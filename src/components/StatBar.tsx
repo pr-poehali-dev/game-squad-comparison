@@ -3,9 +3,10 @@ interface StatBarProps {
   value: number;
   max?: number;
   bonus?: number;
+  unitLabel?: string;
 }
 
-export default function StatBar({ label, value, max = 100, bonus = 0 }: StatBarProps) {
+export default function StatBar({ label, value, max = 100, bonus = 0, unitLabel }: StatBarProps) {
   const pct = Math.min((value / max) * 100, 100);
   const bonusPct = bonus ? Math.min(((value + bonus) / max) * 100, 100) : 0;
   const isPositive = bonus > 0;
@@ -15,7 +16,9 @@ export default function StatBar({ label, value, max = 100, bonus = 0 }: StatBarP
       <div className="flex justify-between items-baseline">
         <span className="text-xs text-muted-foreground uppercase tracking-widest">{label}</span>
         <div className="flex items-baseline gap-1">
-          <span className="font-mono-data text-sm font-medium text-foreground">{value}</span>
+          <span className="font-mono-data text-sm font-medium text-foreground">
+            {value}{unitLabel ? ` ${unitLabel}` : ''}
+          </span>
           {bonus !== 0 && (
             <span className={`font-mono-data text-xs ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
               {isPositive ? '+' : ''}{bonus}

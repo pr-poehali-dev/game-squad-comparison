@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { UNITS } from '@/data/units';
 import { TREATIES } from '@/data/treaties';
-import { Treaty, Unit } from '@/data/types';
+import { ALL_STATS } from '@/data/statGroups';
+import { Treaty, Unit, UnitStats } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
+
+const getStatLabel = (key: string) => {
+  const found = ALL_STATS.find(s => s.key === key);
+  if (!found) return key;
+  return found.label.length > 18 ? found.label.slice(0, 17) + '…' : found.label;
+};
 
 interface TreatiesPageProps {
   appliedTreaties: Record<string, string[]>;
@@ -108,7 +115,7 @@ export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: Tre
                             key={stat}
                             className={`font-mono-data text-[10px] px-2 py-1 rounded-sm ${val > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
                           >
-                            {stat}: {val > 0 ? '+' : ''}{val}
+                            {getStatLabel(stat)}: {val > 0 ? '+' : ''}{val}
                           </span>
                         ));
                       })()}
@@ -142,7 +149,7 @@ export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: Tre
                                 key={stat}
                                 className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
                               >
-                                {stat}: {(val || 0) > 0 ? '+' : ''}{val}
+                                {getStatLabel(stat)}: {(val || 0) > 0 ? '+' : ''}{val}
                               </span>
                             ))}
                           </div>

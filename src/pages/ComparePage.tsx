@@ -1,18 +1,10 @@
 import { useState } from 'react';
 import { UNITS } from '@/data/units';
 import { TREATIES } from '@/data/treaties';
-import { Unit } from '@/data/types';
+import { STAT_GROUPS, ALL_STATS } from '@/data/statGroups';
+import { Unit, UnitStats } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
-
-const STAT_KEYS: Array<{ key: keyof Unit['stats']; label: string; max: number }> = [
-  { key: 'attack', label: 'Атака', max: 100 },
-  { key: 'defense', label: 'Защита', max: 100 },
-  { key: 'speed', label: 'Скорость', max: 100 },
-  { key: 'health', label: 'Здоровье', max: 100 },
-  { key: 'morale', label: 'Мораль', max: 100 },
-  { key: 'range', label: 'Дальность', max: 12 },
-];
 
 interface ComparePageProps {
   appliedTreaties: Record<string, string[]>;
@@ -24,23 +16,24 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
   const [selected, setSelected] = useState<string[]>([]);
   const [picker, setPicker] = useState(false);
   const [treatyPanelUnit, setTreatyPanelUnit] = useState<string | null>(null);
+  const [activeGroup, setActiveGroup] = useState(0);
 
   const selectedUnits = UNITS.filter(u => selected.includes(u.id));
 
-  const getEffectiveStat = (unit: Unit, key: keyof Unit['stats']) => {
+  const getEffectiveStat = (unit: Unit, key: keyof UnitStats) => {
     const ids = appliedTreaties[unit.id] || [];
     const bonus = TREATIES.filter(t => ids.includes(t.id))
       .reduce((acc, t) => acc + (t.statModifiers[key] || 0), 0);
     return unit.stats[key] + bonus;
   };
 
-  const getBonus = (unit: Unit, key: keyof Unit['stats']) => {
+  const getBonus = (unit: Unit, key: keyof UnitStats) => {
     const ids = appliedTreaties[unit.id] || [];
     return TREATIES.filter(t => ids.includes(t.id))
       .reduce((acc, t) => acc + (t.statModifiers[key] || 0), 0);
   };
 
-  const getBest = (key: keyof Unit['stats']) => {
+  const getBest = (key: keyof UnitStats) => {
     if (selectedUnits.length < 2) return null;
     return Math.max(...selectedUnits.map(u => getEffectiveStat(u, key)));
   };
@@ -57,6 +50,8 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
     ? TREATIES.filter(t => t.compatibleClasses.includes(treatyPanelUnitObj.class))
     : [];
   const activeTreatyIds = treatyPanelUnit ? (appliedTreaties[treatyPanelUnit] || []) : [];
+
+  const currentGroupStats = STAT_GROUPS[activeGroup].stats;
 
   return (
     <div>
@@ -121,7 +116,6 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
         )}
       </div>
 
-      {/* Compare table */}
       {selectedUnits.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <Icon name="GitCompare" size={40} className="mx-auto mb-3 opacity-30" />
@@ -129,10 +123,28 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-card border border-border rounded-sm overflow-x-auto">
+          <div className="bg-card border border-border rounded-sm overflow-hidden">
+            {/* Stat group tabs */}
+            <div className="flex border-b border-border bg-muted/30">
+              {STAT_GROUPS.map((g, idx) => (
+                <button
+                  key={g.label}
+                  onClick={() => setActiveGroup(idx)}
+                  className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium transition-all border-b-2 -mb-px ${
+                    activeGroup === idx
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Icon name={g.icon} size={12} className={activeGroup === idx ? g.color : ''} />
+                  {g.label}
+                </button>
+              ))}
+            </div>
+
             {/* Unit headers */}
-            <div className="grid border-b border-border" style={{ gridTemplateColumns: `180px repeat(${selectedUnits.length}, 1fr)` }}>
-              <div className="p-4 bg-muted/50" />
+            <div className="grid border-b border-border" style={{ gridTemplateColumns: `200px repeat(${selectedUnits.length}, 1fr)` }}>
+              <div className="p-4 bg-muted/30" />
               {selectedUnits.map(u => {
                 const treatyCount = (appliedTreaties[u.id] || []).length;
                 const isActive = treatyPanelUnit === u.id;
@@ -159,17 +171,17 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
               })}
             </div>
 
-            {/* Stats rows */}
-            {STAT_KEYS.map(({ key, label, max }, idx) => {
+            {/* Stat rows */}
+            {currentGroupStats.map(({ key, label, max, unit: unitLabel }, idx) => {
               const best = getBest(key);
               return (
                 <div
                   key={key}
-                  className={`grid border-b border-border ${idx % 2 === 0 ? '' : 'bg-muted/20'}`}
-                  style={{ gridTemplateColumns: `180px repeat(${selectedUnits.length}, 1fr)` }}
+                  className={`grid border-b border-border ${idx % 2 === 0 ? '' : 'bg-muted/10'}`}
+                  style={{ gridTemplateColumns: `200px repeat(${selectedUnits.length}, 1fr)` }}
                 >
-                  <div className="p-4 flex items-center">
-                    <span className="text-xs text-muted-foreground uppercase tracking-widest">{label}</span>
+                  <div className="p-3 flex items-center border-r border-border">
+                    <span className="text-xs text-muted-foreground">{label}</span>
                   </div>
                   {selectedUnits.map(u => {
                     const base = u.stats[key];
@@ -178,14 +190,14 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                     const isBest = best !== null && val === best;
                     const pct = Math.min((val / max) * 100, 100);
                     return (
-                      <div key={u.id} className={`p-4 border-l border-border ${isBest ? 'bg-primary/5' : ''} ${treatyPanelUnit === u.id ? 'bg-primary/3' : ''}`}>
-                        <div className={`font-mono-data text-lg font-medium mb-0.5 ${isBest ? 'text-primary' : 'text-foreground'}`}>
-                          {val}
-                          {isBest && selectedUnits.length > 1 && <span className="text-xs ml-1 opacity-70">▲</span>}
+                      <div key={u.id} className={`p-3 border-l border-border ${isBest ? 'bg-primary/5' : ''}`}>
+                        <div className={`font-mono-data text-base font-medium mb-0.5 ${isBest ? 'text-primary' : 'text-foreground'}`}>
+                          {val}{unitLabel ? ` ${unitLabel}` : ''}
+                          {isBest && selectedUnits.length > 1 && <span className="text-xs ml-1 opacity-60">▲</span>}
                         </div>
                         {bonus !== 0 && (
                           <div className={`font-mono-data text-[10px] mb-1 ${bonus > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {bonus > 0 ? '+' : ''}{bonus} от трактатов
+                            {bonus > 0 ? '+' : ''}{bonus}
                           </div>
                         )}
                         <div className="h-0.5 bg-border rounded-full overflow-hidden">
@@ -206,17 +218,17 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
 
             {/* Cost row */}
             <div
-              className="grid bg-muted/30"
-              style={{ gridTemplateColumns: `180px repeat(${selectedUnits.length}, 1fr)` }}
+              className="grid bg-muted/20"
+              style={{ gridTemplateColumns: `200px repeat(${selectedUnits.length}, 1fr)` }}
             >
-              <div className="p-4 flex items-center">
-                <span className="text-xs text-muted-foreground uppercase tracking-widest">Стоимость</span>
+              <div className="p-3 flex items-center border-r border-border">
+                <span className="text-xs text-muted-foreground">Стоимость найма</span>
               </div>
               {selectedUnits.map(u => {
                 const cheapest = Math.min(...selectedUnits.map(x => x.cost));
                 return (
-                  <div key={u.id} className={`p-4 border-l border-border ${u.cost === cheapest ? 'bg-green-900/10' : ''}`}>
-                    <span className={`font-mono-data text-lg font-medium ${u.cost === cheapest ? 'text-green-400' : 'text-foreground'}`}>
+                  <div key={u.id} className={`p-3 border-l border-border ${u.cost === cheapest ? 'bg-green-900/10' : ''}`}>
+                    <span className={`font-mono-data text-base font-medium ${u.cost === cheapest ? 'text-green-400' : 'text-foreground'}`}>
                       {u.cost}
                     </span>
                   </div>
@@ -234,10 +246,7 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                   Трактаты для «{treatyPanelUnitObj.name}»
                   <span className="text-xs text-muted-foreground font-normal">({treatyPanelUnitObj.class})</span>
                 </h3>
-                <button
-                  onClick={() => setTreatyPanelUnit(null)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <button onClick={() => setTreatyPanelUnit(null)} className="text-muted-foreground hover:text-foreground transition-colors">
                   <Icon name="X" size={14} />
                 </button>
               </div>
@@ -251,18 +260,15 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                     return (
                       <div
                         key={t.id}
-                        className={`border rounded-sm p-3 transition-all border-rarity-${t.rarity} ${applied ? 'bg-primary/5' : 'bg-muted/30'}`}
+                        className={`border rounded-sm p-3 transition-all border-rarity-${t.rarity} ${applied ? 'bg-primary/5' : 'bg-muted/20'}`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div>
-                            <div className="text-xs font-medium text-foreground leading-tight">{t.name}</div>
+                            <div className="text-xs font-medium text-foreground leading-tight mb-0.5">{t.name}</div>
                             <RarityBadge rarity={t.rarity} />
                           </div>
                           <button
-                            onClick={() => applied
-                              ? onRemove(treatyPanelUnit, t.id)
-                              : onApply(treatyPanelUnit, t.id)
-                            }
+                            onClick={() => applied ? onRemove(treatyPanelUnit, t.id) : onApply(treatyPanelUnit, t.id)}
                             className={`flex-shrink-0 text-[10px] px-2 py-1 rounded-sm border transition-all flex items-center gap-1 ${
                               applied
                                 ? 'border-red-500/40 text-red-400 hover:bg-red-900/20'
@@ -274,14 +280,20 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {Object.entries(t.statModifiers).map(([stat, val]) => (
-                            <span
-                              key={stat}
-                              className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
-                            >
-                              {stat}: {(val || 0) > 0 ? '+' : ''}{val}
-                            </span>
-                          ))}
+                          {Object.entries(t.statModifiers).map(([stat, val]) => {
+                            const statDef = ALL_STATS.find(s => s.key === stat);
+                            const shortLabel = statDef
+                              ? statDef.label.length > 15 ? statDef.label.slice(0, 14) + '…' : statDef.label
+                              : stat;
+                            return (
+                              <span
+                                key={stat}
+                                className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
+                              >
+                                {shortLabel}: {(val || 0) > 0 ? '+' : ''}{val}
+                              </span>
+                            );
+                          })}
                         </div>
                       </div>
                     );

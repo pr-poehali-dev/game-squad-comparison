@@ -1,4 +1,5 @@
 import { Unit } from '@/data/types';
+import { CARD_STATS } from '@/data/statGroups';
 import RarityBadge from './RarityBadge';
 import StatBar from './StatBar';
 import Icon from '@/components/ui/icon';
@@ -54,29 +55,30 @@ export default function UnitCard({ unit, onClick, selected, compact }: UnitCardP
       )}
 
       <div className="space-y-2">
-        <StatBar label="Атака" value={unit.stats.attack} />
-        <StatBar label="Защита" value={unit.stats.defense} />
-        <StatBar label="Скорость" value={unit.stats.speed} />
-        {!compact && (
-          <>
-            <StatBar label="Здоровье" value={unit.stats.health} />
-            <StatBar label="Мораль" value={unit.stats.morale} />
-          </>
-        )}
+        {CARD_STATS.map(({ key, label, max }) => (
+          <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
+        ))}
       </div>
 
       <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <Icon name="Users" size={11} />
+          <span className="font-mono-data">{unit.stats.troops}</span>
+        </div>
+        {unit.stats.rangeDistance > 0 ? (
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Icon name="Crosshair" size={11} />
+            <span className="font-mono-data">{unit.stats.rangeDistance} кл.</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+            <Icon name="Sword" size={11} />
+            <span className="font-mono-data">ближний бой</span>
+          </div>
+        )}
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
           <Icon name="Coins" size={11} />
           <span className="font-mono-data">{unit.cost}</span>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Icon name="RefreshCw" size={11} />
-          <span className="font-mono-data">{unit.upkeep}/ход</span>
-        </div>
-        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Icon name="Crosshair" size={11} />
-          <span className="font-mono-data">Дальн. {unit.stats.range}</span>
         </div>
       </div>
     </div>

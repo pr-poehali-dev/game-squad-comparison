@@ -12,7 +12,13 @@ export const UNITS: Unit[] = [
     abilities: ['Щитовая стена', 'Боевое закалывание'],
     cost: 120,
     upkeep: 15,
-    stats: { attack: 42, defense: 78, speed: 28, health: 95, morale: 65, range: 1 },
+    stats: {
+      health: 95, troops: 200, leadership: 55, moveSpeed: 28, rangeDistance: 0, ammo: 0, morale: 65,
+      piercingPenetration: 20, slashingPenetration: 35, bluntPenetration: 40,
+      piercingDamage: 15, slashingDamage: 42, bluntDamage: 30,
+      piercingDefense: 70, slashingDefense: 78, bluntDefense: 72,
+      block: 85, blockRecovery: 40,
+    },
   },
   {
     id: 'shadow-runners',
@@ -25,7 +31,13 @@ export const UNITS: Unit[] = [
     abilities: ['Засада', 'Скрытное передвижение', 'Отравленные клинки'],
     cost: 180,
     upkeep: 22,
-    stats: { attack: 61, defense: 35, speed: 88, health: 52, morale: 70, range: 1 },
+    stats: {
+      health: 52, troops: 120, leadership: 68, moveSpeed: 88, rangeDistance: 0, ammo: 0, morale: 70,
+      piercingPenetration: 55, slashingPenetration: 62, bluntPenetration: 20,
+      piercingDamage: 61, slashingDamage: 55, bluntDamage: 18,
+      piercingDefense: 25, slashingDefense: 35, bluntDefense: 20,
+      block: 30, blockRecovery: 65,
+    },
   },
   {
     id: 'storm-cavalry',
@@ -38,7 +50,13 @@ export const UNITS: Unit[] = [
     abilities: ['Сокрушительный натиск', 'Рассеивание рядов', 'Преследование'],
     cost: 380,
     upkeep: 45,
-    stats: { attack: 85, defense: 52, speed: 92, health: 70, morale: 80, range: 1 },
+    stats: {
+      health: 70, troops: 80, leadership: 75, moveSpeed: 92, rangeDistance: 0, ammo: 0, morale: 80,
+      piercingPenetration: 40, slashingPenetration: 70, bluntPenetration: 85,
+      piercingDamage: 35, slashingDamage: 85, bluntDamage: 75,
+      piercingDefense: 40, slashingDefense: 52, bluntDefense: 48,
+      block: 25, blockRecovery: 50,
+    },
   },
   {
     id: 'arcane-archers',
@@ -51,7 +69,13 @@ export const UNITS: Unit[] = [
     abilities: ['Магический залп', 'Пронзающий выстрел', 'Зачарованный колчан'],
     cost: 320,
     upkeep: 38,
-    stats: { attack: 79, defense: 28, speed: 55, health: 45, morale: 72, range: 5 },
+    stats: {
+      health: 45, troops: 100, leadership: 62, moveSpeed: 55, rangeDistance: 5, ammo: 30, morale: 72,
+      piercingPenetration: 79, slashingPenetration: 30, bluntPenetration: 20,
+      piercingDamage: 79, slashingDamage: 22, bluntDamage: 15,
+      piercingDefense: 18, slashingDefense: 28, bluntDefense: 22,
+      block: 10, blockRecovery: 35,
+    },
   },
   {
     id: 'siege-masters',
@@ -64,7 +88,13 @@ export const UNITS: Unit[] = [
     abilities: ['Требушет', 'Горящие снаряды', 'Инженерный ремонт'],
     cost: 250,
     upkeep: 30,
-    stats: { attack: 95, defense: 25, speed: 15, health: 55, morale: 58, range: 8 },
+    stats: {
+      health: 55, troops: 40, leadership: 50, moveSpeed: 15, rangeDistance: 8, ammo: 20, morale: 58,
+      piercingPenetration: 60, slashingPenetration: 50, bluntPenetration: 95,
+      piercingDamage: 50, slashingDamage: 45, bluntDamage: 95,
+      piercingDefense: 15, slashingDefense: 25, bluntDefense: 20,
+      block: 0, blockRecovery: 0,
+    },
   },
   {
     id: 'veil-mages',
@@ -77,7 +107,13 @@ export const UNITS: Unit[] = [
     abilities: ['Аура щита', 'Туман войны', 'Массовое замедление', 'Чары восстановления'],
     cost: 550,
     upkeep: 65,
-    stats: { attack: 55, defense: 40, speed: 48, health: 40, morale: 90, range: 6 },
+    stats: {
+      health: 40, troops: 30, leadership: 88, moveSpeed: 48, rangeDistance: 6, ammo: 0, morale: 90,
+      piercingPenetration: 55, slashingPenetration: 40, bluntPenetration: 55,
+      piercingDamage: 55, slashingDamage: 30, bluntDamage: 55,
+      piercingDefense: 30, slashingDefense: 40, bluntDefense: 30,
+      block: 20, blockRecovery: 80,
+    },
   },
   {
     id: 'crimson-paladins',
@@ -90,7 +126,13 @@ export const UNITS: Unit[] = [
     abilities: ['Священный щит', 'Вдохновляющий клич', 'Карающий удар'],
     cost: 620,
     upkeep: 72,
-    stats: { attack: 74, defense: 88, speed: 58, health: 88, morale: 95, range: 1 },
+    stats: {
+      health: 88, troops: 60, leadership: 90, moveSpeed: 58, rangeDistance: 0, ammo: 0, morale: 95,
+      piercingPenetration: 50, slashingPenetration: 74, bluntPenetration: 68,
+      piercingDamage: 45, slashingDamage: 74, bluntDamage: 62,
+      piercingDefense: 80, slashingDefense: 88, bluntDefense: 82,
+      block: 90, blockRecovery: 55,
+    },
   },
   {
     id: 'death-whisperers',
@@ -103,7 +145,13 @@ export const UNITS: Unit[] = [
     abilities: ['Воскрешение', 'Проклятие', 'Страх смерти', 'Костяная броня', 'Жатва душ'],
     cost: 1200,
     upkeep: 130,
-    stats: { attack: 88, defense: 62, speed: 42, health: 68, morale: 100, range: 4 },
+    stats: {
+      health: 68, troops: 25, leadership: 95, moveSpeed: 42, rangeDistance: 4, ammo: 0, morale: 100,
+      piercingPenetration: 75, slashingPenetration: 65, bluntPenetration: 72,
+      piercingDamage: 88, slashingDamage: 70, bluntDamage: 80,
+      piercingDefense: 55, slashingDefense: 62, bluntDefense: 58,
+      block: 40, blockRecovery: 70,
+    },
   },
   {
     id: 'golden-crossbows',
@@ -116,7 +164,13 @@ export const UNITS: Unit[] = [
     abilities: ['Бронебойный болт', 'Прицельный залп'],
     cost: 200,
     upkeep: 25,
-    stats: { attack: 72, defense: 32, speed: 42, health: 48, morale: 65, range: 4 },
+    stats: {
+      health: 48, troops: 90, leadership: 58, moveSpeed: 42, rangeDistance: 4, ammo: 25, morale: 65,
+      piercingPenetration: 90, slashingPenetration: 35, bluntPenetration: 30,
+      piercingDamage: 72, slashingDamage: 25, bluntDamage: 20,
+      piercingDefense: 22, slashingDefense: 32, bluntDefense: 28,
+      block: 15, blockRecovery: 30,
+    },
   },
   {
     id: 'highland-berserkers',
@@ -129,7 +183,13 @@ export const UNITS: Unit[] = [
     abilities: ['Боевое безумие', 'Ярость крови', 'Неудержимый натиск'],
     cost: 290,
     upkeep: 35,
-    stats: { attack: 92, defense: 30, speed: 68, health: 72, morale: 85, range: 1 },
+    stats: {
+      health: 72, troops: 110, leadership: 60, moveSpeed: 68, rangeDistance: 0, ammo: 0, morale: 85,
+      piercingPenetration: 45, slashingPenetration: 88, bluntPenetration: 75,
+      piercingDamage: 40, slashingDamage: 92, bluntDamage: 65,
+      piercingDefense: 20, slashingDefense: 30, bluntDefense: 25,
+      block: 20, blockRecovery: 45,
+    },
   },
   {
     id: 'iron-hounds',
@@ -142,7 +202,13 @@ export const UNITS: Unit[] = [
     abilities: ['Быстрая разведка', 'Перехват'],
     cost: 140,
     upkeep: 18,
-    stats: { attack: 48, defense: 38, speed: 95, health: 58, morale: 68, range: 1 },
+    stats: {
+      health: 58, troops: 70, leadership: 65, moveSpeed: 95, rangeDistance: 0, ammo: 0, morale: 68,
+      piercingPenetration: 30, slashingPenetration: 48, bluntPenetration: 35,
+      piercingDamage: 28, slashingDamage: 48, bluntDamage: 32,
+      piercingDefense: 28, slashingDefense: 38, bluntDefense: 32,
+      block: 22, blockRecovery: 55,
+    },
   },
   {
     id: 'thunder-cannons',
@@ -155,6 +221,12 @@ export const UNITS: Unit[] = [
     abilities: ['Сокрушительный залп', 'Дымовая завеса', 'Разрывной снаряд', 'Осадный режим'],
     cost: 980,
     upkeep: 110,
-    stats: { attack: 100, defense: 20, speed: 10, health: 60, morale: 75, range: 10 },
+    stats: {
+      health: 60, troops: 20, leadership: 70, moveSpeed: 10, rangeDistance: 10, ammo: 15, morale: 75,
+      piercingPenetration: 80, slashingPenetration: 70, bluntPenetration: 100,
+      piercingDamage: 70, slashingDamage: 60, bluntDamage: 100,
+      piercingDefense: 10, slashingDefense: 20, bluntDefense: 15,
+      block: 0, blockRecovery: 0,
+    },
   },
 ];
