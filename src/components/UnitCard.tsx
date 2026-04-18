@@ -77,8 +77,8 @@ export default function UnitCard({ unit, onClick, selected, compact }: UnitCardP
           </div>
         )}
         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-          <Icon name="Coins" size={11} />
-          <span className="font-mono-data">{unit.cost}</span>
+          <Icon name="Crown" size={11} />
+          <span className="font-mono-data">{unit.stats.leadership} лид.</span>
         </div>
       </div>
     </div>

@@ -144,12 +144,6 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Icon name="Coins" size={12} /> Стоимость найма
-                </span>
-                <span className="font-mono-data text-sm text-foreground">{unit.cost}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                   <Icon name="RefreshCw" size={12} /> Содержание/ход
                 </span>
                 <span className="font-mono-data text-sm text-foreground">{unit.upkeep}</span>
@@ -162,12 +156,6 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
                   <span className="font-mono-data text-sm text-foreground">{unit.stats.ammo}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center pt-2 border-t border-border">
-                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Icon name="TrendingDown" size={12} /> За 10 ходов
-                </span>
-                <span className="font-mono-data text-sm text-primary">{unit.cost + unit.upkeep * 10}</span>
-              </div>
             </div>
           </div>
 

@@ -20,7 +20,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   const [classFilter, setClassFilter] = useState<UnitClass | ''>('');
   const [roleFilter, setRoleFilter] = useState<UnitRole | ''>('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | ''>('');
-  const [sortBy, setSortBy] = useState<'name' | 'attack' | 'defense' | 'cost'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'attack' | 'defense' | 'leadership'>('name');
 
   const filtered = useMemo(() => {
     return UNITS
@@ -33,9 +33,9 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
       })
       .sort((a, b) => {
         if (sortBy === 'name') return a.name.localeCompare(b.name, 'ru');
-        if (sortBy === 'attack') return b.stats.attack - a.stats.attack;
-        if (sortBy === 'defense') return b.stats.defense - a.stats.defense;
-        if (sortBy === 'cost') return b.cost - a.cost;
+        if (sortBy === 'attack') return b.stats.slashingDamage - a.stats.slashingDamage;
+        if (sortBy === 'defense') return b.stats.slashingDefense - a.stats.slashingDefense;
+        if (sortBy === 'leadership') return b.stats.leadership - a.stats.leadership;
         return 0;
       });
   }, [search, classFilter, roleFilter, rarityFilter, sortBy]);
@@ -109,7 +109,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
               <option value="name">По названию</option>
               <option value="attack">По атаке</option>
               <option value="defense">По защите</option>
-              <option value="cost">По стоимости</option>
+              <option value="leadership">По лидерству</option>
             </select>
             {hasFilters && (
               <button

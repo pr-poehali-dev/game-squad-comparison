@@ -216,25 +216,7 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
               );
             })}
 
-            {/* Cost row */}
-            <div
-              className="grid bg-muted/20"
-              style={{ gridTemplateColumns: `200px repeat(${selectedUnits.length}, 1fr)` }}
-            >
-              <div className="p-3 flex items-center border-r border-border">
-                <span className="text-xs text-muted-foreground">Стоимость найма</span>
-              </div>
-              {selectedUnits.map(u => {
-                const cheapest = Math.min(...selectedUnits.map(x => x.cost));
-                return (
-                  <div key={u.id} className={`p-3 border-l border-border ${u.cost === cheapest ? 'bg-green-900/10' : ''}`}>
-                    <span className={`font-mono-data text-base font-medium ${u.cost === cheapest ? 'text-green-400' : 'text-foreground'}`}>
-                      {u.cost}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+
           </div>
 
           {/* Treaty panel */}
