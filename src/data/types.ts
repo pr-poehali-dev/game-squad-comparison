@@ -47,6 +47,5 @@ export interface Unit {
   description: string;
   lore: string;
   abilities: string[];
-  cost: number;
   upkeep: number;
 }
