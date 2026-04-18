@@ -1,0 +1,172 @@
+import { useState } from 'react';
+import { UNITS } from '@/data/units';
+import { TREATIES } from '@/data/treaties';
+import { Treaty, Unit } from '@/data/types';
+import RarityBadge from '@/components/RarityBadge';
+import Icon from '@/components/ui/icon';
+
+interface TreatiesPageProps {
+  appliedTreaties: Record<string, string[]>;
+  onApply: (unitId: string, treatyId: string) => void;
+  onRemove: (unitId: string, treatyId: string) => void;
+}
+
+export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: TreatiesPageProps) {
+  const [selectedUnit, setSelectedUnit] = useState<string>('');
+
+  const unit = UNITS.find(u => u.id === selectedUnit);
+  const unitTreatyIds = selectedUnit ? (appliedTreaties[selectedUnit] || []) : [];
+
+  const compatibleTreaties = unit
+    ? TREATIES.filter(t => t.compatibleClasses.includes(unit.class))
+    : [];
+
+  const getStatBonuses = (unitId: string) => {
+    const ids = appliedTreaties[unitId] || [];
+    return ids.length;
+  };
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-semibold text-foreground mb-1">Трактаты</h1>
+        <p className="text-muted-foreground text-sm">Применяйте трактаты к отрядам и наблюдайте за изменением характеристик</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Unit selector */}
+        <div className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Выберите отряд</h2>
+          <div className="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto scrollbar-thin pr-1">
+            {UNITS.map(u => {
+              const count = getStatBonuses(u.id);
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => setSelectedUnit(u.id)}
+                  className={`w-full text-left p-3 rounded-sm border transition-all ${
+                    selectedUnit === u.id
+                      ? `border-primary bg-primary/5`
+                      : `border-border bg-card hover:border-primary/30`
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm font-medium ${selectedUnit === u.id ? 'text-foreground' : 'text-foreground'}`}>
+                      {u.name}
+                    </span>
+                    {count > 0 && (
+                      <span className="text-[10px] font-mono-data bg-primary/20 text-primary rounded-sm px-1.5 py-0.5">
+                        +{count}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-0.5">{u.class}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Treaties panel */}
+        <div className="lg:col-span-2">
+          {!unit ? (
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+              <Icon name="ScrollText" size={40} className="text-muted-foreground opacity-30 mb-3" />
+              <p className="text-sm text-muted-foreground">Выберите отряд слева для управления трактатами</p>
+            </div>
+          ) : (
+            <div>
+              <div className={`bg-card border border-rarity-${unit.rarity} rounded-sm p-4 mb-4`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-foreground">{unit.name}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-muted-foreground">{unit.class}</span>
+                      <RarityBadge rarity={unit.rarity} />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-muted-foreground">Трактатов</div>
+                    <div className="font-mono-data text-2xl text-primary">{unitTreatyIds.length}</div>
+                  </div>
+                </div>
+
+                {/* Current bonuses summary */}
+                {unitTreatyIds.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="text-xs text-muted-foreground mb-2">Суммарные бонусы:</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(() => {
+                        const totals: Record<string, number> = {};
+                        TREATIES.filter(t => unitTreatyIds.includes(t.id)).forEach(t => {
+                          Object.entries(t.statModifiers).forEach(([k, v]) => {
+                            totals[k] = (totals[k] || 0) + (v || 0);
+                          });
+                        });
+                        return Object.entries(totals).map(([stat, val]) => (
+                          <span
+                            key={stat}
+                            className={`font-mono-data text-[10px] px-2 py-1 rounded-sm ${val > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
+                          >
+                            {stat}: {val > 0 ? '+' : ''}{val}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+                Доступные трактаты ({compatibleTreaties.length})
+              </h3>
+
+              <div className="grid gap-3">
+                {compatibleTreaties.map(t => {
+                  const applied = unitTreatyIds.includes(t.id);
+                  return (
+                    <div
+                      key={t.id}
+                      className={`bg-card border rounded-sm p-4 transition-all border-rarity-${t.rarity} ${applied ? 'bg-primary/5' : ''}`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm text-foreground">{t.name}</span>
+                            <RarityBadge rarity={t.rarity} />
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{t.description}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(t.statModifiers).map(([stat, val]) => (
+                              <span
+                                key={stat}
+                                className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
+                              >
+                                {stat}: {(val || 0) > 0 ? '+' : ''}{val}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => applied ? onRemove(unit.id, t.id) : onApply(unit.id, t.id)}
+                          className={`flex-shrink-0 text-xs px-3 py-1.5 rounded-sm border transition-all flex items-center gap-1.5 ${
+                            applied
+                              ? 'border-red-500/40 text-red-400 hover:bg-red-900/20'
+                              : 'border-primary/40 text-primary hover:bg-primary/10'
+                          }`}
+                        >
+                          <Icon name={applied ? 'X' : 'Plus'} size={12} />
+                          {applied ? 'Снять' : 'Применить'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

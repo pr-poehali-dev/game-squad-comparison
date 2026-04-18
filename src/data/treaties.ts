@@ -1,0 +1,68 @@
+import { Treaty } from './types';
+
+export const TREATIES: Treaty[] = [
+  {
+    id: 'iron-discipline',
+    name: 'Железная Дисциплина',
+    description: 'Суровая тренировка повышает боеспособность пехотных отрядов.',
+    statModifiers: { defense: 15, morale: 10 },
+    compatibleClasses: ['Пехота'],
+    rarity: 'common',
+  },
+  {
+    id: 'swift-winds',
+    name: 'Попутный Ветер',
+    description: 'Благословение скорости — отряд движется быстрее ветра.',
+    statModifiers: { speed: 20, morale: 5 },
+    compatibleClasses: ['Кавалерия', 'Пехота', 'Стрелки'],
+    rarity: 'uncommon',
+  },
+  {
+    id: 'eagle-eye',
+    name: 'Орлиный Взор',
+    description: 'Дальнобойные отряды получают бонус к дальности и точности.',
+    statModifiers: { attack: 18, range: 2 },
+    compatibleClasses: ['Стрелки'],
+    rarity: 'uncommon',
+  },
+  {
+    id: 'arcane-infusion',
+    name: 'Арканное Насыщение',
+    description: 'Магические отряды усиливают свои заклинания арканной энергией.',
+    statModifiers: { attack: 22, health: -8 },
+    compatibleClasses: ['Магические'],
+    rarity: 'rare',
+  },
+  {
+    id: 'siege-mastery',
+    name: 'Мастерство Осады',
+    description: 'Осадные орудия работают с удвоенной эффективностью.',
+    statModifiers: { attack: 25, speed: -5 },
+    compatibleClasses: ['Осадные'],
+    rarity: 'rare',
+  },
+  {
+    id: 'blood-oath',
+    name: 'Кровавая Клятва',
+    description: 'Отряд клянётся победить или умереть — атака и мораль резко возрастают.',
+    statModifiers: { attack: 30, morale: 25, defense: -10 },
+    compatibleClasses: ['Пехота', 'Кавалерия'],
+    rarity: 'epic',
+  },
+  {
+    id: 'ancient-covenant',
+    name: 'Древний Завет',
+    description: 'Легендарный договор с духами предков. Все характеристики возрастают.',
+    statModifiers: { attack: 20, defense: 20, speed: 10, health: 20, morale: 20 },
+    compatibleClasses: ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные', 'Магические'],
+    rarity: 'legendary',
+  },
+  {
+    id: 'shadow-pact',
+    name: 'Тёмный Пакт',
+    description: 'Магический договор даёт силу, но ослабляет волю.',
+    statModifiers: { attack: 35, morale: -15 },
+    compatibleClasses: ['Магические', 'Пехота'],
+    rarity: 'epic',
+  },
+];
