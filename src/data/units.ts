@@ -10,7 +10,7 @@ export const UNITS: Unit[] = [
     description: 'Тяжёлая пехота с высокой защитой и стойкостью. Костяк любой обороны.',
     lore: 'Прошедшие суровые испытания воины, закованные в листовую сталь. Их называют живой стеной.',
     abilities: ['Щитовая стена', 'Боевое закалывание'],
-    upkeep: 15,
+
     stats: {
       health: 95, troops: 200, leadership: 55, moveSpeed: 28, rangeDistance: 0, ammo: 0, morale: 65,
       piercingPenetration: 20, slashingPenetration: 35, bluntPenetration: 40,
@@ -28,7 +28,7 @@ export const UNITS: Unit[] = [
     description: 'Быстрая лёгкая пехота, мастера засад и разведывательных операций.',
     lore: 'Их следы не находят даже следопыты. Они приходят из темноты — и уходят в неё же.',
     abilities: ['Засада', 'Скрытное передвижение', 'Отравленные клинки'],
-    upkeep: 22,
+
     stats: {
       health: 52, troops: 120, leadership: 68, moveSpeed: 88, rangeDistance: 0, ammo: 0, morale: 70,
       piercingPenetration: 55, slashingPenetration: 62, bluntPenetration: 20,
@@ -46,7 +46,7 @@ export const UNITS: Unit[] = [
     description: 'Стремительный кавалерийский отряд, способный прорвать любой строй.',
     lore: 'Земля дрожит под их копытами. Враги, услышавшие этот грохот, редко успевают выстроить защиту.',
     abilities: ['Сокрушительный натиск', 'Рассеивание рядов', 'Преследование'],
-    upkeep: 45,
+
     stats: {
       health: 70, troops: 80, leadership: 75, moveSpeed: 92, rangeDistance: 0, ammo: 0, morale: 80,
       piercingPenetration: 40, slashingPenetration: 70, bluntPenetration: 85,
@@ -64,7 +64,7 @@ export const UNITS: Unit[] = [
     description: 'Лучники, чьи стрелы заряжены магической энергией. Поражают врагов на огромной дистанции.',
     lore: 'Каждая стрела — заклинание. Каждый выстрел — ритуал, который они совершали тысячи раз.',
     abilities: ['Магический залп', 'Пронзающий выстрел', 'Зачарованный колчан'],
-    upkeep: 38,
+
     stats: {
       health: 45, troops: 100, leadership: 62, moveSpeed: 55, rangeDistance: 5, ammo: 30, morale: 72,
       piercingPenetration: 79, slashingPenetration: 30, bluntPenetration: 20,
@@ -82,7 +82,7 @@ export const UNITS: Unit[] = [
     description: 'Инженеры и расчёты метательных машин. Незаменимы при штурме укреплений.',
     lore: 'Они не сражаются — они решают уравнения разрушения, в которых нет неизвестных.',
     abilities: ['Требушет', 'Горящие снаряды', 'Инженерный ремонт'],
-    upkeep: 30,
+
     stats: {
       health: 55, troops: 40, leadership: 50, moveSpeed: 15, rangeDistance: 8, ammo: 20, morale: 58,
       piercingPenetration: 60, slashingPenetration: 50, bluntPenetration: 95,
@@ -100,7 +100,7 @@ export const UNITS: Unit[] = [
     description: 'Могущественные маги, управляющие полем боя через наложение заклятий.',
     lore: 'Реальность для них — лишь черновик. То, что остальные видят как твёрдое, они воспринимают как временное.',
     abilities: ['Аура щита', 'Туман войны', 'Массовое замедление', 'Чары восстановления'],
-    upkeep: 65,
+
     stats: {
       health: 40, troops: 30, leadership: 88, moveSpeed: 48, rangeDistance: 6, ammo: 0, morale: 90,
       piercingPenetration: 55, slashingPenetration: 40, bluntPenetration: 55,
@@ -118,7 +118,7 @@ export const UNITS: Unit[] = [
     description: 'Элитные рыцари в тяжёлых доспехах, сочетающие силу и защиту.',
     lore: 'Их клятва — щит для союзников и меч для врагов. Никто не видел, чтобы они отступали.',
     abilities: ['Священный щит', 'Вдохновляющий клич', 'Карающий удар'],
-    upkeep: 72,
+
     stats: {
       health: 88, troops: 60, leadership: 90, moveSpeed: 58, rangeDistance: 0, ammo: 0, morale: 95,
       piercingPenetration: 50, slashingPenetration: 74, bluntPenetration: 68,
@@ -136,7 +136,7 @@ export const UNITS: Unit[] = [
     description: 'Некроманты высшего ранга, способные поднимать павших воинов.',
     lore: 'Смерть на поле боя для них — лишь начало. Каждый павший враг пополняет их армию.',
     abilities: ['Воскрешение', 'Проклятие', 'Страх смерти', 'Костяная броня', 'Жатва душ'],
-    upkeep: 130,
+
     stats: {
       health: 68, troops: 25, leadership: 95, moveSpeed: 42, rangeDistance: 4, ammo: 0, morale: 100,
       piercingPenetration: 75, slashingPenetration: 65, bluntPenetration: 72,
@@ -154,7 +154,7 @@ export const UNITS: Unit[] = [
     description: 'Опытные арбалетчики с тяжёлыми осадными арбалетами. Пробивают любую броню.',
     lore: 'Им платят золотом — и они стоят каждой монеты. Ни одна цель не уходила из их прицела.',
     abilities: ['Бронебойный болт', 'Прицельный залп'],
-    upkeep: 25,
+
     stats: {
       health: 48, troops: 90, leadership: 58, moveSpeed: 42, rangeDistance: 4, ammo: 25, morale: 65,
       piercingPenetration: 90, slashingPenetration: 35, bluntPenetration: 30,
@@ -172,7 +172,7 @@ export const UNITS: Unit[] = [
     description: 'Неистовые воины с севера, впадающие в боевое безумие при виде крови.',
     lore: 'Холод гор сделал их нечувствительными к боли. Они не знают страха — только ярость.',
     abilities: ['Боевое безумие', 'Ярость крови', 'Неудержимый натиск'],
-    upkeep: 35,
+
     stats: {
       health: 72, troops: 110, leadership: 60, moveSpeed: 68, rangeDistance: 0, ammo: 0, morale: 85,
       piercingPenetration: 45, slashingPenetration: 88, bluntPenetration: 75,
@@ -190,7 +190,7 @@ export const UNITS: Unit[] = [
     description: 'Лёгкая кавалерия для быстрой разведки и преследования отступающих.',
     lore: 'Быстрее ветра, тише тени. Их задача — видеть всё и не быть замеченными.',
     abilities: ['Быстрая разведка', 'Перехват'],
-    upkeep: 18,
+
     stats: {
       health: 58, troops: 70, leadership: 65, moveSpeed: 95, rangeDistance: 0, ammo: 0, morale: 68,
       piercingPenetration: 30, slashingPenetration: 48, bluntPenetration: 35,
@@ -208,7 +208,7 @@ export const UNITS: Unit[] = [
     description: 'Легендарные артиллеристы с орудиями небывалой разрушительной силы.',
     lore: 'Их залп слышен за тридцать миль. Крепости, которые они осаждали, вписаны в историю — как руины.',
     abilities: ['Сокрушительный залп', 'Дымовая завеса', 'Разрывной снаряд', 'Осадный режим'],
-    upkeep: 110,
+
     stats: {
       health: 60, troops: 20, leadership: 70, moveSpeed: 10, rangeDistance: 10, ammo: 15, morale: 75,
       piercingPenetration: 80, slashingPenetration: 70, bluntPenetration: 100,

@@ -144,18 +144,10 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Icon name="RefreshCw" size={12} /> Содержание/ход
+                  <Icon name="Crown" size={12} /> Лидерство
                 </span>
-                <span className="font-mono-data text-sm text-foreground">{unit.upkeep}</span>
+                <span className="font-mono-data text-sm text-foreground">{unit.stats.leadership}</span>
               </div>
-              {unit.stats.ammo > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Icon name="Crosshair" size={12} /> Боезапас
-                  </span>
-                  <span className="font-mono-data text-sm text-foreground">{unit.stats.ammo}</span>
-                </div>
-              )}
             </div>
           </div>
 
