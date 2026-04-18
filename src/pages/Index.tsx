@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import CatalogPage from './CatalogPage';
 import ComparePage from './ComparePage';
@@ -18,8 +18,19 @@ const NAV_ITEMS: Array<{ id: Page; label: string; icon: string }> = [
 export default function Index() {
   const [page, setPage] = useState<Page>('catalog');
   const [detailUnitId, setDetailUnitId] = useState<string | null>(null);
-  const [appliedTreaties, setAppliedTreaties] = useState<Record<string, string[]>>({});
+  const [appliedTreaties, setAppliedTreaties] = useState<Record<string, string[]>>(() => {
+    try {
+      const saved = localStorage.getItem('companion_treaties');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('companion_treaties', JSON.stringify(appliedTreaties));
+  }, [appliedTreaties]);
 
   const handleApplyTreaty = (unitId: string, treatyId: string) => {
     setAppliedTreaties(prev => ({
@@ -133,7 +144,11 @@ export default function Index() {
           ) : page === 'catalog' ? (
             <CatalogPage onSelectUnit={setDetailUnitId} />
           ) : page === 'compare' ? (
-            <ComparePage />
+            <ComparePage
+              appliedTreaties={appliedTreaties}
+              onApply={handleApplyTreaty}
+              onRemove={handleRemoveTreaty}
+            />
           ) : page === 'treaties' ? (
             <TreatiesPage
               appliedTreaties={appliedTreaties}
