@@ -4,6 +4,7 @@ const URLS = {
   treatiesApi: 'https://functions.poehali.dev/c9428367-4953-41ff-9034-681a2f9d5d89',
   seed: 'https://functions.poehali.dev/95ab29ef-b38b-4e5b-9578-0456fb855829',
   upload: 'https://functions.poehali.dev/26151075-4ef3-4b29-8d16-c82a04dd0e83',
+  forum: 'https://functions.poehali.dev/914f3bd8-b9e4-4dfa-b16a-e3dda3710d6e',
 };
 
 function getSessionId(): string {
@@ -62,6 +63,26 @@ export const seedApi = {
 export const uploadApi = {
   upload: (file: string, content_type: string, folder = 'avatars') =>
     request(URLS.upload, { method: 'POST', body: JSON.stringify({ file, content_type, folder }) }),
+};
+
+// Forum
+export const forumApi = {
+  getTopics: () => request(URLS.forum),
+  getTopic: (id: number) => request(`${URLS.forum}?action=topic&id=${id}`),
+  createTopic: (title: string, content: string) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'create_topic', title, content }) }),
+  createPost: (topic_id: number, content: string) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'create_post', topic_id, content }) }),
+  editTopic: (topic_id: number, title: string, content: string) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'edit_topic', topic_id, title, content }) }),
+  editPost: (post_id: number, content: string) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'edit_post', post_id, content }) }),
+  pinTopic: (topic_id: number) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'pin_topic', topic_id }) }),
+  lockTopic: (topic_id: number) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'lock_topic', topic_id }) }),
+  hidePost: (post_id: number) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'hide_post', post_id }) }),
 };
 
 // Treaties

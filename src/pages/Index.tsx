@@ -8,13 +8,16 @@ import UnitDetailPage from './UnitDetailPage';
 import AboutPage from './AboutPage';
 import AuthPage from './AuthPage';
 import AdminPage from './AdminPage';
+import ForumPage from './ForumPage';
+import TopicPage from './TopicPage';
 
-type Page = 'catalog' | 'compare' | 'treaties' | 'about' | 'auth' | 'admin';
+type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'about' | 'auth' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: boolean }> = [
   { id: 'catalog', label: 'Каталог', icon: 'Grid3X3' },
   { id: 'compare', label: 'Сравнение', icon: 'GitCompare' },
   { id: 'treaties', label: 'Трактаты', icon: 'ScrollText' },
+  { id: 'forum', label: 'Форум', icon: 'MessageSquare' },
   { id: 'about', label: 'О проекте', icon: 'Info' },
   { id: 'admin', label: 'Управление', icon: 'Settings', adminOnly: true },
 ];
@@ -23,6 +26,7 @@ export default function Index() {
   const { user, loading: authLoading, logout } = useAuth();
   const [page, setPage] = useState<Page>('catalog');
   const [detailUnitId, setDetailUnitId] = useState<string | null>(null);
+  const [forumTopicId, setForumTopicId] = useState<number | null>(null);
   const [appliedTreaties, setAppliedTreaties] = useState<Record<string, string[]>>(() => {
     try {
       const saved = localStorage.getItem('companion_treaties');
@@ -54,6 +58,7 @@ export default function Index() {
   const navigateTo = (p: Page) => {
     setPage(p);
     setDetailUnitId(null);
+    setForumTopicId(null);
     setMobileMenuOpen(false);
   };
 
@@ -164,7 +169,7 @@ export default function Index() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className="hover:text-foreground cursor-pointer transition-colors"
-              onClick={() => { setPage('catalog'); setDetailUnitId(null); }}
+              onClick={() => { setPage('catalog'); setDetailUnitId(null); setForumTopicId(null); }}
             >
               {page === 'auth' ? 'Вход' : page === 'admin' ? 'Управление' : NAV_ITEMS.find(n => n.id === page)?.label}
             </span>
@@ -172,6 +177,12 @@ export default function Index() {
               <>
                 <Icon name="ChevronRight" size={12} />
                 <span className="text-foreground">Детали</span>
+              </>
+            )}
+            {page === 'forum' && forumTopicId && (
+              <>
+                <Icon name="ChevronRight" size={12} />
+                <span className="text-foreground">Тема</span>
               </>
             )}
           </div>
@@ -199,6 +210,12 @@ export default function Index() {
               onApply={handleApplyTreaty}
               onRemove={handleRemoveTreaty}
             />
+          ) : page === 'forum' ? (
+            forumTopicId ? (
+              <TopicPage topicId={forumTopicId} onBack={() => setForumTopicId(null)} />
+            ) : (
+              <ForumPage onOpenTopic={setForumTopicId} />
+            )
           ) : page === 'about' ? (
             <AboutPage />
           ) : page === 'auth' ? (
