@@ -1,5 +1,6 @@
 """
 CRUD для отрядов: получение списка, создание, обновление, удаление.
+GET / — список. POST / с action=create/update/delete — изменения (только для админа).
 """
 import json
 import os
@@ -10,8 +11,8 @@ SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Auth-Token, X-Session-Id',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Session-Id',
     'Access-Control-Max-Age': '86400',
 }
 
@@ -28,7 +29,7 @@ def json_response(data, status=200):
     }
 
 
-def get_session_user(session_id: str, conn):
+def get_session_user(session_id, conn):
     if not session_id:
         return None
     with conn.cursor() as cur:
@@ -44,22 +45,17 @@ def get_session_user(session_id: str, conn):
     return None
 
 
-def slugify(text: str) -> str:
+def slugify(text):
     text = text.lower().strip()
     text = re.sub(r'\s+', '-', text)
     text = re.sub(r'[^\w\-]', '', text)
     return text[:100]
 
 
-def row_to_unit(row) -> dict:
+def row_to_unit(row):
     return {
-        'id': row[0],
-        'name': row[1],
-        'class': row[2],
-        'role': row[3],
-        'rarity': row[4],
-        'description': row[5] or '',
-        'lore': row[6] or '',
+        'id': row[0], 'name': row[1], 'class': row[2], 'role': row[3],
+        'rarity': row[4], 'description': row[5] or '', 'lore': row[6] or '',
         'abilities': list(row[7]) if row[7] else [],
         'avatar_url': row[8] or '',
         'stats': row[9] if row[9] else {},
@@ -73,21 +69,17 @@ def handler(event: dict, context) -> dict:
         return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
 
     method = event.get('httpMethod', 'GET')
-    path = event.get('path', '/')
     body = {}
     if event.get('body'):
         body = json.loads(event['body'])
 
-    session_id = event.get('headers', {}).get('X-Session-Id', '').strip()
-
-    # Извлекаем ID из пути /units-api/{id}
-    path_parts = [p for p in path.split('/') if p]
-    unit_id = path_parts[-1] if len(path_parts) > 1 else None
+    session_id = (event.get('headers') or {}).get('X-Session-Id', '').strip()
+    action = body.get('action', '')
 
     conn = get_conn()
 
-    # GET / — список всех активных отрядов
-    if method == 'GET' and not unit_id:
+    # GET — список всех активных отрядов
+    if method == 'GET' or action == 'list':
         with conn.cursor() as cur:
             cur.execute(
                 f"SELECT id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active "
@@ -97,34 +89,20 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'units': [row_to_unit(r) for r in rows]})
 
-    # GET /{id} — один отряд
-    if method == 'GET' and unit_id:
-        with conn.cursor() as cur:
-            cur.execute(
-                f"SELECT id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active "
-                f"FROM {SCHEMA}.units WHERE id = %s",
-                (unit_id,)
-            )
-            row = cur.fetchone()
-        conn.close()
-        if not row:
-            return json_response({'error': 'Отряд не найден'}, 404)
-        return json_response({'unit': row_to_unit(row)})
-
-    # Для изменяющих операций нужна авторизация + админ
+    # Для изменений нужна авторизация + админ
     user = get_session_user(session_id, conn)
     if not user or not user['is_admin']:
         conn.close()
         return json_response({'error': 'Требуются права администратора'}, 403)
 
-    # POST / — создание
-    if method == 'POST':
+    # action=create
+    if action == 'create':
         name = body.get('name', '').strip()
         if not name:
             conn.close()
             return json_response({'error': 'Поле "название" обязательно'}, 400)
 
-        unit_id_new = slugify(name)
+        unit_id = slugify(name)
         unit_class = body.get('class', 'Пехота')
         role = body.get('role', 'Урон')
         rarity = body.get('rarity', 'common')
@@ -135,15 +113,15 @@ def handler(event: dict, context) -> dict:
         stats = body.get('stats', {})
 
         with conn.cursor() as cur:
-            cur.execute(f"SELECT id FROM {SCHEMA}.units WHERE id = %s", (unit_id_new,))
+            cur.execute(f"SELECT id FROM {SCHEMA}.units WHERE id = %s", (unit_id,))
             if cur.fetchone():
-                unit_id_new = unit_id_new + '-' + os.urandom(3).hex()
+                unit_id = unit_id + '-' + os.urandom(3).hex()
 
             cur.execute(
                 f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_by) "
                 f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 f"RETURNING id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active",
-                (unit_id_new, name, unit_class, role, rarity, description, lore, abilities, avatar_url, json.dumps(stats), user['id'])
+                (unit_id, name, unit_class, role, rarity, description, lore, abilities, avatar_url, json.dumps(stats), user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -151,9 +129,13 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'message': 'Отряд успешно добавлен', 'unit': row_to_unit(row)})
 
-    # PUT /{id} — обновление
-    if method == 'PUT' and unit_id:
+    # action=update
+    if action == 'update':
+        unit_id = body.get('id', '').strip()
         name = body.get('name', '').strip()
+        if not unit_id:
+            conn.close()
+            return json_response({'error': 'ID отряда обязателен'}, 400)
         if not name:
             conn.close()
             return json_response({'error': 'Поле "название" обязательно'}, 400)
@@ -185,8 +167,13 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'message': 'Отряд успешно обновлён', 'unit': row_to_unit(row)})
 
-    # DELETE /{id} — удаление (soft delete)
-    if method == 'DELETE' and unit_id:
+    # action=delete
+    if action == 'delete':
+        unit_id = body.get('id', '').strip()
+        if not unit_id:
+            conn.close()
+            return json_response({'error': 'ID отряда обязателен'}, 400)
+
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.units WHERE id = %s", (unit_id,))
             if not cur.fetchone():
@@ -199,4 +186,4 @@ def handler(event: dict, context) -> dict:
         return json_response({'message': 'Отряд успешно удалён'})
 
     conn.close()
-    return json_response({'error': 'Не найдено'}, 404)
+    return json_response({'error': 'Неизвестное действие'}, 400)

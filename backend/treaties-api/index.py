@@ -1,5 +1,6 @@
 """
 CRUD для трактатов: получение списка, создание, обновление, удаление.
+GET / — список. POST / с action=create/update/delete — изменения (только для админа).
 """
 import json
 import os
@@ -10,8 +11,8 @@ SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
 
 CORS_HEADERS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Auth-Token, X-Session-Id',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Session-Id',
     'Access-Control-Max-Age': '86400',
 }
 
@@ -28,7 +29,7 @@ def json_response(data, status=200):
     }
 
 
-def get_session_user(session_id: str, conn):
+def get_session_user(session_id, conn):
     if not session_id:
         return None
     with conn.cursor() as cur:
@@ -44,18 +45,16 @@ def get_session_user(session_id: str, conn):
     return None
 
 
-def slugify(text: str) -> str:
+def slugify(text):
     text = text.lower().strip()
     text = re.sub(r'\s+', '-', text)
     text = re.sub(r'[^\w\-]', '', text)
     return text[:100]
 
 
-def row_to_treaty(row) -> dict:
+def row_to_treaty(row):
     return {
-        'id': row[0],
-        'name': row[1],
-        'description': row[2] or '',
+        'id': row[0], 'name': row[1], 'description': row[2] or '',
         'compatibleClasses': list(row[3]) if row[3] else [],
         'rarity': row[4],
         'statModifiers': row[5] if row[5] else {},
@@ -69,20 +68,17 @@ def handler(event: dict, context) -> dict:
         return {'statusCode': 200, 'headers': CORS_HEADERS, 'body': ''}
 
     method = event.get('httpMethod', 'GET')
-    path = event.get('path', '/')
     body = {}
     if event.get('body'):
         body = json.loads(event['body'])
 
-    session_id = event.get('headers', {}).get('X-Session-Id', '').strip()
-
-    path_parts = [p for p in path.split('/') if p]
-    treaty_id = path_parts[-1] if len(path_parts) > 1 else None
+    session_id = (event.get('headers') or {}).get('X-Session-Id', '').strip()
+    action = body.get('action', '')
 
     conn = get_conn()
 
-    # GET / — список всех активных трактатов
-    if method == 'GET' and not treaty_id:
+    # GET — список всех активных трактатов
+    if method == 'GET' or action == 'list':
         with conn.cursor() as cur:
             cur.execute(
                 f"SELECT id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active "
@@ -92,48 +88,35 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'treaties': [row_to_treaty(r) for r in rows]})
 
-    # GET /{id}
-    if method == 'GET' and treaty_id:
-        with conn.cursor() as cur:
-            cur.execute(
-                f"SELECT id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active "
-                f"FROM {SCHEMA}.treaties WHERE id = %s",
-                (treaty_id,)
-            )
-            row = cur.fetchone()
-        conn.close()
-        if not row:
-            return json_response({'error': 'Трактат не найден'}, 404)
-        return json_response({'treaty': row_to_treaty(row)})
-
+    # Для изменений нужна авторизация + админ
     user = get_session_user(session_id, conn)
     if not user or not user['is_admin']:
         conn.close()
         return json_response({'error': 'Требуются права администратора'}, 403)
 
-    # POST / — создание
-    if method == 'POST':
+    # action=create
+    if action == 'create':
         name = body.get('name', '').strip()
         if not name:
             conn.close()
             return json_response({'error': 'Поле "название" обязательно'}, 400)
 
-        treaty_id_new = slugify(name)
+        treaty_id = slugify(name)
         description = body.get('description', '')
         compatible_classes = body.get('compatibleClasses', [])
         rarity = body.get('rarity', 'common')
         stat_modifiers = body.get('statModifiers', {})
 
         with conn.cursor() as cur:
-            cur.execute(f"SELECT id FROM {SCHEMA}.treaties WHERE id = %s", (treaty_id_new,))
+            cur.execute(f"SELECT id FROM {SCHEMA}.treaties WHERE id = %s", (treaty_id,))
             if cur.fetchone():
-                treaty_id_new = treaty_id_new + '-' + os.urandom(3).hex()
+                treaty_id = treaty_id + '-' + os.urandom(3).hex()
 
             cur.execute(
                 f"INSERT INTO {SCHEMA}.treaties (id, name, description, compatible_classes, rarity, stat_modifiers, created_by) "
                 f"VALUES (%s, %s, %s, %s, %s, %s, %s) "
                 f"RETURNING id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active",
-                (treaty_id_new, name, description, compatible_classes, rarity, json.dumps(stat_modifiers), user['id'])
+                (treaty_id, name, description, compatible_classes, rarity, json.dumps(stat_modifiers), user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -141,9 +124,13 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'message': 'Трактат успешно добавлен', 'treaty': row_to_treaty(row)})
 
-    # PUT /{id} — обновление
-    if method == 'PUT' and treaty_id:
+    # action=update
+    if action == 'update':
+        treaty_id = body.get('id', '').strip()
         name = body.get('name', '').strip()
+        if not treaty_id:
+            conn.close()
+            return json_response({'error': 'ID трактата обязателен'}, 400)
         if not name:
             conn.close()
             return json_response({'error': 'Поле "название" обязательно'}, 400)
@@ -171,8 +158,13 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return json_response({'message': 'Трактат успешно обновлён', 'treaty': row_to_treaty(row)})
 
-    # DELETE /{id}
-    if method == 'DELETE' and treaty_id:
+    # action=delete
+    if action == 'delete':
+        treaty_id = body.get('id', '').strip()
+        if not treaty_id:
+            conn.close()
+            return json_response({'error': 'ID трактата обязателен'}, 400)
+
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.treaties WHERE id = %s", (treaty_id,))
             if not cur.fetchone():
@@ -185,4 +177,4 @@ def handler(event: dict, context) -> dict:
         return json_response({'message': 'Трактат успешно удалён'})
 
     conn.close()
-    return json_response({'error': 'Не найдено'}, 404)
+    return json_response({'error': 'Неизвестное действие'}, 400)

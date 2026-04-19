@@ -44,13 +44,12 @@ export const authApi = {
 // Units
 export const unitsApi = {
   list: () => request(URLS.unitsApi),
-  get: (id: string) => request(`${URLS.unitsApi}/${id}`),
   create: (data: Record<string, unknown>) =>
-    request(URLS.unitsApi, { method: 'POST', body: JSON.stringify(data) }),
+    request(URLS.unitsApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
   update: (id: string, data: Record<string, unknown>) =>
-    request(`${URLS.unitsApi}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    request(URLS.unitsApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: string) =>
-    request(`${URLS.unitsApi}/${id}`, { method: 'DELETE' }),
+    request(URLS.unitsApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
 
 // Seed
@@ -61,11 +60,10 @@ export const seedApi = {
 // Treaties
 export const treatiesApi = {
   list: () => request(URLS.treatiesApi),
-  get: (id: string) => request(`${URLS.treatiesApi}/${id}`),
   create: (data: Record<string, unknown>) =>
-    request(URLS.treatiesApi, { method: 'POST', body: JSON.stringify(data) }),
+    request(URLS.treatiesApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
   update: (id: string, data: Record<string, unknown>) =>
-    request(`${URLS.treatiesApi}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    request(URLS.treatiesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: string) =>
-    request(`${URLS.treatiesApi}/${id}`, { method: 'DELETE' }),
+    request(URLS.treatiesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
