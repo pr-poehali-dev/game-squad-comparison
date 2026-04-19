@@ -1,5 +1,5 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-export type UnitClass = 'Пехота' | 'Кавалерия' | 'Стрелки' | 'Осадные' | 'Магические';
+export type UnitClass = 'Пехота' | 'Кавалерия' | 'Стрелки' | 'Осадные';
 export type UnitRole = 'Танк' | 'Урон' | 'Поддержка' | 'Разведчик' | 'Контроль';
 
 export interface UnitStats {
@@ -37,6 +37,12 @@ export interface Treaty {
   rarity: Rarity;
 }
 
+export interface Ability {
+  name: string;
+  description?: string;
+  statModifiers?: Partial<UnitStats>;
+}
+
 export interface Unit {
   id: string;
   name: string;
@@ -46,5 +52,5 @@ export interface Unit {
   stats: UnitStats;
   description: string;
   lore: string;
-  abilities: string[];
+  abilities: (string | Ability)[];
 }

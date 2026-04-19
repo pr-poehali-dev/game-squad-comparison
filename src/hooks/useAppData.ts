@@ -1,6 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { unitsApi, treatiesApi } from '@/lib/api';
-import { Unit, Treaty, UnitStats } from '@/data/types';
+import { Unit, Treaty, UnitStats, Ability } from '@/data/types';
+
+// Конвертирует abilities — поддерживает и строки, и объекты Ability
+function parseAbilities(raw: unknown): (string | Ability)[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(item => {
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object' && item !== null && 'name' in item) {
+      return item as Ability;
+    }
+    return String(item);
+  });
+}
 
 // Конвертирует объект из API в тип Unit
 function apiToUnit(u: Record<string, unknown>): Unit {
@@ -12,7 +24,7 @@ function apiToUnit(u: Record<string, unknown>): Unit {
     rarity: u.rarity as Unit['rarity'],
     description: (u.description as string) || '',
     lore: (u.lore as string) || '',
-    abilities: (u.abilities as string[]) || [],
+    abilities: parseAbilities(u.abilities),
     stats: (u.stats as UnitStats) || {} as UnitStats,
   };
 }

@@ -53,10 +53,20 @@ def slugify(text):
 
 
 def row_to_unit(row):
+    abilities_raw = row[7]
+    if isinstance(abilities_raw, list):
+        abilities = abilities_raw
+    elif isinstance(abilities_raw, str):
+        try:
+            abilities = json.loads(abilities_raw)
+        except Exception:
+            abilities = []
+    else:
+        abilities = []
     return {
         'id': row[0], 'name': row[1], 'class': row[2], 'role': row[3],
         'rarity': row[4], 'description': row[5] or '', 'lore': row[6] or '',
-        'abilities': list(row[7]) if row[7] else [],
+        'abilities': abilities,
         'avatar_url': row[8] or '',
         'stats': row[9] if row[9] else {},
         'created_at': str(row[10]) if row[10] else '',
@@ -121,7 +131,7 @@ def handler(event: dict, context) -> dict:
                 f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_by) "
                 f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 f"RETURNING id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active",
-                (unit_id, name, unit_class, role, rarity, description, lore, abilities, avatar_url, json.dumps(stats), user['id'])
+                (unit_id, name, unit_class, role, rarity, description, lore, json.dumps(abilities, ensure_ascii=False), avatar_url, json.dumps(stats), user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -159,7 +169,7 @@ def handler(event: dict, context) -> dict:
                 f"UPDATE {SCHEMA}.units SET name=%s, class=%s, role=%s, rarity=%s, description=%s, lore=%s, "
                 f"abilities=%s, avatar_url=%s, stats=%s, updated_at=now() WHERE id=%s "
                 f"RETURNING id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active",
-                (name, unit_class, role, rarity, description, lore, abilities, avatar_url, json.dumps(stats), unit_id)
+                (name, unit_class, role, rarity, description, lore, json.dumps(abilities, ensure_ascii=False), avatar_url, json.dumps(stats), unit_id)
             )
             row = cur.fetchone()
             conn.commit()

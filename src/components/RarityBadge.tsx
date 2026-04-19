@@ -4,7 +4,7 @@ const RARITY_LABELS: Record<Rarity, string> = {
   common: 'Обычный',
   uncommon: 'Необычный',
   rare: 'Редкий',
-  epic: 'Эпический',
+  epic: 'Уникальный',
   legendary: 'Легендарный',
 };
 

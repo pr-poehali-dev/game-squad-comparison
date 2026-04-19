@@ -4,14 +4,15 @@ import { useAuth } from '@/context/AuthContext';
 import { useUnits, useTreaties } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
-import { Rarity, UnitClass, UnitRole } from '@/data/types';
+import { Rarity, UnitClass, UnitRole, Ability, UnitStats } from '@/data/types';
+import { ALL_STATS } from '@/data/statGroups';
 
 type AdminTab = 'units' | 'treaties';
 
-const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные', 'Магические'];
+const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const UNIT_ROLES: UnitRole[] = ['Танк', 'Урон', 'Поддержка', 'Разведчик', 'Контроль'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-const RARITY_LABELS: Record<Rarity, string> = { common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Эпический', legendary: 'Легендарный' };
+const RARITY_LABELS: Record<Rarity, string> = { common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Уникальный', legendary: 'Легендарный' };
 
 const DEFAULT_UNIT_STATS = {
   health: 0, troops: 0, leadership: 0, moveSpeed: 0, rangeDistance: 0, ammo: 0, morale: 0,
@@ -58,6 +59,33 @@ function ConfirmModal({ name, type, onConfirm, onCancel }: { name: string; type:
 }
 
 // ───── Unit Form ─────
+interface AbilityDraft {
+  name: string;
+  description: string;
+  modifiers: Record<string, string>;
+  newModKey: string;
+  newModVal: string;
+}
+
+function emptyAbility(): AbilityDraft {
+  return { name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '' };
+}
+
+function rawToAbilityDraft(raw: unknown): AbilityDraft {
+  if (typeof raw === 'string') return { ...emptyAbility(), name: raw };
+  const a = raw as Ability;
+  return {
+    name: a.name || '',
+    description: a.description || '',
+    modifiers: Object.fromEntries(Object.entries(a.statModifiers || {}).map(([k, v]) => [k, String(v)])),
+    newModKey: 'health',
+    newModVal: '',
+  };
+}
+
+const statOptions = ALL_STATS.map(s => s.key);
+const STAT_LABELS: Partial<Record<string, string>> = Object.fromEntries(ALL_STATS.map(s => [s.key, s.label]));
+
 interface UnitFormData {
   name: string;
   class: UnitClass;
@@ -65,7 +93,7 @@ interface UnitFormData {
   rarity: Rarity;
   description: string;
   lore: string;
-  abilities: string;
+  abilities: AbilityDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
 }
 
@@ -77,6 +105,7 @@ function UnitModal({ unit, onSave, onClose }: {
   const editing = !!unit;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const rawAbilities = (unit?.abilities as unknown[]) || [];
   const [form, setForm] = useState<UnitFormData>({
     name: (unit?.name as string) || '',
     class: (unit?.class as UnitClass) || 'Пехота',
@@ -84,12 +113,28 @@ function UnitModal({ unit, onSave, onClose }: {
     rarity: (unit?.rarity as Rarity) || 'common',
     description: (unit?.description as string) || '',
     lore: (unit?.lore as string) || '',
-    abilities: ((unit?.abilities as string[]) || []).join(', '),
+    abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
   });
 
   const set = (key: keyof UnitFormData, val: unknown) => setForm(f => ({ ...f, [key]: val }));
   const setStat = (key: string, val: string) => setForm(f => ({ ...f, stats: { ...f.stats, [key]: parseInt(val) || 0 } }));
+
+  const addAbility = () => setForm(f => ({ ...f, abilities: [...f.abilities, emptyAbility()] }));
+  const removeAbility = (i: number) => setForm(f => ({ ...f, abilities: f.abilities.filter((_, idx) => idx !== i) }));
+  const updateAbility = (i: number, patch: Partial<AbilityDraft>) =>
+    setForm(f => ({ ...f, abilities: f.abilities.map((a, idx) => idx === i ? { ...a, ...patch } : a) }));
+  const addAbilityMod = (i: number) => {
+    const a = form.abilities[i];
+    if (!a.newModVal) return;
+    updateAbility(i, { modifiers: { ...a.modifiers, [a.newModKey]: a.newModVal }, newModVal: '' });
+  };
+  const removeAbilityMod = (i: number, key: string) => {
+    const a = form.abilities[i];
+    const m = { ...a.modifiers };
+    delete m[key];
+    updateAbility(i, { modifiers: m });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +142,18 @@ function UnitModal({ unit, onSave, onClose }: {
     setLoading(true);
     setError('');
     try {
+      const abilities = form.abilities
+        .filter(a => a.name.trim())
+        .map(a => {
+          const mods: Record<string, number> = {};
+          for (const [k, v] of Object.entries(a.modifiers)) {
+            const n = parseFloat(v);
+            if (!isNaN(n)) mods[k] = n;
+          }
+          const hasInfo = a.description.trim() || Object.keys(mods).length > 0;
+          if (!hasInfo) return a.name.trim();
+          return { name: a.name.trim(), description: a.description.trim() || undefined, statModifiers: Object.keys(mods).length > 0 ? mods : undefined };
+        });
       await onSave({
         name: form.name.trim(),
         class: form.class,
@@ -104,7 +161,7 @@ function UnitModal({ unit, onSave, onClose }: {
         rarity: form.rarity,
         description: form.description,
         lore: form.lore,
-        abilities: form.abilities.split(',').map(s => s.trim()).filter(Boolean),
+        abilities,
         stats: form.stats,
       });
       onClose();
@@ -159,12 +216,70 @@ function UnitModal({ unit, onSave, onClose }: {
               <textarea value={form.description} onChange={e => set('description', e.target.value)} className={inputCls + ' resize-none'} rows={2} />
             </div>
             <div className="col-span-2">
-              <label className="text-xs text-muted-foreground block mb-1.5">Лор</label>
+              <label className="text-xs text-muted-foreground block mb-1.5">Хроника</label>
               <textarea value={form.lore} onChange={e => set('lore', e.target.value)} className={inputCls + ' resize-none'} rows={2} />
             </div>
-            <div className="col-span-2">
-              <label className="text-xs text-muted-foreground block mb-1.5">Способности (через запятую)</label>
-              <input type="text" value={form.abilities} onChange={e => set('abilities', e.target.value)} className={inputCls} placeholder="Щитовая стена, Боевое закалывание" />
+          </div>
+
+          {/* Способности */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Способности</h4>
+              <button type="button" onClick={addAbility} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
+                <Icon name="Plus" size={12} /> Добавить
+              </button>
+            </div>
+            {form.abilities.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">Нет способностей. Нажмите «Добавить».</p>
+            )}
+            <div className="space-y-3">
+              {form.abilities.map((ab, i) => (
+                <div key={i} className="border border-border rounded-sm p-3 space-y-2 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={ab.name}
+                      onChange={e => updateAbility(i, { name: e.target.value })}
+                      className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Название способности"
+                    />
+                    <button type="button" onClick={() => removeAbility(i)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                      <Icon name="Trash2" size={13} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={ab.description}
+                    onChange={e => updateAbility(i, { description: e.target.value })}
+                    className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Описание (необязательно)"
+                  />
+                  {/* Модификаторы */}
+                  {Object.entries(ab.modifiers).length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(ab.modifiers).map(([key, val]) => (
+                        <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${parseFloat(val) >= 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                          {STAT_LABELS[key] ?? key}: {parseFloat(val) >= 0 ? '+' : ''}{val}
+                          <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-1.5">
+                    <select value={ab.newModKey} onChange={e => updateAbility(i, { newModKey: e.target.value })} className="flex-1 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
+                    </select>
+                    <input
+                      type="number"
+                      value={ab.newModVal}
+                      onChange={e => updateAbility(i, { newModVal: e.target.value })}
+                      className="w-20 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="±знач."
+                    />
+                    <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Баф/Дебаф</button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

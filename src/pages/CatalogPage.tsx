@@ -4,11 +4,11 @@ import { UnitClass, UnitRole, Rarity } from '@/data/types';
 import UnitCard from '@/components/UnitCard';
 import Icon from '@/components/ui/icon';
 
-const CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные', 'Магические'];
+const CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const ROLES: UnitRole[] = ['Танк', 'Урон', 'Поддержка', 'Разведчик', 'Контроль'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const RARITY_LABELS: Record<Rarity, string> = {
-  common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Эпический', legendary: 'Легендарный'
+  common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Уникальный', legendary: 'Легендарный'
 };
 
 interface CatalogPageProps {

@@ -9,7 +9,6 @@ const CLASS_ICONS: Record<string, string> = {
   'Кавалерия': 'Zap',
   'Стрелки': 'Target',
   'Осадные': 'Hammer',
-  'Магические': 'Sparkles',
 };
 
 interface UnitCardProps {
@@ -68,7 +67,7 @@ export default function UnitCard({ unit, onClick, selected, compact }: UnitCardP
         {unit.stats.rangeDistance > 0 ? (
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <Icon name="Crosshair" size={11} />
-            <span className="font-mono-data">{unit.stats.rangeDistance} кл.</span>
+            <span className="font-mono-data">{unit.stats.rangeDistance}</span>
           </div>
         ) : (
           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">

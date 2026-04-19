@@ -24,7 +24,7 @@ export const STAT_GROUPS: StatGroup[] = [
       { key: 'troops',        label: 'Численность',        max: 300 },
       { key: 'leadership',    label: 'Лидерство',          max: 100 },
       { key: 'moveSpeed',     label: 'Скорость движения',  max: 100 },
-      { key: 'rangeDistance', label: 'Дальность стрельбы', max: 12, unit: 'кл.' },
+      { key: 'rangeDistance', label: 'Дальность стрельбы', max: 12 },
       { key: 'ammo',          label: 'Боезапас',           max: 40 },
       { key: 'morale',        label: 'Работоспособность',  max: 100 },
     ],
