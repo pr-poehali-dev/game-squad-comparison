@@ -40,6 +40,7 @@ function apiToUnit(u: Record<string, unknown>): Unit {
     lore: (u.lore as string) || '',
     abilities: parseAbilities(u.abilities),
     traits: parseTraits(u.traits),
+    avatar_url: (u.avatar_url as string) || '',
     stats: (u.stats as UnitStats) || {} as UnitStats,
   };
 }
@@ -53,6 +54,7 @@ function apiToTreaty(t: Record<string, unknown>): Treaty {
     compatibleClasses: (t.compatibleClasses as Treaty['compatibleClasses']) || [],
     rarity: t.rarity as Treaty['rarity'],
     statModifiers: (t.statModifiers as Partial<UnitStats>) || {},
+    avatar_url: (t.avatar_url as string) || '',
   };
 }
 

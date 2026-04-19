@@ -16,6 +16,8 @@ CORS_HEADERS = {
     'Access-Control-Max-Age': '86400',
 }
 
+SELECT_COLS = "id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active, avatar_url"
+
 
 def get_conn():
     return psycopg2.connect(os.environ['DATABASE_URL'])
@@ -60,6 +62,7 @@ def row_to_treaty(row):
         'statModifiers': row[5] if row[5] else {},
         'created_at': str(row[6]) if row[6] else '',
         'is_active': row[7],
+        'avatar_url': row[8] or '' if len(row) > 8 else '',
     }
 
 
@@ -81,8 +84,7 @@ def handler(event: dict, context) -> dict:
     if method == 'GET' or action == 'list':
         with conn.cursor() as cur:
             cur.execute(
-                f"SELECT id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active "
-                f"FROM {SCHEMA}.treaties WHERE is_active = true ORDER BY name"
+                f"SELECT {SELECT_COLS} FROM {SCHEMA}.treaties WHERE is_active = true ORDER BY name"
             )
             rows = cur.fetchall()
         conn.close()
@@ -106,6 +108,7 @@ def handler(event: dict, context) -> dict:
         compatible_classes = body.get('compatibleClasses', [])
         rarity = body.get('rarity', 'common')
         stat_modifiers = body.get('statModifiers', {})
+        avatar_url = body.get('avatar_url', '')
 
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.treaties WHERE id = %s", (treaty_id,))
@@ -113,10 +116,10 @@ def handler(event: dict, context) -> dict:
                 treaty_id = treaty_id + '-' + os.urandom(3).hex()
 
             cur.execute(
-                f"INSERT INTO {SCHEMA}.treaties (id, name, description, compatible_classes, rarity, stat_modifiers, created_by) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s) "
-                f"RETURNING id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active",
-                (treaty_id, name, description, compatible_classes, rarity, json.dumps(stat_modifiers), user['id'])
+                f"INSERT INTO {SCHEMA}.treaties (id, name, description, compatible_classes, rarity, stat_modifiers, avatar_url, created_by) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s) "
+                f"RETURNING {SELECT_COLS}",
+                (treaty_id, name, description, compatible_classes, rarity, json.dumps(stat_modifiers), avatar_url, user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -139,6 +142,7 @@ def handler(event: dict, context) -> dict:
         compatible_classes = body.get('compatibleClasses', [])
         rarity = body.get('rarity', 'common')
         stat_modifiers = body.get('statModifiers', {})
+        avatar_url = body.get('avatar_url', '')
 
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.treaties WHERE id = %s", (treaty_id,))
@@ -148,9 +152,9 @@ def handler(event: dict, context) -> dict:
 
             cur.execute(
                 f"UPDATE {SCHEMA}.treaties SET name=%s, description=%s, compatible_classes=%s, rarity=%s, "
-                f"stat_modifiers=%s, updated_at=now() WHERE id=%s "
-                f"RETURNING id, name, description, compatible_classes, rarity, stat_modifiers, created_at, is_active",
-                (name, description, compatible_classes, rarity, json.dumps(stat_modifiers), treaty_id)
+                f"stat_modifiers=%s, avatar_url=%s, updated_at=now() WHERE id=%s "
+                f"RETURNING {SELECT_COLS}",
+                (name, description, compatible_classes, rarity, json.dumps(stat_modifiers), avatar_url, treaty_id)
             )
             row = cur.fetchone()
             conn.commit()

@@ -43,6 +43,7 @@ export interface Treaty {
   statModifiers: Partial<UnitStats>;
   compatibleClasses: UnitClass[];
   rarity: Rarity;
+  avatar_url?: string;
 }
 
 export interface Ability {
@@ -62,4 +63,5 @@ export interface Unit {
   lore: string;
   abilities: (string | Ability)[];
   traits?: Trait[];
+  avatar_url?: string;
 }

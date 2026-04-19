@@ -6,6 +6,7 @@ import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
 import { ALL_STATS } from '@/data/statGroups';
+import AvatarUpload from '@/components/AvatarUpload';
 
 type AdminTab = 'units' | 'treaties';
 
@@ -109,6 +110,7 @@ interface UnitFormData {
   rarity: Rarity;
   description: string;
   lore: string;
+  avatar_url: string;
   abilities: AbilityDraft[];
   traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
@@ -137,6 +139,7 @@ function UnitModal({ unit, onSave, onClose }: {
     rarity: (unit?.rarity as Rarity) || 'common',
     description: (unit?.description as string) || '',
     lore: (unit?.lore as string) || '',
+    avatar_url: (unit?.avatar_url as string) || '',
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
     traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
@@ -202,6 +205,7 @@ function UnitModal({ unit, onSave, onClose }: {
         rarity: form.rarity,
         description: form.description,
         lore: form.lore,
+        avatar_url: form.avatar_url,
         abilities,
         traits,
         stats: form.stats,
@@ -267,6 +271,15 @@ function UnitModal({ unit, onSave, onClose }: {
             <div className="col-span-2">
               <label className="text-xs text-muted-foreground block mb-1.5">Хроника</label>
               <textarea value={form.lore} onChange={e => set('lore', e.target.value)} className={inputCls + ' resize-none'} rows={2} />
+            </div>
+            <div className="col-span-2">
+              <AvatarUpload
+                value={form.avatar_url}
+                onChange={url => set('avatar_url', url)}
+                aspectRatio="3/4"
+                label="Аватар отряда (пропорции карточки)"
+                folder="units"
+              />
             </div>
           </div>
 
@@ -389,6 +402,7 @@ function TreatyModal({ treaty, onSave, onClose }: {
   const [description, setDescription] = useState((treaty?.description as string) || '');
   const [rarity, setRarity] = useState<Rarity>((treaty?.rarity as Rarity) || 'common');
   const [classes, setClasses] = useState<UnitClass[]>((treaty?.compatibleClasses as UnitClass[]) || []);
+  const [avatarUrl, setAvatarUrl] = useState((treaty?.avatar_url as string) || '');
   const [modifiers, setModifiers] = useState<Record<string, string>>(
     Object.fromEntries(Object.entries((treaty?.statModifiers as Record<string, number>) || {}).map(([k, v]) => [k, String(v)]))
   );
@@ -422,7 +436,7 @@ function TreatyModal({ treaty, onSave, onClose }: {
         const n = parseFloat(v);
         if (!isNaN(n)) statModifiers[k] = n;
       }
-      await onSave({ name: name.trim(), description, rarity, compatibleClasses: classes, statModifiers });
+      await onSave({ name: name.trim(), description, rarity, compatibleClasses: classes, statModifiers, avatar_url: avatarUrl });
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения');
@@ -454,6 +468,13 @@ function TreatyModal({ treaty, onSave, onClose }: {
             <label className="text-xs text-muted-foreground block mb-1.5">Описание</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + ' resize-none'} rows={3} />
           </div>
+          <AvatarUpload
+            value={avatarUrl}
+            onChange={setAvatarUrl}
+            aspectRatio="1/1"
+            label="Аватар трактата"
+            folder="treaties"
+          />
           <div>
             <label className="text-xs text-muted-foreground block mb-1.5">Редкость</label>
             <select value={rarity} onChange={e => setRarity(e.target.value as Rarity)} className={inputCls}>

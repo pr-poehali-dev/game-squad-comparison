@@ -6,8 +6,8 @@ import Icon from '@/components/ui/icon';
 
 const CLASS_ICONS: Record<string, string> = {
   'Пехота': 'Sword',
-  'Кавалерия': 'Horse',
-  'Стрелки': 'Bow',
+  'Кавалерия': 'Zap',
+  'Стрелки': 'Crosshair',
   'Осадные': 'Hammer',
 };
 
@@ -47,8 +47,12 @@ export default function UnitCard({ unit, onClick, selected, compact }: UnitCardP
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-sm bg-muted flex items-center justify-center flex-shrink-0">
-            <Icon name={combatIcon} size={16} className="text-muted-foreground" fallback="Shield" />
+          <div className="w-8 h-8 rounded-sm bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {unit.avatar_url ? (
+              <img src={unit.avatar_url} alt={unit.name} className="w-full h-full object-cover" />
+            ) : (
+              <Icon name={combatIcon} size={16} className="text-muted-foreground" fallback="Shield" />
+            )}
           </div>
           <div>
             <h3 className="font-semibold text-sm leading-tight text-foreground" style={{ fontFamily: 'Oswald, sans-serif' }}>

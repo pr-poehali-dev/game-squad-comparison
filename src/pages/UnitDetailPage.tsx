@@ -7,7 +7,7 @@ import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
 
 const CLASS_ICONS: Record<string, string> = {
-  'Пехота': 'Sword', 'Кавалерия': 'Zap', 'Стрелки': 'Target', 'Осадные': 'Hammer',
+  'Пехота': 'Sword', 'Кавалерия': 'Zap', 'Стрелки': 'Crosshair', 'Осадные': 'Hammer',
 };
 
 const STAT_LABEL_MAP: Partial<Record<keyof UnitStats, string>> = {
@@ -171,8 +171,12 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
           {/* Header */}
           <div className={`bg-card border border-rarity-${unit.rarity} rounded-sm p-6`}>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-sm bg-muted flex items-center justify-center flex-shrink-0">
-                <Icon name={CLASS_ICONS[unit.class] || 'Shield'} size={28} className="text-primary" />
+              <div className="w-14 h-14 rounded-sm bg-muted flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {unit.avatar_url ? (
+                  <img src={unit.avatar_url} alt={unit.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Icon name={CLASS_ICONS[unit.class] || 'Shield'} size={28} className="text-primary" />
+                )}
               </div>
               <div>
                 <h1 className="text-2xl font-semibold text-foreground">{unit.name}</h1>
@@ -284,8 +288,13 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
               <div className="space-y-3">
                 {myTreaties.map(t => (
                   <div key={t.id} className={`border border-rarity-${t.rarity} rounded-sm p-3`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-medium text-foreground">{t.name}</span>
+                    <div className="flex items-center gap-2 mb-2">
+                      {t.avatar_url && (
+                        <div className="w-7 h-7 rounded-sm overflow-hidden flex-shrink-0 bg-muted">
+                          <img src={t.avatar_url} alt={t.name} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <span className="text-xs font-medium text-foreground flex-1">{t.name}</span>
                       <RarityBadge rarity={t.rarity} />
                     </div>
                     <div className="flex flex-wrap gap-1">
