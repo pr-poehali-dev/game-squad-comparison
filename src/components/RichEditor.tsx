@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { uploadApi } from '@/lib/api';
 import Icon from '@/components/ui/icon';
 
@@ -20,7 +20,27 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
   const [showEmoji, setShowEmoji] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // Флаг: изменение пришло изнутри — не перезаписывать DOM
+  const isInternal = useRef(false);
   const savedRange = useRef<Range | null>(null);
+
+  // Устанавливаем начальное значение только один раз при монтировании
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      // Игнорируем обновление если оно пришло из onInput
+      if (isInternal.current) {
+        isInternal.current = false;
+        return;
+      }
+      editorRef.current.innerHTML = value;
+    }
+   
+  }, [value]);
+
+  const notifyChange = () => {
+    isInternal.current = true;
+    onChange(editorRef.current?.innerHTML || '');
+  };
 
   const saveSelection = () => {
     const sel = window.getSelection();
@@ -39,19 +59,15 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
 
   const exec = (cmd: string, val?: string) => {
     editorRef.current?.focus();
-    document.execCommand(cmd, false, val);
-    syncContent();
+    document.execCommand(cmd, false, val ?? undefined);
+    notifyChange();
   };
-
-  const syncContent = useCallback(() => {
-    onChange(editorRef.current?.innerHTML || '');
-  }, [onChange]);
 
   const insertEmoji = (emoji: string) => {
     editorRef.current?.focus();
     restoreSelection();
     document.execCommand('insertText', false, emoji);
-    syncContent();
+    notifyChange();
     setShowEmoji(false);
   };
 
@@ -61,14 +77,17 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
     try {
       const reader = new FileReader();
       reader.onload = async () => {
-        const res = await uploadApi.upload(reader.result as string, file.type, 'forum');
-        editorRef.current?.focus();
-        restoreSelection();
-        document.execCommand('insertHTML', false,
-          `<img src="${res.url}" alt="image" style="max-width:100%;border-radius:4px;margin:4px 0;" />`
-        );
-        syncContent();
-        setUploading(false);
+        try {
+          const res = await uploadApi.upload(reader.result as string, file.type, 'forum');
+          editorRef.current?.focus();
+          restoreSelection();
+          document.execCommand('insertHTML', false,
+            `<img src="${res.url}" alt="image" style="max-width:100%;border-radius:4px;margin:4px 0;" />`
+          );
+          notifyChange();
+        } finally {
+          setUploading(false);
+        }
       };
       reader.readAsDataURL(file);
     } catch {
@@ -103,12 +122,10 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
         {toolBtn('List', 'insertUnorderedList', undefined, 'Список')}
         {toolBtn('ListOrdered', 'insertOrderedList', undefined, 'Нумерованный список')}
         <span className="w-px h-4 bg-border mx-1" />
-        {/* Заголовки */}
         <button type="button" onMouseDown={e => { e.preventDefault(); exec('formatBlock', '<h3>'); }}
           className="px-2 py-1 text-xs rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors font-semibold">H</button>
         {toolBtn('Quote', 'formatBlock', '<blockquote>', 'Цитата')}
         <span className="w-px h-4 bg-border mx-1" />
-        {/* Смайлики */}
         <div className="relative">
           <button type="button"
             onMouseDown={e => { e.preventDefault(); saveSelection(); setShowEmoji(v => !v); }}
@@ -126,7 +143,6 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
             </div>
           )}
         </div>
-        {/* Фото */}
         <button type="button"
           disabled={uploading}
           onMouseDown={e => { e.preventDefault(); saveSelection(); fileRef.current?.click(); }}
@@ -138,15 +154,14 @@ export default function RichEditor({ value, onChange, placeholder = 'Введи�
         {toolBtn('Eraser', 'removeFormat', undefined, 'Очистить форматирование')}
       </div>
 
-      {/* Editor area */}
+      {/* contentEditable БЕЗ dangerouslySetInnerHTML — управление через ref */}
       <div
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        onInput={syncContent}
+        onInput={() => notifyChange()}
         onMouseUp={saveSelection}
         onKeyUp={saveSelection}
-        dangerouslySetInnerHTML={{ __html: value }}
         data-placeholder={placeholder}
         className="outline-none px-4 py-3 text-sm text-foreground leading-relaxed rich-editor"
         style={{ minHeight }}

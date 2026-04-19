@@ -159,6 +159,32 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return resp({'message': 'Тема создана', 'topic_id': topic_id})
 
+    # ── GET: уведомления текущего пользователя ──────────────────────
+    if method == 'GET' and action == 'notifications':
+        with conn.cursor() as cur:
+            cur.execute(
+                f"SELECT id, message, link_topic_id, is_read, created_at "
+                f"FROM {SCHEMA}.notifications WHERE user_id = %s ORDER BY created_at DESC LIMIT 30",
+                (user['id'],)
+            )
+            rows = cur.fetchall()
+        conn.close()
+        return resp({'notifications': [
+            {'id': r[0], 'message': r[1], 'link_topic_id': r[2], 'is_read': r[3], 'created_at': str(r[4])}
+            for r in rows
+        ]})
+
+    # ── POST: прочитать уведомления ──────────────────────────────────
+    if action == 'read_notifications':
+        with conn.cursor() as cur:
+            cur.execute(
+                f"UPDATE {SCHEMA}.notifications SET is_read = true WHERE user_id = %s",
+                (user['id'],)
+            )
+            conn.commit()
+        conn.close()
+        return resp({'message': 'ok'})
+
     # ── POST: ответить в теме ────────────────────────────────────────
     if action == 'create_post':
         topic_id = int(body.get('topic_id', 0))
@@ -167,12 +193,16 @@ def handler(event: dict, context) -> dict:
             conn.close()
             return resp({'error': 'Напишите текст ответа'}, 400)
         with conn.cursor() as cur:
-            cur.execute(f"SELECT is_locked FROM {SCHEMA}.forum_topics WHERE id = %s", (topic_id,))
+            cur.execute(
+                f"SELECT t.is_locked, t.title, t.author_id FROM {SCHEMA}.forum_topics t WHERE t.id = %s",
+                (topic_id,)
+            )
             row = cur.fetchone()
             if not row:
                 conn.close()
                 return resp({'error': 'Тема не найдена'}, 404)
-            if row[0] and not user['is_admin']:
+            is_locked, topic_title, topic_author_id = row
+            if is_locked and not user['is_admin']:
                 conn.close()
                 return resp({'error': 'Тема закрыта для ответов'}, 403)
             cur.execute(
@@ -181,6 +211,13 @@ def handler(event: dict, context) -> dict:
             )
             post_id = cur.fetchone()[0]
             cur.execute(f"UPDATE {SCHEMA}.forum_topics SET updated_at = now() WHERE id = %s", (topic_id,))
+            # Уведомление автору темы (если ответил не он сам)
+            if topic_author_id != user['id']:
+                msg = f"{user['username']} ответил в теме «{topic_title[:60]}»"
+                cur.execute(
+                    f"INSERT INTO {SCHEMA}.notifications (user_id, message, link_topic_id) VALUES (%s, %s, %s)",
+                    (topic_author_id, msg, topic_id)
+                )
             conn.commit()
         conn.close()
         return resp({'message': 'Ответ добавлен', 'post_id': post_id})

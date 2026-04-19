@@ -83,6 +83,8 @@ export const forumApi = {
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'lock_topic', topic_id }) }),
   hidePost: (post_id: number) =>
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'hide_post', post_id }) }),
+  getNotifications: () => request(`${URLS.forum}?action=notifications`),
+  readNotifications: () => request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'read_notifications' }) }),
 };
 
 // Treaties

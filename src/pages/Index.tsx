@@ -10,6 +10,7 @@ import AuthPage from './AuthPage';
 import AdminPage from './AdminPage';
 import ForumPage from './ForumPage';
 import TopicPage from './TopicPage';
+import NotificationBell from '@/components/NotificationBell';
 
 type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'about' | 'auth' | 'admin';
 
@@ -186,6 +187,14 @@ export default function Index() {
               </>
             )}
           </div>
+          {user && (
+            <div className="ml-auto">
+              <NotificationBell
+                onGoForum={() => navigateTo('forum')}
+                onOpenTopic={id => { navigateTo('forum'); setForumTopicId(id); }}
+              />
+            </div>
+          )}
         </header>
 
         {/* Content */}
