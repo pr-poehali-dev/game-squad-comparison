@@ -42,6 +42,8 @@ function apiToUnit(u: Record<string, unknown>): Unit {
     traits: parseTraits(u.traits),
     avatar_url: (u.avatar_url as string) || '',
     stars: typeof u.stars === 'number' ? u.stars : 0,
+    guide_upgrade: Array.isArray(u.guide_upgrade) ? u.guide_upgrade : [],
+    guide_gameplay: Array.isArray(u.guide_gameplay) ? u.guide_gameplay : [],
     stats: (u.stats as UnitStats) || {} as UnitStats,
   };
 }

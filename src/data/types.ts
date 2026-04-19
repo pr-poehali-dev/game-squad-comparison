@@ -52,6 +52,13 @@ export interface Ability {
   statModifiers?: Partial<UnitStats>;
 }
 
+export type GuideBlockType = 'text' | 'image';
+
+export interface GuideBlock {
+  type: GuideBlockType;
+  content: string;  // текст или URL изображения
+}
+
 export interface Unit {
   id: string;
   name: string;
@@ -65,4 +72,6 @@ export interface Unit {
   traits?: Trait[];
   avatar_url?: string;
   stars?: number; // 0–5, шаг 0.5
+  guide_upgrade?: GuideBlock[];   // Рекомендации по прокачке
+  guide_gameplay?: GuideBlock[];  // Рекомендации по игре
 }

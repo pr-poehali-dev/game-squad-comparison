@@ -8,6 +8,8 @@ import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } fr
 import { ALL_STATS } from '@/data/statGroups';
 import AvatarUpload from '@/components/AvatarUpload';
 import { StarPicker } from '@/components/StarRating';
+import GuideEditor from '@/components/GuideEditor';
+import { GuideBlock } from '@/data/types';
 
 type AdminTab = 'units' | 'treaties';
 
@@ -113,6 +115,8 @@ interface UnitFormData {
   lore: string;
   avatar_url: string;
   stars: number;
+  guide_upgrade: GuideBlock[];
+  guide_gameplay: GuideBlock[];
   abilities: AbilityDraft[];
   traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
@@ -143,6 +147,8 @@ function UnitModal({ unit, onSave, onClose }: {
     lore: (unit?.lore as string) || '',
     avatar_url: (unit?.avatar_url as string) || '',
     stars: typeof unit?.stars === 'number' ? unit.stars as number : 0,
+    guide_upgrade: Array.isArray(unit?.guide_upgrade) ? unit.guide_upgrade as GuideBlock[] : [],
+    guide_gameplay: Array.isArray(unit?.guide_gameplay) ? unit.guide_gameplay as GuideBlock[] : [],
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
     traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
@@ -210,6 +216,8 @@ function UnitModal({ unit, onSave, onClose }: {
         lore: form.lore,
         avatar_url: form.avatar_url,
         stars: form.stars,
+        guide_upgrade: form.guide_upgrade,
+        guide_gameplay: form.guide_gameplay,
         abilities,
         traits,
         stats: form.stats,
@@ -384,6 +392,18 @@ function UnitModal({ unit, onSave, onClose }: {
               ))}
             </div>
           </div>
+
+          <GuideEditor
+            label="Рекомендации по прокачке"
+            value={form.guide_upgrade}
+            onChange={v => set('guide_upgrade', v)}
+          />
+
+          <GuideEditor
+            label="Рекомендации по игре"
+            value={form.guide_gameplay}
+            onChange={v => set('guide_gameplay', v)}
+          />
 
           <div className="flex gap-3 justify-end pt-2 border-t border-border">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm border border-border rounded-sm hover:bg-muted transition-colors">Отмена</button>

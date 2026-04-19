@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { STAT_GROUPS } from '@/data/statGroups';
-import { UnitStats, Ability, Trait, UnitRole } from '@/data/types';
+import { UnitStats, Ability, Trait, UnitRole, GuideBlock } from '@/data/types';
 import StarRating from '@/components/StarRating';
 import StatBar from '@/components/StatBar';
 import RarityBadge from '@/components/RarityBadge';
@@ -119,6 +119,37 @@ function TraitTag({ trait }: { trait: Trait }) {
         {hasDesc && <Icon name="Info" size={10} className="opacity-50" />}
       </span>
       {show && hasDesc && <TraitTooltip trait={trait} />}
+    </div>
+  );
+}
+
+// ── Секция руководства ──
+function GuideSection({ title, icon, blocks }: { title: string; icon: string; blocks: GuideBlock[] }) {
+  if (!blocks || blocks.length === 0) return null;
+  return (
+    <div className="bg-card border border-border rounded-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-border">
+        <Icon name={icon} size={14} className="text-primary" />
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-widest">{title}</h2>
+      </div>
+      <div className="p-5 space-y-4">
+        {blocks.map((block, i) => (
+          block.type === 'image' ? (
+            <div key={i} className="rounded-sm overflow-hidden border border-border">
+              <img
+                src={block.content}
+                alt=""
+                className="w-full object-cover max-h-80"
+                style={{ display: 'block' }}
+              />
+            </div>
+          ) : (
+            <p key={i} className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {block.content}
+            </p>
+          )
+        ))}
+      </div>
     </div>
   );
 }
@@ -265,6 +296,18 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
               {unit.abilities.map((ab, i) => <AbilityTag key={i} ab={ab} />)}
             </div>
           </div>
+
+          <GuideSection
+            title="Рекомендации по прокачке"
+            icon="TrendingUp"
+            blocks={unit.guide_upgrade || []}
+          />
+
+          <GuideSection
+            title="Рекомендации по игре"
+            icon="Gamepad2"
+            blocks={unit.guide_gameplay || []}
+          />
         </div>
 
         {/* Right */}
