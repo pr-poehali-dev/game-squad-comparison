@@ -157,10 +157,10 @@ def handler(event: dict, context) -> dict:
                 unit_id = unit_id + '-' + os.urandom(3).hex()
 
             cur.execute(
-                f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, traits, avatar_url, stats, stars, guide_upgrade, guide_gameplay, created_by) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                f"INSERT INTO {SCHEMA}.units (id, name, class, role_old, role, rarity, description, lore, abilities, traits, avatar_url, stats, stars, guide_upgrade, guide_gameplay, created_by) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 f"RETURNING {SELECT_COLS}",
-                (unit_id, name, unit_class, json.dumps(role, ensure_ascii=False), rarity, description, lore,
+                (unit_id, name, unit_class, '', json.dumps(role, ensure_ascii=False), rarity, description, lore,
                  json.dumps(abilities, ensure_ascii=False), json.dumps(traits, ensure_ascii=False),
                  avatar_url, json.dumps(stats), stars,
                  json.dumps(guide_upgrade, ensure_ascii=False), json.dumps(guide_gameplay, ensure_ascii=False),
