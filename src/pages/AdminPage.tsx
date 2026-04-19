@@ -344,36 +344,52 @@ function UnitModal({ unit, onSave, onClose }: {
             {form.abilities.length === 0 && <p className="text-xs text-muted-foreground italic">Нет умений. Нажмите «Добавить».</p>}
             <div className="space-y-3">
               {form.abilities.map((ab, i) => (
-                <div key={i} className="border border-border rounded-sm p-3 space-y-2 bg-muted/30">
+                <div key={i} className="border border-border rounded-sm p-3 space-y-2.5 bg-muted/30">
+                  {/* Название */}
                   <div className="flex items-center gap-2">
-                    <input type="text" value={ab.name} onChange={e => updateAbility(i, { name: e.target.value })}
-                      className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Название умения" />
-                    <button type="button" onClick={() => removeAbility(i)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
+                    <div className="flex-1">
+                      <label className="text-[10px] text-muted-foreground block mb-1">Название умения</label>
+                      <input type="text" value={ab.name} onChange={e => updateAbility(i, { name: e.target.value })}
+                        className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="Например: Лес копий" />
+                    </div>
+                    <button type="button" onClick={() => removeAbility(i)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 mt-4">
                       <Icon name="Trash2" size={13} />
                     </button>
                   </div>
-                  <input type="text" value={ab.description} onChange={e => updateAbility(i, { description: e.target.value })}
-                    className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Описание (необязательно)" />
-                  {Object.entries(ab.modifiers).length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(ab.modifiers).map(([key, val]) => (
-                        <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${parseFloat(val) >= 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
-                          {STAT_LABELS[key] ?? key}: {parseFloat(val) >= 0 ? '+' : ''}{val}
-                          <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
-                        </span>
-                      ))}
+                  {/* Описание — textarea для длинных текстов */}
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1">Описание</label>
+                    <textarea
+                      value={ab.description}
+                      onChange={e => updateAbility(i, { description: e.target.value })}
+                      rows={3}
+                      className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-y leading-relaxed"
+                      placeholder="Опишите механику умения подробно — эффекты, условия, числовые значения..."
+                    />
+                  </div>
+                  {/* Бафы/дебафы к характеристикам (опционально) */}
+                  <div>
+                    <label className="text-[10px] text-muted-foreground block mb-1.5">Модификаторы характеристик <span className="opacity-50">(необязательно)</span></label>
+                    {Object.entries(ab.modifiers).length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {Object.entries(ab.modifiers).map(([key, val]) => (
+                          <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${parseFloat(val) >= 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                            {STAT_LABELS[key] ?? key}: {parseFloat(val) >= 0 ? '+' : ''}{val}
+                            <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex gap-1.5">
+                      <select value={ab.newModKey} onChange={e => updateAbility(i, { newModKey: e.target.value })} className="flex-1 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                        {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
+                      </select>
+                      <input type="number" value={ab.newModVal} onChange={e => updateAbility(i, { newModVal: e.target.value })}
+                        className="w-20 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        placeholder="±знач." />
+                      <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Добавить</button>
                     </div>
-                  )}
-                  <div className="flex gap-1.5">
-                    <select value={ab.newModKey} onChange={e => updateAbility(i, { newModKey: e.target.value })} className="flex-1 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                      {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
-                    </select>
-                    <input type="number" value={ab.newModVal} onChange={e => updateAbility(i, { newModVal: e.target.value })}
-                      className="w-20 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="±знач." />
-                    <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Баф/Дебаф</button>
                   </div>
                 </div>
               ))}
