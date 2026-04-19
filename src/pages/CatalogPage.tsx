@@ -21,7 +21,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   const [classFilter, setClassFilter] = useState<UnitClass | ''>('');
   const [roleFilter, setRoleFilter] = useState<UnitRole | ''>('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | ''>('');
-  const [sortBy, setSortBy] = useState<'name' | 'attack' | 'defense' | 'leadership'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'attack' | 'defense' | 'leadership' | 'stars'>('name');
 
   const filtered = useMemo(() => {
     return UNITS
@@ -40,6 +40,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
         if (sortBy === 'attack') return b.stats.slashingDamage - a.stats.slashingDamage;
         if (sortBy === 'defense') return b.stats.slashingDefense - a.stats.slashingDefense;
         if (sortBy === 'leadership') return b.stats.leadership - a.stats.leadership;
+        if (sortBy === 'stars') return (b.stars ?? 0) - (a.stars ?? 0);
         return 0;
       });
   }, [search, classFilter, roleFilter, rarityFilter, sortBy]);
@@ -117,6 +118,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
               className="bg-muted border border-border rounded-sm px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             >
               <option value="name">По названию</option>
+              <option value="stars">По рейтингу ★</option>
               <option value="attack">По атаке</option>
               <option value="defense">По защите</option>
               <option value="leadership">По лидерству</option>
