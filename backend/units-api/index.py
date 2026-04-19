@@ -66,7 +66,7 @@ def parse_jsonb(val):
 
 
 def row_to_unit(row):
-    # row: id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits
+    # row: id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits, stars
     return {
         'id': row[0],
         'name': row[1],
@@ -81,10 +81,11 @@ def row_to_unit(row):
         'created_at': str(row[10]) if row[10] else '',
         'is_active': row[11],
         'traits': parse_jsonb(row[12]) if len(row) > 12 else [],
+        'stars': float(row[13]) if len(row) > 13 and row[13] is not None else 0,
     }
 
 
-SELECT_COLS = "id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits"
+SELECT_COLS = "id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits, stars"
 
 
 def normalize_role(role_raw):
@@ -143,6 +144,7 @@ def handler(event: dict, context) -> dict:
         traits = body.get('traits', [])
         avatar_url = body.get('avatar_url', '')
         stats = body.get('stats', {})
+        stars = max(0, min(5, float(body.get('stars', 0))))
 
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.units WHERE id = %s", (unit_id,))
@@ -150,12 +152,12 @@ def handler(event: dict, context) -> dict:
                 unit_id = unit_id + '-' + os.urandom(3).hex()
 
             cur.execute(
-                f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, traits, avatar_url, stats, created_by) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, traits, avatar_url, stats, stars, created_by) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
                 f"RETURNING {SELECT_COLS}",
                 (unit_id, name, unit_class, json.dumps(role, ensure_ascii=False), rarity, description, lore,
                  json.dumps(abilities, ensure_ascii=False), json.dumps(traits, ensure_ascii=False),
-                 avatar_url, json.dumps(stats), user['id'])
+                 avatar_url, json.dumps(stats), stars, user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -183,6 +185,7 @@ def handler(event: dict, context) -> dict:
         traits = body.get('traits', [])
         avatar_url = body.get('avatar_url', '')
         stats = body.get('stats', {})
+        stars = max(0, min(5, float(body.get('stars', 0))))
 
         with conn.cursor() as cur:
             cur.execute(f"SELECT id FROM {SCHEMA}.units WHERE id = %s", (unit_id,))
@@ -192,11 +195,11 @@ def handler(event: dict, context) -> dict:
 
             cur.execute(
                 f"UPDATE {SCHEMA}.units SET name=%s, class=%s, role=%s, rarity=%s, description=%s, lore=%s, "
-                f"abilities=%s, traits=%s, avatar_url=%s, stats=%s, updated_at=now() WHERE id=%s "
+                f"abilities=%s, traits=%s, avatar_url=%s, stats=%s, stars=%s, updated_at=now() WHERE id=%s "
                 f"RETURNING {SELECT_COLS}",
                 (name, unit_class, json.dumps(role, ensure_ascii=False), rarity, description, lore,
                  json.dumps(abilities, ensure_ascii=False), json.dumps(traits, ensure_ascii=False),
-                 avatar_url, json.dumps(stats), unit_id)
+                 avatar_url, json.dumps(stats), stars, unit_id)
             )
             row = cur.fetchone()
             conn.commit()

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { STAT_GROUPS } from '@/data/statGroups';
 import { UnitStats, Ability, Trait, UnitRole } from '@/data/types';
+import StarRating from '@/components/StarRating';
 import StatBar from '@/components/StatBar';
 import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
@@ -179,7 +180,10 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-foreground">{unit.name}</h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-2xl font-semibold text-foreground">{unit.name}</h1>
+                  {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={16} />}
+                </div>
                 <div className="flex items-center flex-wrap gap-2 mt-1">
                   <span className="text-sm text-muted-foreground">{unit.class}</span>
                   <span className="text-muted-foreground">·</span>

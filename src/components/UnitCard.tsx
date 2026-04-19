@@ -3,6 +3,7 @@ import { CARD_STATS } from '@/data/statGroups';
 import RarityBadge from './RarityBadge';
 import StatBar from './StatBar';
 import Icon from '@/components/ui/icon';
+import StarRating from './StarRating';
 
 const CLASS_ICONS: Record<string, string> = {
   'Пехота': 'Sword',
@@ -55,9 +56,12 @@ export default function UnitCard({ unit, onClick, selected, compact }: UnitCardP
             )}
           </div>
           <div>
-            <h3 className="font-semibold text-sm leading-tight text-foreground" style={{ fontFamily: 'Oswald, sans-serif' }}>
-              {unit.name}
-            </h3>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h3 className="font-semibold text-sm leading-tight text-foreground" style={{ fontFamily: 'Oswald, sans-serif' }}>
+                {unit.name}
+              </h3>
+              {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={10} />}
+            </div>
             <div className="flex gap-1 mt-0.5 flex-wrap">
               <span className="text-[10px] text-muted-foreground">{unit.class}</span>
               <span className="text-[10px] text-muted-foreground">·</span>

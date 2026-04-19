@@ -7,6 +7,7 @@ import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
 import { ALL_STATS } from '@/data/statGroups';
 import AvatarUpload from '@/components/AvatarUpload';
+import { StarPicker } from '@/components/StarRating';
 
 type AdminTab = 'units' | 'treaties';
 
@@ -111,6 +112,7 @@ interface UnitFormData {
   description: string;
   lore: string;
   avatar_url: string;
+  stars: number;
   abilities: AbilityDraft[];
   traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
@@ -140,6 +142,7 @@ function UnitModal({ unit, onSave, onClose }: {
     description: (unit?.description as string) || '',
     lore: (unit?.lore as string) || '',
     avatar_url: (unit?.avatar_url as string) || '',
+    stars: typeof unit?.stars === 'number' ? unit.stars as number : 0,
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
     traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
@@ -206,6 +209,7 @@ function UnitModal({ unit, onSave, onClose }: {
         description: form.description,
         lore: form.lore,
         avatar_url: form.avatar_url,
+        stars: form.stars,
         abilities,
         traits,
         stats: form.stats,
@@ -280,6 +284,10 @@ function UnitModal({ unit, onSave, onClose }: {
                 label="Аватар отряда (пропорции карточки)"
                 folder="units"
               />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-muted-foreground block mb-2">Звёзды отряда (0–5)</label>
+              <StarPicker value={form.stars} onChange={v => set('stars', v)} />
             </div>
           </div>
 

@@ -64,4 +64,5 @@ export interface Unit {
   abilities: (string | Ability)[];
   traits?: Trait[];
   avatar_url?: string;
+  stars?: number; // 0–5, шаг 0.5
 }
