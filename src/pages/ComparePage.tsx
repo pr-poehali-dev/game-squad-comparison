@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { STAT_GROUPS, ALL_STATS } from '@/data/statGroups';
-import { Unit, UnitStats } from '@/data/types';
+import { Unit, UnitStats, Ability } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
+import StarRating from '@/components/StarRating';
 import Icon from '@/components/ui/icon';
 
 interface ComparePageProps {
   appliedTreaties: Record<string, string[]>;
   onApply: (unitId: string, treatyId: string) => void;
   onRemove: (unitId: string, treatyId: string) => void;
+}
+
+function getAbilityBonus(unit: Unit, key: keyof UnitStats): number {
+  return unit.abilities.reduce((acc, ab) => {
+    if (typeof ab === 'string') return acc;
+    const mod = (ab as Ability).statModifiers?.[key] || 0;
+    return acc + mod;
+  }, 0);
 }
 
 export default function ComparePage({ appliedTreaties, onApply, onRemove }: ComparePageProps) {
@@ -21,22 +30,20 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
 
   const selectedUnits = UNITS.filter(u => selected.includes(u.id));
 
-  const getEffectiveStat = (unit: Unit, key: keyof UnitStats) => {
-    const ids = appliedTreaties[unit.id] || [];
-    const bonus = TREATIES.filter(t => ids.includes(t.id))
-      .reduce((acc, t) => acc + (t.statModifiers[key] || 0), 0);
-    return unit.stats[key] + bonus;
-  };
-
-  const getBonus = (unit: Unit, key: keyof UnitStats) => {
+  const getTreatyBonus = (unit: Unit, key: keyof UnitStats) => {
     const ids = appliedTreaties[unit.id] || [];
     return TREATIES.filter(t => ids.includes(t.id))
       .reduce((acc, t) => acc + (t.statModifiers[key] || 0), 0);
   };
 
+  // Итоговое значение с трактатами И умениями
+  const getTotal = (unit: Unit, key: keyof UnitStats) =>
+    unit.stats[key] + getTreatyBonus(unit, key) + getAbilityBonus(unit, key);
+
+  // Лучшее итоговое значение среди выбранных
   const getBest = (key: keyof UnitStats) => {
     if (selectedUnits.length < 2) return null;
-    return Math.max(...selectedUnits.map(u => getEffectiveStat(u, key)));
+    return Math.max(...selectedUnits.map(u => getTotal(u, key)));
   };
 
   const toggleUnit = (id: string) => {
@@ -75,7 +82,13 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
             const count = (appliedTreaties[id] || []).length;
             return (
               <div key={id} className={`flex items-center gap-2 bg-muted border border-rarity-${u.rarity} rounded-sm px-3 py-2`}>
+                {u.avatar_url && (
+                  <div className="w-5 h-5 rounded-sm overflow-hidden flex-shrink-0">
+                    <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <span className="text-sm text-foreground">{u.name}</span>
+                {(u.stars ?? 0) > 0 && <StarRating value={u.stars ?? 0} size={9} />}
                 {count > 0 && (
                   <span className="text-[10px] font-mono-data bg-primary/20 text-primary rounded-sm px-1 py-0.5">+{count}</span>
                 )}
@@ -115,8 +128,18 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                     : 'border-border bg-muted text-muted-foreground hover:border-primary/40 hover:text-foreground'
                 } disabled:opacity-30 disabled:cursor-not-allowed`}
               >
-                <div className="font-medium truncate">{u.name}</div>
-                <div className="text-[10px] opacity-70">{u.class}</div>
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  {u.avatar_url && (
+                    <div className="w-4 h-4 rounded-sm overflow-hidden flex-shrink-0">
+                      <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <span className="font-medium truncate">{u.name}</span>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] opacity-70">
+                  <span>{u.class}</span>
+                  {(u.stars ?? 0) > 0 && <StarRating value={u.stars ?? 0} size={8} />}
+                </div>
               </button>
             ))}
           </div>
@@ -154,28 +177,55 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
               <div className="p-4 bg-muted/30" />
               {selectedUnits.map(u => {
                 const treatyCount = (appliedTreaties[u.id] || []).length;
+                const abilityCount = u.abilities.filter(ab => typeof ab !== 'string' && !!(ab as Ability).statModifiers && Object.keys((ab as Ability).statModifiers!).length > 0).length;
                 const isActive = treatyPanelUnit === u.id;
+                const roles = Array.isArray(u.role) ? u.role : [u.role];
                 return (
                   <div key={u.id} className={`p-4 border-l border-border ${isActive ? 'bg-primary/5' : ''}`}>
-                    <div className={`rarity-${u.rarity} text-[10px] font-mono-data uppercase tracking-widest mb-1`}>
-                      {u.rarity}
+                    {/* Аватар + название */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {u.avatar_url ? (
+                        <div className="w-10 h-10 rounded-sm overflow-hidden flex-shrink-0 bg-muted">
+                          <img src={u.avatar_url} alt={u.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-sm bg-muted flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <RarityBadge rarity={u.rarity} />
+                        <div className="font-semibold text-sm text-foreground leading-tight truncate">{u.name}</div>
+                        {(u.stars ?? 0) > 0 && <StarRating value={u.stars ?? 0} size={10} className="mt-0.5" />}
+                      </div>
                     </div>
-                    <div className="font-semibold text-sm text-foreground leading-tight">{u.name}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 mb-2">{u.class} · {u.role}</div>
-                    <button
-                      onClick={() => setTreatyPanelUnit(isActive ? null : u.id)}
-                      className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-sm border transition-all ${
-                        isActive
-                          ? 'border-primary text-primary bg-primary/10'
-                          : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon name="ScrollText" size={10} />
-                      Трактаты {treatyCount > 0 && <span className="font-mono-data">({treatyCount})</span>}
-                    </button>
+                    <div className="text-[10px] text-muted-foreground mb-2">{u.class} · {roles.join(', ')}</div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => setTreatyPanelUnit(isActive ? null : u.id)}
+                        className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-sm border transition-all ${
+                          isActive
+                            ? 'border-primary text-primary bg-primary/10'
+                            : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                        }`}
+                      >
+                        <Icon name="ScrollText" size={10} />
+                        Трактаты {treatyCount > 0 && <span className="font-mono-data">({treatyCount})</span>}
+                      </button>
+                      {abilityCount > 0 && (
+                        <span className="flex items-center gap-1 text-[10px] text-blue-400 font-mono-data">
+                          <Icon name="Zap" size={10} /> {abilityCount}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Легенда формата */}
+            <div className="px-4 py-2 border-b border-border bg-muted/10 flex items-center gap-4 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-foreground/40 inline-block" /> база</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> +трактаты</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" /> +умения</span>
             </div>
 
             {/* Stat rows */}
@@ -192,29 +242,75 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                   </div>
                   {selectedUnits.map(u => {
                     const base = u.stats[key];
-                    const bonus = getBonus(u, key);
-                    const val = base + bonus;
-                    const isBest = best !== null && val === best;
-                    const pct = Math.min((val / max) * 100, 100);
+                    const treatyBonus = getTreatyBonus(u, key);
+                    const abilityBonus = getAbilityBonus(u, key);
+                    const withTreaties = base + treatyBonus;
+                    const withAbilities = base + abilityBonus;
+                    const total = base + treatyBonus + abilityBonus;
+                    const isBest = best !== null && total === best;
+                    const pct = Math.min((total / max) * 100, 100);
+                    const basePct = Math.min((base / max) * 100, 100);
+
                     return (
                       <div key={u.id} className={`p-3 border-l border-border ${isBest ? 'bg-primary/5' : ''}`}>
-                        <div className={`font-mono-data text-base font-medium mb-0.5 ${isBest ? 'text-primary' : 'text-foreground'}`}>
-                          {val}{unitLabel ? ` ${unitLabel}` : ''}
+                        {/* Основное значение */}
+                        <div className={`font-mono-data text-base font-semibold mb-1 ${isBest ? 'text-primary' : 'text-foreground'}`}>
+                          {total}{unitLabel ? ` ${unitLabel}` : ''}
                           {isBest && selectedUnits.length > 1 && <span className="text-xs ml-1 opacity-60">▲</span>}
                         </div>
-                        {bonus !== 0 && (
-                          <div className={`font-mono-data text-[10px] mb-1 ${bonus > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {bonus > 0 ? '+' : ''}{bonus}
-                          </div>
-                        )}
-                        <div className="h-0.5 bg-border rounded-full overflow-hidden">
+
+                        {/* Разбивка: база / с трактатами / с умениями */}
+                        <div className="flex items-center gap-1 text-[10px] font-mono-data mb-1.5 flex-wrap">
+                          <span className="text-muted-foreground">{base}</span>
+                          {treatyBonus !== 0 && (
+                            <>
+                              <span className="text-muted-foreground/40">/</span>
+                              <span className={treatyBonus > 0 ? 'text-green-400' : 'text-red-400'}>
+                                {withTreaties}
+                              </span>
+                            </>
+                          )}
+                          {abilityBonus !== 0 && (
+                            <>
+                              <span className="text-muted-foreground/40">/</span>
+                              <span className={abilityBonus > 0 ? 'text-blue-400' : 'text-orange-400'}>
+                                {withAbilities}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Полоска */}
+                        <div className="h-1 bg-border rounded-full overflow-hidden relative">
+                          {/* База */}
                           <div
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{
-                              width: `${pct}%`,
-                              background: isBest ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
-                            }}
+                            className="absolute top-0 left-0 h-full rounded-full bg-muted-foreground/40"
+                            style={{ width: `${basePct}%` }}
                           />
+                          {/* Трактаты */}
+                          {treatyBonus > 0 && (
+                            <div
+                              className="absolute top-0 left-0 h-full rounded-full bg-green-500/50"
+                              style={{ width: `${Math.min((withTreaties / max) * 100, 100)}%` }}
+                            />
+                          )}
+                          {/* Умения */}
+                          {abilityBonus > 0 && (
+                            <div
+                              className="absolute top-0 left-0 h-full rounded-full bg-blue-500/60"
+                              style={{ width: `${pct}%` }}
+                            />
+                          )}
+                          {/* Итог без бонусов */}
+                          {treatyBonus === 0 && abilityBonus === 0 && (
+                            <div
+                              className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                              style={{
+                                width: `${pct}%`,
+                                background: isBest ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))'
+                              }}
+                            />
+                          )}
                         </div>
                       </div>
                     );
@@ -222,8 +318,6 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                 </div>
               );
             })}
-
-
           </div>
 
           {/* Treaty panel */}
@@ -252,9 +346,16 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
                         className={`border rounded-sm p-3 transition-all border-rarity-${t.rarity} ${applied ? 'bg-primary/5' : 'bg-muted/20'}`}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <div>
-                            <div className="text-xs font-medium text-foreground leading-tight mb-0.5">{t.name}</div>
-                            <RarityBadge rarity={t.rarity} />
+                          <div className="flex items-center gap-2 min-w-0">
+                            {t.avatar_url && (
+                              <div className="w-8 h-8 rounded-sm overflow-hidden flex-shrink-0 bg-muted">
+                                <img src={t.avatar_url} alt={t.name} className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <div className="text-xs font-medium text-foreground leading-tight mb-0.5 truncate">{t.name}</div>
+                              <RarityBadge rarity={t.rarity} />
+                            </div>
                           </div>
                           <button
                             onClick={() => applied ? onRemove(treatyPanelUnit, t.id) : onApply(treatyPanelUnit, t.id)}
