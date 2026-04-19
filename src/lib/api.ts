@@ -5,6 +5,7 @@ const URLS = {
   seed: 'https://functions.poehali.dev/95ab29ef-b38b-4e5b-9578-0456fb855829',
   upload: 'https://functions.poehali.dev/26151075-4ef3-4b29-8d16-c82a04dd0e83',
   forum: 'https://functions.poehali.dev/914f3bd8-b9e4-4dfa-b16a-e3dda3710d6e',
+  battle: 'https://functions.poehali.dev/e55b6676-4af3-410b-99a4-d9faac5243bb',
 };
 
 function getSessionId(): string {

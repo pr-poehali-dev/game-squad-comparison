@@ -1,0 +1,33 @@
+{
+  "tests": [
+    {
+      "name": "Battle simulation with 2 units",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "units": [
+          {
+            "name": "Копейщики",
+            "class": "Пехота",
+            "role": ["Танк"],
+            "stats": { "health": 80, "troops": 150, "leadership": 60, "moveSpeed": 40, "morale": 70, "piercingDamage": 30, "slashingDamage": 20, "bluntDamage": 10, "piercingDefense": 40, "slashingDefense": 35, "bluntDefense": 25, "piercingPenetration": 20, "slashingPenetration": 10, "bluntPenetration": 5, "block": 30, "blockRecovery": 20, "rangeDistance": 0, "ammo": 0 },
+            "abilities": [],
+            "traits": []
+          },
+          {
+            "name": "Лучники",
+            "class": "Стрелки",
+            "role": ["Урон"],
+            "stats": { "health": 50, "troops": 100, "leadership": 40, "moveSpeed": 50, "morale": 60, "piercingDamage": 50, "slashingDamage": 10, "bluntDamage": 5, "piercingDefense": 15, "slashingDefense": 10, "bluntDefense": 10, "piercingPenetration": 35, "slashingPenetration": 5, "bluntPenetration": 5, "block": 5, "blockRecovery": 10, "rangeDistance": 8, "ammo": 30 },
+            "abilities": [],
+            "traits": []
+          }
+        ],
+        "formation": ""
+      },
+      "expectedStatus": 200,
+      "expectedBody": { "simulation": {} },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
