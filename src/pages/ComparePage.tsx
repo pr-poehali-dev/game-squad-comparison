@@ -223,7 +223,7 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
 
             {/* Легенда формата */}
             <div className="px-4 py-2 border-b border-border bg-muted/10 flex items-center gap-4 text-[10px] text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-foreground/40 inline-block" /> база</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-foreground/40 inline-block" /> базовые характеристики</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> +трактаты</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" /> +умения</span>
             </div>
