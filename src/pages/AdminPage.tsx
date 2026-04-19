@@ -5,7 +5,7 @@ import { useUnits, useTreaties } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
-import { ALL_STATS } from '@/data/statGroups';
+import { ALL_STATS, STAT_GROUPS } from '@/data/statGroups';
 import AvatarUpload from '@/components/AvatarUpload';
 import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
@@ -382,12 +382,27 @@ function UnitModal({ unit, onSave, onClose }: {
 
           <div>
             <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">Характеристики</h4>
-            <div className="grid grid-cols-3 gap-3">
-              {statKeys.map(key => (
-                <div key={key}>
-                  <label className="text-[10px] text-muted-foreground block mb-1">{key}</label>
-                  <input type="number" value={form.stats[key as keyof typeof DEFAULT_UNIT_STATS]}
-                    onChange={e => setStat(key, e.target.value)} className={inputCls + ' font-mono-data'} min={-9999} max={9999} />
+            <div className="space-y-4">
+              {STAT_GROUPS.map(group => (
+                <div key={group.label}>
+                  <div className={`flex items-center gap-1.5 mb-2 ${group.color}`}>
+                    <Icon name={group.icon} size={12} />
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">{group.label}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {group.stats.map(({ key, label }) => (
+                      <div key={key}>
+                        <label className="text-[10px] text-muted-foreground block mb-1">{label}</label>
+                        <input
+                          type="number"
+                          value={form.stats[key as keyof typeof DEFAULT_UNIT_STATS] ?? 0}
+                          onChange={e => setStat(key, e.target.value)}
+                          className={inputCls + ' font-mono-data'}
+                          min={-9999} max={9999}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
