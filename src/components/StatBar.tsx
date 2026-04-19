@@ -3,7 +3,7 @@ interface StatBarProps {
   value: number;
   max?: number;
   bonus?: number;       // от трактатов — зелёный/красный
-  abilityBonus?: number; // от способностей — синий/оранжевый
+  abilityBonus?: number; // от умений — синий/оранжевый
   unitLabel?: string;
 }
 
@@ -38,7 +38,7 @@ export default function StatBar({ label, value, max = 100, bonus = 0, abilityBon
       </div>
       <div className="stat-bar">
         <div className="relative h-full">
-          {/* Фон от способностей */}
+          {/* Фон от умений */}
           {abilityBonus !== 0 && (
             <div
               className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 opacity-25 ${abilityPositive ? 'bg-blue-400' : 'bg-orange-400'}`}

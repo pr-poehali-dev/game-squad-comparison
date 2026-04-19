@@ -28,7 +28,10 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
       .filter(u => {
         if (search && !u.name.toLowerCase().includes(search.toLowerCase())) return false;
         if (classFilter && u.class !== classFilter) return false;
-        if (roleFilter && u.role !== roleFilter) return false;
+        if (roleFilter) {
+          const roles = Array.isArray(u.role) ? u.role : [u.role];
+          if (!roles.includes(roleFilter as import('@/data/types').UnitRole)) return false;
+        }
         if (rarityFilter && u.rarity !== rarityFilter) return false;
         return true;
       })

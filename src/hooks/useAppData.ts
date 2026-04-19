@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { unitsApi, treatiesApi } from '@/lib/api';
-import { Unit, Treaty, UnitStats, Ability } from '@/data/types';
+import { Unit, Treaty, UnitStats, Ability, Trait } from '@/data/types';
 
 // Конвертирует abilities — поддерживает и строки, и объекты Ability
 function parseAbilities(raw: unknown): (string | Ability)[] {
@@ -14,17 +14,32 @@ function parseAbilities(raw: unknown): (string | Ability)[] {
   });
 }
 
+function parseRole(raw: unknown): Unit['role'] {
+  if (Array.isArray(raw)) return raw as Unit['role'];
+  if (typeof raw === 'string') return raw as Unit['role'];
+  return 'Урон';
+}
+
+function parseTraits(raw: unknown): Trait[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(item => {
+    if (typeof item === 'string') return { name: item };
+    return item as Trait;
+  });
+}
+
 // Конвертирует объект из API в тип Unit
 function apiToUnit(u: Record<string, unknown>): Unit {
   return {
     id: u.id as string,
     name: u.name as string,
     class: u.class as Unit['class'],
-    role: u.role as Unit['role'],
+    role: parseRole(u.role),
     rarity: u.rarity as Unit['rarity'],
     description: (u.description as string) || '',
     lore: (u.lore as string) || '',
     abilities: parseAbilities(u.abilities),
+    traits: parseTraits(u.traits),
     stats: (u.stats as UnitStats) || {} as UnitStats,
   };
 }

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useUnits, useTreaties } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
-import { Rarity, UnitClass, UnitRole, Ability, UnitStats } from '@/data/types';
+import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
 import { ALL_STATS } from '@/data/statGroups';
 
 type AdminTab = 'units' | 'treaties';
@@ -86,15 +86,38 @@ function rawToAbilityDraft(raw: unknown): AbilityDraft {
 const statOptions = ALL_STATS.map(s => s.key);
 const STAT_LABELS: Partial<Record<string, string>> = Object.fromEntries(ALL_STATS.map(s => [s.key, s.label]));
 
+interface TraitDraft {
+  name: string;
+  description: string;
+  color: TraitColor;
+}
+
+function emptyTrait(): TraitDraft {
+  return { name: '', description: '', color: 'gray' };
+}
+
+function rawToTraitDraft(raw: unknown): TraitDraft {
+  if (typeof raw === 'string') return { ...emptyTrait(), name: raw };
+  const t = raw as Trait;
+  return { name: t.name || '', description: t.description || '', color: (t.color as TraitColor) || 'gray' };
+}
+
 interface UnitFormData {
   name: string;
   class: UnitClass;
-  role: UnitRole;
+  roles: UnitRole[];
   rarity: Rarity;
   description: string;
   lore: string;
   abilities: AbilityDraft[];
+  traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
+}
+
+function getRawRoles(raw: unknown): UnitRole[] {
+  if (Array.isArray(raw)) return raw as UnitRole[];
+  if (typeof raw === 'string') return [raw as UnitRole];
+  return ['Урон'];
 }
 
 function UnitModal({ unit, onSave, onClose }: {
@@ -106,20 +129,28 @@ function UnitModal({ unit, onSave, onClose }: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const rawAbilities = (unit?.abilities as unknown[]) || [];
+  const rawTraits = (unit?.traits as unknown[]) || [];
   const [form, setForm] = useState<UnitFormData>({
     name: (unit?.name as string) || '',
     class: (unit?.class as UnitClass) || 'Пехота',
-    role: (unit?.role as UnitRole) || 'Урон',
+    roles: getRawRoles(unit?.role),
     rarity: (unit?.rarity as Rarity) || 'common',
     description: (unit?.description as string) || '',
     lore: (unit?.lore as string) || '',
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
+    traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
   });
 
   const set = (key: keyof UnitFormData, val: unknown) => setForm(f => ({ ...f, [key]: val }));
   const setStat = (key: string, val: string) => setForm(f => ({ ...f, stats: { ...f.stats, [key]: parseInt(val) || 0 } }));
 
+  const toggleRole = (r: UnitRole) => setForm(f => ({
+    ...f,
+    roles: f.roles.includes(r) ? f.roles.filter(x => x !== r) : [...f.roles, r],
+  }));
+
+  // Умения
   const addAbility = () => setForm(f => ({ ...f, abilities: [...f.abilities, emptyAbility()] }));
   const removeAbility = (i: number) => setForm(f => ({ ...f, abilities: f.abilities.filter((_, idx) => idx !== i) }));
   const updateAbility = (i: number, patch: Partial<AbilityDraft>) =>
@@ -136,9 +167,16 @@ function UnitModal({ unit, onSave, onClose }: {
     updateAbility(i, { modifiers: m });
   };
 
+  // Особенности
+  const addTrait = () => setForm(f => ({ ...f, traits: [...f.traits, emptyTrait()] }));
+  const removeTrait = (i: number) => setForm(f => ({ ...f, traits: f.traits.filter((_, idx) => idx !== i) }));
+  const updateTrait = (i: number, patch: Partial<TraitDraft>) =>
+    setForm(f => ({ ...f, traits: f.traits.map((t, idx) => idx === i ? { ...t, ...patch } : t) }));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Поле "название" обязательно'); return; }
+    if (form.roles.length === 0) { setError('Выберите хотя бы одну роль'); return; }
     setLoading(true);
     setError('');
     try {
@@ -154,14 +192,18 @@ function UnitModal({ unit, onSave, onClose }: {
           if (!hasInfo) return a.name.trim();
           return { name: a.name.trim(), description: a.description.trim() || undefined, statModifiers: Object.keys(mods).length > 0 ? mods : undefined };
         });
+      const traits = form.traits.filter(t => t.name.trim()).map(t => ({
+        name: t.name.trim(), description: t.description.trim() || undefined, color: t.color,
+      }));
       await onSave({
         name: form.name.trim(),
         class: form.class,
-        role: form.role,
+        role: form.roles,
         rarity: form.rarity,
         description: form.description,
         lore: form.lore,
         abilities,
+        traits,
         stats: form.stats,
       });
       onClose();
@@ -174,6 +216,8 @@ function UnitModal({ unit, onSave, onClose }: {
 
   const inputCls = "w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary";
   const statKeys = Object.keys(DEFAULT_UNIT_STATS);
+
+  const TRAIT_COLOR_LABELS: Record<TraitColor, string> = { green: 'Положительная', gray: 'Нейтральная', red: 'Негативная' };
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-background/80 overflow-y-auto py-6">
@@ -200,16 +244,21 @@ function UnitModal({ unit, onSave, onClose }: {
               </select>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground block mb-1.5">Роль</label>
-              <select value={form.role} onChange={e => set('role', e.target.value)} className={inputCls}>
-                {UNIT_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-            <div>
               <label className="text-xs text-muted-foreground block mb-1.5">Редкость</label>
               <select value={form.rarity} onChange={e => set('rarity', e.target.value)} className={inputCls}>
                 {RARITIES.map(r => <option key={r} value={r}>{RARITY_LABELS[r]}</option>)}
               </select>
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-muted-foreground block mb-2">Роли (можно несколько)</label>
+              <div className="flex flex-wrap gap-2">
+                {UNIT_ROLES.map(r => (
+                  <button key={r} type="button" onClick={() => toggleRole(r)}
+                    className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${form.roles.includes(r) ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="col-span-2">
               <label className="text-xs text-muted-foreground block mb-1.5">Описание</label>
@@ -221,40 +270,63 @@ function UnitModal({ unit, onSave, onClose }: {
             </div>
           </div>
 
-          {/* Способности */}
+          {/* Особенности */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Способности</h4>
+              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Особенности</h4>
+              <button type="button" onClick={addTrait} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
+                <Icon name="Plus" size={12} /> Добавить
+              </button>
+            </div>
+            {form.traits.length === 0 && <p className="text-xs text-muted-foreground italic">Нет особенностей.</p>}
+            <div className="space-y-2">
+              {form.traits.map((tr, i) => (
+                <div key={i} className="border border-border rounded-sm p-3 space-y-2 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <input type="text" value={tr.name} onChange={e => updateTrait(i, { name: e.target.value })}
+                      className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      placeholder="Название особенности" />
+                    <select value={tr.color} onChange={e => updateTrait(i, { color: e.target.value as TraitColor })}
+                      className="bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                      {(Object.keys(TRAIT_COLOR_LABELS) as TraitColor[]).map(c => (
+                        <option key={c} value={c}>{TRAIT_COLOR_LABELS[c]}</option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={() => removeTrait(i)} className="text-muted-foreground hover:text-destructive transition-colors">
+                      <Icon name="Trash2" size={13} />
+                    </button>
+                  </div>
+                  <input type="text" value={tr.description} onChange={e => updateTrait(i, { description: e.target.value })}
+                    className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="Описание особенности (появится в тултипе)" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Умения */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Умения</h4>
               <button type="button" onClick={addAbility} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
                 <Icon name="Plus" size={12} /> Добавить
               </button>
             </div>
-            {form.abilities.length === 0 && (
-              <p className="text-xs text-muted-foreground italic">Нет способностей. Нажмите «Добавить».</p>
-            )}
+            {form.abilities.length === 0 && <p className="text-xs text-muted-foreground italic">Нет умений. Нажмите «Добавить».</p>}
             <div className="space-y-3">
               {form.abilities.map((ab, i) => (
                 <div key={i} className="border border-border rounded-sm p-3 space-y-2 bg-muted/30">
                   <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={ab.name}
-                      onChange={e => updateAbility(i, { name: e.target.value })}
+                    <input type="text" value={ab.name} onChange={e => updateAbility(i, { name: e.target.value })}
                       className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Название способности"
-                    />
+                      placeholder="Название умения" />
                     <button type="button" onClick={() => removeAbility(i)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0">
                       <Icon name="Trash2" size={13} />
                     </button>
                   </div>
-                  <input
-                    type="text"
-                    value={ab.description}
-                    onChange={e => updateAbility(i, { description: e.target.value })}
+                  <input type="text" value={ab.description} onChange={e => updateAbility(i, { description: e.target.value })}
                     className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Описание (необязательно)"
-                  />
-                  {/* Модификаторы */}
+                    placeholder="Описание (необязательно)" />
                   {Object.entries(ab.modifiers).length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {Object.entries(ab.modifiers).map(([key, val]) => (
@@ -269,13 +341,9 @@ function UnitModal({ unit, onSave, onClose }: {
                     <select value={ab.newModKey} onChange={e => updateAbility(i, { newModKey: e.target.value })} className="flex-1 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
                       {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
                     </select>
-                    <input
-                      type="number"
-                      value={ab.newModVal}
-                      onChange={e => updateAbility(i, { newModVal: e.target.value })}
+                    <input type="number" value={ab.newModVal} onChange={e => updateAbility(i, { newModVal: e.target.value })}
                       className="w-20 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="±знач."
-                    />
+                      placeholder="±знач." />
                     <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Баф/Дебаф</button>
                   </div>
                 </div>
@@ -289,13 +357,8 @@ function UnitModal({ unit, onSave, onClose }: {
               {statKeys.map(key => (
                 <div key={key}>
                   <label className="text-[10px] text-muted-foreground block mb-1">{key}</label>
-                  <input
-                    type="number"
-                    value={form.stats[key as keyof typeof DEFAULT_UNIT_STATS]}
-                    onChange={e => setStat(key, e.target.value)}
-                    className={inputCls + ' font-mono-data'}
-                    min={-9999} max={9999}
-                  />
+                  <input type="number" value={form.stats[key as keyof typeof DEFAULT_UNIT_STATS]}
+                    onChange={e => setStat(key, e.target.value)} className={inputCls + ' font-mono-data'} min={-9999} max={9999} />
                 </div>
               ))}
             </div>

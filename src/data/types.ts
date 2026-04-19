@@ -2,6 +2,14 @@ export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type UnitClass = 'Пехота' | 'Кавалерия' | 'Стрелки' | 'Осадные';
 export type UnitRole = 'Танк' | 'Урон' | 'Поддержка' | 'Разведчик' | 'Контроль';
 
+export type TraitColor = 'green' | 'gray' | 'red';
+
+export interface Trait {
+  name: string;
+  description?: string;
+  color?: TraitColor;
+}
+
 export interface UnitStats {
   // Основные
   health: number;           // Здоровье
@@ -47,10 +55,11 @@ export interface Unit {
   id: string;
   name: string;
   class: UnitClass;
-  role: UnitRole;
+  role: UnitRole | UnitRole[];
   rarity: Rarity;
   stats: UnitStats;
   description: string;
   lore: string;
   abilities: (string | Ability)[];
+  traits?: Trait[];
 }

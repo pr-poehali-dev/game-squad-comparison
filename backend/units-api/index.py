@@ -52,26 +52,48 @@ def slugify(text):
     return text[:100]
 
 
-def row_to_unit(row):
-    abilities_raw = row[7]
-    if isinstance(abilities_raw, list):
-        abilities = abilities_raw
-    elif isinstance(abilities_raw, str):
+def parse_jsonb(val):
+    if val is None:
+        return []
+    if isinstance(val, (list, dict)):
+        return val
+    if isinstance(val, str):
         try:
-            abilities = json.loads(abilities_raw)
+            return json.loads(val)
         except Exception:
-            abilities = []
-    else:
-        abilities = []
+            return []
+    return []
+
+
+def row_to_unit(row):
+    # row: id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits
     return {
-        'id': row[0], 'name': row[1], 'class': row[2], 'role': row[3],
-        'rarity': row[4], 'description': row[5] or '', 'lore': row[6] or '',
-        'abilities': abilities,
+        'id': row[0],
+        'name': row[1],
+        'class': row[2],
+        'role': parse_jsonb(row[3]),
+        'rarity': row[4],
+        'description': row[5] or '',
+        'lore': row[6] or '',
+        'abilities': parse_jsonb(row[7]),
         'avatar_url': row[8] or '',
         'stats': row[9] if row[9] else {},
         'created_at': str(row[10]) if row[10] else '',
         'is_active': row[11],
+        'traits': parse_jsonb(row[12]) if len(row) > 12 else [],
     }
+
+
+SELECT_COLS = "id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active, traits"
+
+
+def normalize_role(role_raw):
+    """Приводим role к списку строк."""
+    if isinstance(role_raw, list):
+        return role_raw
+    if isinstance(role_raw, str):
+        return [role_raw]
+    return ['Урон']
 
 
 def handler(event: dict, context) -> dict:
@@ -92,8 +114,7 @@ def handler(event: dict, context) -> dict:
     if method == 'GET' or action == 'list':
         with conn.cursor() as cur:
             cur.execute(
-                f"SELECT id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active "
-                f"FROM {SCHEMA}.units WHERE is_active = true ORDER BY name"
+                f"SELECT {SELECT_COLS} FROM {SCHEMA}.units WHERE is_active = true ORDER BY name"
             )
             rows = cur.fetchall()
         conn.close()
@@ -114,11 +135,12 @@ def handler(event: dict, context) -> dict:
 
         unit_id = slugify(name)
         unit_class = body.get('class', 'Пехота')
-        role = body.get('role', 'Урон')
+        role = normalize_role(body.get('role', ['Урон']))
         rarity = body.get('rarity', 'common')
         description = body.get('description', '')
         lore = body.get('lore', '')
         abilities = body.get('abilities', [])
+        traits = body.get('traits', [])
         avatar_url = body.get('avatar_url', '')
         stats = body.get('stats', {})
 
@@ -128,10 +150,12 @@ def handler(event: dict, context) -> dict:
                 unit_id = unit_id + '-' + os.urandom(3).hex()
 
             cur.execute(
-                f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_by) "
-                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
-                f"RETURNING id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active",
-                (unit_id, name, unit_class, role, rarity, description, lore, json.dumps(abilities, ensure_ascii=False), avatar_url, json.dumps(stats), user['id'])
+                f"INSERT INTO {SCHEMA}.units (id, name, class, role, rarity, description, lore, abilities, traits, avatar_url, stats, created_by) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                f"RETURNING {SELECT_COLS}",
+                (unit_id, name, unit_class, json.dumps(role, ensure_ascii=False), rarity, description, lore,
+                 json.dumps(abilities, ensure_ascii=False), json.dumps(traits, ensure_ascii=False),
+                 avatar_url, json.dumps(stats), user['id'])
             )
             row = cur.fetchone()
             conn.commit()
@@ -151,11 +175,12 @@ def handler(event: dict, context) -> dict:
             return json_response({'error': 'Поле "название" обязательно'}, 400)
 
         unit_class = body.get('class', 'Пехота')
-        role = body.get('role', 'Урон')
+        role = normalize_role(body.get('role', ['Урон']))
         rarity = body.get('rarity', 'common')
         description = body.get('description', '')
         lore = body.get('lore', '')
         abilities = body.get('abilities', [])
+        traits = body.get('traits', [])
         avatar_url = body.get('avatar_url', '')
         stats = body.get('stats', {})
 
@@ -167,9 +192,11 @@ def handler(event: dict, context) -> dict:
 
             cur.execute(
                 f"UPDATE {SCHEMA}.units SET name=%s, class=%s, role=%s, rarity=%s, description=%s, lore=%s, "
-                f"abilities=%s, avatar_url=%s, stats=%s, updated_at=now() WHERE id=%s "
-                f"RETURNING id, name, class, role, rarity, description, lore, abilities, avatar_url, stats, created_at, is_active",
-                (name, unit_class, role, rarity, description, lore, json.dumps(abilities, ensure_ascii=False), avatar_url, json.dumps(stats), unit_id)
+                f"abilities=%s, traits=%s, avatar_url=%s, stats=%s, updated_at=now() WHERE id=%s "
+                f"RETURNING {SELECT_COLS}",
+                (name, unit_class, json.dumps(role, ensure_ascii=False), rarity, description, lore,
+                 json.dumps(abilities, ensure_ascii=False), json.dumps(traits, ensure_ascii=False),
+                 avatar_url, json.dumps(stats), unit_id)
             )
             row = cur.fetchone()
             conn.commit()
