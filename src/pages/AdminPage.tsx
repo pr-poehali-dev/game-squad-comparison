@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { useUnits, useTreaties } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole } from '@/data/types';
@@ -346,10 +347,13 @@ function TreatyModal({ treaty, onSave, onClose }: {
 // ───── Main AdminPage ─────
 export default function AdminPage() {
   const { user } = useAuth();
+  const { invalidate: invalidateUnits } = useUnits();
+  const { invalidate: invalidateTreaties } = useTreaties();
   const [tab, setTab] = useState<AdminTab>('units');
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [seedLoading, setSeedLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string; kind: 'unit' | 'treaty' } | null>(null);
   const [unitModal, setUnitModal] = useState<{ open: boolean; unit?: Record<string, unknown> | null }>({ open: false });
@@ -372,6 +376,23 @@ export default function AdminPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  const handleSeed = async () => {
+    setSeedLoading(true);
+    try {
+      const res = await seedApi.run();
+      const u = res.units as { inserted: number; skipped: number };
+      const t = res.treaties as { inserted: number; skipped: number };
+      showToast(`Импортировано: ${u.inserted} отрядов, ${t.inserted} трактатов`);
+      await loadData();
+      invalidateUnits();
+      invalidateTreaties();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка импорта', 'error');
+    } finally {
+      setSeedLoading(false);
+    }
+  };
+
   const handleSaveUnit = async (data: Record<string, unknown>) => {
     if (unitModal.unit) {
       await unitsApi.update(unitModal.unit.id as string, data);
@@ -381,6 +402,7 @@ export default function AdminPage() {
       showToast('Отряд успешно добавлен');
     }
     await loadData();
+    invalidateUnits();
   };
 
   const handleSaveTreaty = async (data: Record<string, unknown>) => {
@@ -392,6 +414,7 @@ export default function AdminPage() {
       showToast('Трактат успешно добавлен');
     }
     await loadData();
+    invalidateTreaties();
   };
 
   const handleConfirmDelete = async () => {
@@ -400,9 +423,11 @@ export default function AdminPage() {
       if (confirmDelete.kind === 'unit') {
         await unitsApi.delete(confirmDelete.id);
         showToast('Отряд успешно удалён');
+        invalidateUnits();
       } else {
         await treatiesApi.delete(confirmDelete.id);
         showToast('Трактат успешно удалён');
+        invalidateTreaties();
       }
       await loadData();
     } catch (err: unknown) {
@@ -432,6 +457,14 @@ export default function AdminPage() {
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">Управление данными справочника</p>
         </div>
+        <button
+          onClick={handleSeed}
+          disabled={seedLoading}
+          className="flex items-center gap-2 px-3 py-2 text-xs border border-border rounded-sm hover:bg-muted disabled:opacity-50 transition-colors"
+        >
+          <Icon name={seedLoading ? 'Loader' : 'Download'} size={13} className={seedLoading ? 'animate-spin' : ''} />
+          Импортировать базовые данные
+        </button>
       </div>
 
       {/* Tabs */}

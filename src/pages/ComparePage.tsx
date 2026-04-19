@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { UNITS } from '@/data/units';
-import { TREATIES } from '@/data/treaties';
+import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { STAT_GROUPS, ALL_STATS } from '@/data/statGroups';
 import { Unit, UnitStats } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
@@ -13,6 +12,8 @@ interface ComparePageProps {
 }
 
 export default function ComparePage({ appliedTreaties, onApply, onRemove }: ComparePageProps) {
+  const { units: UNITS, loading: unitsLoading } = useUnits();
+  const { treaties: TREATIES } = useTreaties();
   const [selected, setSelected] = useState<string[]>([]);
   const [picker, setPicker] = useState(false);
   const [treatyPanelUnit, setTreatyPanelUnit] = useState<string | null>(null);
@@ -52,6 +53,12 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
   const activeTreatyIds = treatyPanelUnit ? (appliedTreaties[treatyPanelUnit] || []) : [];
 
   const currentGroupStats = STAT_GROUPS[activeGroup].stats;
+
+  if (unitsLoading) return (
+    <div className="flex items-center justify-center py-24 text-muted-foreground text-sm">
+      <Icon name="Loader" size={18} className="animate-spin mr-2" /> Загрузка...
+    </div>
+  );
 
   return (
     <div>

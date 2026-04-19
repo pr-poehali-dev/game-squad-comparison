@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { UNITS } from '@/data/units';
-import { TREATIES } from '@/data/treaties';
+import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { STAT_GROUPS } from '@/data/statGroups';
 import { UnitStats } from '@/data/types';
 import StatBar from '@/components/StatBar';
@@ -18,13 +17,15 @@ interface UnitDetailPageProps {
 }
 
 export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: UnitDetailPageProps) {
+  const { units } = useUnits();
+  const { treaties } = useTreaties();
   const [activeGroup, setActiveGroup] = useState(0);
 
-  const unit = UNITS.find(u => u.id === unitId);
+  const unit = units.find(u => u.id === unitId);
   if (!unit) return null;
 
   const myTreatyIds = appliedTreaties[unit.id] || [];
-  const myTreaties = TREATIES.filter(t => myTreatyIds.includes(t.id));
+  const myTreaties = treaties.filter(t => myTreatyIds.includes(t.id));
 
   const getBonus = (stat: keyof UnitStats) =>
     myTreaties.reduce((acc, t) => acc + (t.statModifiers[stat] || 0), 0);

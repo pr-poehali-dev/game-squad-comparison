@@ -2,6 +2,7 @@ const URLS = {
   auth: 'https://functions.poehali.dev/23d99d84-1616-4b50-9313-b88ca1a4a272',
   unitsApi: 'https://functions.poehali.dev/1332b379-06bb-41c1-83f8-e8bc6369fd8e',
   treatiesApi: 'https://functions.poehali.dev/c9428367-4953-41ff-9034-681a2f9d5d89',
+  seed: 'https://functions.poehali.dev/95ab29ef-b38b-4e5b-9578-0456fb855829',
 };
 
 function getSessionId(): string {
@@ -50,6 +51,11 @@ export const unitsApi = {
     request(`${URLS.unitsApi}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id: string) =>
     request(`${URLS.unitsApi}/${id}`, { method: 'DELETE' }),
+};
+
+// Seed
+export const seedApi = {
+  run: () => request(URLS.seed, { method: 'POST', body: JSON.stringify({}) }),
 };
 
 // Treaties

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { UNITS } from '@/data/units';
+import { useUnits } from '@/hooks/useAppData';
 import { UnitClass, UnitRole, Rarity } from '@/data/types';
 import UnitCard from '@/components/UnitCard';
 import Icon from '@/components/ui/icon';
@@ -16,6 +16,7 @@ interface CatalogPageProps {
 }
 
 export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
+  const { units: UNITS, loading } = useUnits();
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState<UnitClass | ''>('');
   const [roleFilter, setRoleFilter] = useState<UnitRole | ''>('');
@@ -45,6 +46,12 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   };
 
   const hasFilters = search || classFilter || roleFilter || rarityFilter;
+
+  if (loading) return (
+    <div className="flex items-center justify-center py-24 text-muted-foreground text-sm">
+      <Icon name="Loader" size={18} className="animate-spin mr-2" /> Загрузка...
+    </div>
+  );
 
   return (
     <div>

@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { UNITS } from '@/data/units';
-import { TREATIES } from '@/data/treaties';
+import { useUnits, useTreaties } from '@/hooks/useAppData';
 import { ALL_STATS } from '@/data/statGroups';
 import { Treaty, Unit, UnitStats } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
@@ -19,6 +18,8 @@ interface TreatiesPageProps {
 }
 
 export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: TreatiesPageProps) {
+  const { units: UNITS, loading: unitsLoading } = useUnits();
+  const { treaties: TREATIES, loading: treatiesLoading } = useTreaties();
   const [selectedUnit, setSelectedUnit] = useState<string>('');
 
   const unit = UNITS.find(u => u.id === selectedUnit);
@@ -32,6 +33,12 @@ export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: Tre
     const ids = appliedTreaties[unitId] || [];
     return ids.length;
   };
+
+  if (unitsLoading || treatiesLoading) return (
+    <div className="flex items-center justify-center py-24 text-muted-foreground text-sm">
+      <Icon name="Loader" size={18} className="animate-spin mr-2" /> Загрузка...
+    </div>
+  );
 
   return (
     <div>
