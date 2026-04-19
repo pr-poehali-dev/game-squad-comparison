@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Get all units",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {"units": []},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

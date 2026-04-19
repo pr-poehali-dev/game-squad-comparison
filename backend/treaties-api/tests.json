@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Get all treaties",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {"treaties": []},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

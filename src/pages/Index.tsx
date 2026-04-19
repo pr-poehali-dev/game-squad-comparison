@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
+import { useAuth } from '@/context/AuthContext';
 import CatalogPage from './CatalogPage';
 import ComparePage from './ComparePage';
 import TreatiesPage from './TreatiesPage';
 import UnitDetailPage from './UnitDetailPage';
 import AboutPage from './AboutPage';
+import AuthPage from './AuthPage';
+import AdminPage from './AdminPage';
 
-type Page = 'catalog' | 'compare' | 'treaties' | 'about';
+type Page = 'catalog' | 'compare' | 'treaties' | 'about' | 'auth' | 'admin';
 
-const NAV_ITEMS: Array<{ id: Page; label: string; icon: string }> = [
+const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: boolean }> = [
   { id: 'catalog', label: 'Каталог', icon: 'Grid3X3' },
   { id: 'compare', label: 'Сравнение', icon: 'GitCompare' },
   { id: 'treaties', label: 'Трактаты', icon: 'ScrollText' },
   { id: 'about', label: 'О проекте', icon: 'Info' },
+  { id: 'admin', label: 'Управление', icon: 'Settings', adminOnly: true },
 ];
 
 export default function Index() {
+  const { user, loading: authLoading, logout } = useAuth();
   const [page, setPage] = useState<Page>('catalog');
   const [detailUnitId, setDetailUnitId] = useState<string | null>(null);
   const [appliedTreaties, setAppliedTreaties] = useState<Record<string, string[]>>(() => {
@@ -52,6 +57,14 @@ export default function Index() {
     setMobileMenuOpen(false);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    setPage('catalog');
+    setMobileMenuOpen(false);
+  };
+
+  const visibleNav = NAV_ITEMS.filter(item => !item.adminOnly || user?.is_admin);
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -78,7 +91,7 @@ export default function Index() {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-0.5">
-          {NAV_ITEMS.map(item => (
+          {visibleNav.map(item => (
             <button
               key={item.id}
               onClick={() => navigateTo(item.id)}
@@ -96,9 +109,40 @@ export default function Index() {
           ))}
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-border">
-          <div className="text-[10px] text-muted-foreground font-mono-data">v1.0.0</div>
+        {/* User section */}
+        <div className="p-3 border-t border-border space-y-0.5">
+          {!authLoading && (
+            user ? (
+              <>
+                <div className="px-3 py-2">
+                  <div className="text-xs font-medium text-foreground truncate">{user.username}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{user.email}</div>
+                  {user.is_admin && (
+                    <div className="text-[10px] text-primary mt-0.5">Администратор</div>
+                  )}
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+                >
+                  <Icon name="LogOut" size={14} />
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigateTo('auth')}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-sm text-sm transition-all
+                  ${page === 'auth' ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
+              >
+                <Icon name="LogIn" size={15} />
+                Войти
+              </button>
+            )
+          )}
+          <div className="px-3 pt-1">
+            <div className="text-[10px] text-muted-foreground font-mono-data">v1.0.0</div>
+          </div>
         </div>
       </aside>
 
@@ -122,7 +166,7 @@ export default function Index() {
               className="hover:text-foreground cursor-pointer transition-colors"
               onClick={() => { setPage('catalog'); setDetailUnitId(null); }}
             >
-              {NAV_ITEMS.find(n => n.id === page)?.label}
+              {page === 'auth' ? 'Вход' : page === 'admin' ? 'Управление' : NAV_ITEMS.find(n => n.id === page)?.label}
             </span>
             {detailUnitId && (
               <>
@@ -155,9 +199,13 @@ export default function Index() {
               onApply={handleApplyTreaty}
               onRemove={handleRemoveTreaty}
             />
-          ) : (
+          ) : page === 'about' ? (
             <AboutPage />
-          )}
+          ) : page === 'auth' ? (
+            <AuthPage onSuccess={() => setPage('catalog')} />
+          ) : page === 'admin' ? (
+            <AdminPage />
+          ) : null}
         </main>
       </div>
     </div>

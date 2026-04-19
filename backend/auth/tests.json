@@ -1,0 +1,30 @@
+{
+  "tests": [
+    {
+      "name": "Get current user without session",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Register new user",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "register", "username": "testuser777", "email": "test777@example.com", "password": "password123", "confirmPassword": "password123"},
+      "expectedStatus": 200,
+      "expectedBody": {"message": "string", "session_id": "string"},
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Login with wrong password",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "login", "email": "test@example.com", "password": "wrongpassword"},
+      "expectedStatus": 401,
+      "expectedBody": {"error": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
