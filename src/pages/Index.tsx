@@ -20,7 +20,7 @@ const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: bool
   { id: 'compare',  label: 'Сравнение',  icon: 'Swords' },
   { id: 'treaties', label: 'Трактаты',   icon: 'ScrollText' },
   { id: 'forum',    label: 'Форум',      icon: 'MessageSquare' },
-  { id: 'game',     label: 'Игра',       icon: 'Gamepad2' },
+  { id: 'game',     label: 'Неадекватная игра', icon: 'Gamepad2' },
   { id: 'about',    label: 'О проекте',  icon: 'Info' },
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
 ];
