@@ -4,44 +4,46 @@ interface StarRatingProps {
   className?: string;
 }
 
+/* Геральдический крестъ — заменяет привычные звёзды */
+const CROSS = 'M12 2 L14 9 L22 9 L22 15 L14 15 L12 22 L10 15 L2 15 L2 9 L10 9 Z';
+
+const MEDAL_FILL   = '#b05a32'; /* ржавая медь */
+const MEDAL_STROKE = '#6e2f18'; /* потемневшая медь */
+const MEDAL_EMPTY  = '#6e2f1844';
+
 export default function StarRating({ value, size = 12, className = '' }: StarRatingProps) {
   if (!value || value <= 0) return null;
 
-  const stars = [];
+  const shapes = [];
   for (let i = 1; i <= 5; i++) {
     if (value >= i) {
-      stars.push(
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className="text-yellow-400 flex-shrink-0">
-          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+      shapes.push(
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="flex-shrink-0">
+          <path d={CROSS} fill={MEDAL_FILL} stroke={MEDAL_STROKE} strokeWidth="1.2" strokeLinejoin="round" />
         </svg>
       );
     } else if (value >= i - 0.5) {
-      stars.push(
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="text-yellow-400 flex-shrink-0">
+      shapes.push(
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="flex-shrink-0">
           <defs>
             <linearGradient id={`hg-${i}-${size}`}>
-              <stop offset="50%" stopColor="#facc15" />
+              <stop offset="50%" stopColor={MEDAL_FILL} />
               <stop offset="50%" stopColor="transparent" />
             </linearGradient>
           </defs>
-          <polygon
-            points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-            fill={`url(#hg-${i}-${size})`}
-            stroke="#facc15"
-            strokeWidth="1.5"
-          />
+          <path d={CROSS} fill={`url(#hg-${i}-${size})`} stroke={MEDAL_STROKE} strokeWidth="1.2" strokeLinejoin="round" />
         </svg>
       );
     } else {
-      stars.push(
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-yellow-400/25 flex-shrink-0">
-          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
+      shapes.push(
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24" className="flex-shrink-0">
+          <path d={CROSS} fill="none" stroke={MEDAL_EMPTY} strokeWidth="1.2" strokeLinejoin="round" />
         </svg>
       );
     }
   }
 
-  return <span className={`inline-flex items-center gap-0.5 ${className}`}>{stars}</span>;
+  return <span className={`inline-flex items-center gap-0.5 ${className}`}>{shapes}</span>;
 }
 
 // ── Интерактивный пикер для AdminPage ──
@@ -68,22 +70,19 @@ export function StarPicker({ value, onChange }: StarPickerProps) {
             <span key={i} className="relative cursor-pointer" style={{ width: SIZE, height: SIZE }}>
               <svg width={SIZE} height={SIZE} viewBox="0 0 24 24" className="pointer-events-none absolute inset-0">
                 {full ? (
-                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                    fill="#facc15" />
+                  <path d={CROSS} fill={MEDAL_FILL} stroke={MEDAL_STROKE} strokeWidth="1.2" strokeLinejoin="round" />
                 ) : half ? (
                   <>
                     <defs>
                       <linearGradient id={`hg${i}`}>
-                        <stop offset="50%" stopColor="#facc15" />
+                        <stop offset="50%" stopColor={MEDAL_FILL} />
                         <stop offset="50%" stopColor="transparent" />
                       </linearGradient>
                     </defs>
-                    <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                      fill={`url(#hg${i})`} stroke="#facc15" strokeWidth="1.5" />
+                    <path d={CROSS} fill={`url(#hg${i})`} stroke={MEDAL_STROKE} strokeWidth="1.2" strokeLinejoin="round" />
                   </>
                 ) : (
-                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-                    fill="none" stroke="#facc1540" strokeWidth="1.5" />
+                  <path d={CROSS} fill="none" stroke={MEDAL_EMPTY} strokeWidth="1.2" strokeLinejoin="round" />
                 )}
               </svg>
               <span className="absolute left-0 top-0 h-full z-10" style={{ width: '50%' }}

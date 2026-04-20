@@ -23,45 +23,43 @@ function TooltipPortal({ role, description, anchorRef }: {
       top: pos.y,
       transform: 'translate(-50%, -100%)',
       zIndex: 9999,
-      width: '200px',
-      padding: '8px 12px',
-      background: 'hsl(224 20% 9%)',
-      border: '1px solid hsl(42 90% 52% / 0.35)',
-      borderRadius: '3px',
-      boxShadow: '0 12px 32px hsl(0 0% 0% / 0.6)',
+      width: '220px',
+      padding: '10px 13px',
+      background: 'hsl(22 10% 8%)',
+      border: '1px solid hsl(18 52% 48% / 0.7)',
+      borderRadius: 0,
+      boxShadow: '0 14px 34px hsl(0 0% 0% / 0.7), inset 0 1px 0 hsl(30 30% 30% / 0.25)',
       pointerEvents: 'none',
     }}>
-      <div style={{
-        fontFamily: 'Cinzel, serif',
-        fontSize: '0.6rem',
-        fontWeight: 600,
-        color: 'hsl(42 90% 52%)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.1em',
+      <div className="uppercase" style={{
+        fontFamily: '"IM Fell English SC", serif',
+        fontSize: '0.65rem',
+        fontWeight: 400,
+        color: 'hsl(18 62% 58%)',
+        letterSpacing: '0.22em',
         marginBottom: '4px',
       }}>
         {role}
       </div>
       <div style={{
-        fontFamily: 'Rajdhani, sans-serif',
-        fontSize: '0.75rem',
-        lineHeight: 1.5,
-        color: 'hsl(38 15% 72%)',
+        fontFamily: '"IM Fell English", serif',
+        fontSize: '0.82rem',
+        lineHeight: 1.45,
+        color: 'hsl(40 22% 78%)',
       }}>
         {description}
       </div>
-      {/* Стрелка вниз */}
       <div style={{
         position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%)',
         width: 0, height: 0,
         borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-        borderTop: '6px solid hsl(42 90% 52% / 0.35)',
+        borderTop: '6px solid hsl(18 52% 48% / 0.7)',
       }} />
       <div style={{
         position: 'absolute', bottom: '-4px', left: '50%', transform: 'translateX(-50%)',
         width: 0, height: 0,
         borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-        borderTop: '5px solid hsl(224 20% 9%)',
+        borderTop: '5px solid hsl(22 10% 8%)',
       }} />
     </div>,
     document.body
@@ -82,25 +80,26 @@ export default function RoleTooltip({ role, showDot = false, size = 'sm' }: Role
   const def = roleDefs.find(r => r.name === role);
   const description = def?.description;
 
-  const fontSize = size === 'sm' ? '0.6rem' : '0.85rem';
-  const color = size === 'sm' ? 'hsl(215 18% 42%)' : 'hsl(215 18% 60%)';
+  const fontSize = size === 'sm' ? '0.72rem' : '0.92rem';
+  const color = size === 'sm' ? 'hsl(30 18% 62%)' : 'hsl(40 24% 78%)';
 
   return (
     <span className="inline-flex items-center gap-1">
       {showDot && (
-        <span style={{ color: 'hsl(215 18% 30%)', fontSize: '0.5rem' }}>·</span>
+        <span style={{ color: 'hsl(18 52% 42%)', fontSize: '0.55rem' }}>◆</span>
       )}
       <span
         ref={ref}
         onMouseEnter={() => description && setVisible(true)}
         onMouseLeave={() => setVisible(false)}
+        className="italic"
         style={{
-          fontFamily: 'Rajdhani, sans-serif',
+          fontFamily: '"IM Fell English", serif',
           fontSize,
           color,
-          letterSpacing: '0.04em',
+          letterSpacing: '0.02em',
           cursor: description ? 'help' : 'default',
-          borderBottom: description ? '1px dotted hsl(215 18% 35%)' : 'none',
+          borderBottom: description ? '1px dotted hsl(18 52% 42% / 0.55)' : 'none',
           display: 'inline-block',
         }}
       >

@@ -20,10 +20,15 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				'cinzel': ['"Cinzel"', 'serif'],
-				'cinzel-deco': ['"Cinzel Decorative"', 'serif'],
-				'rajdhani': ['"Rajdhani"', 'sans-serif'],
-				'mono-data': ['"IBM Plex Mono"', 'monospace'],
+				'fell': ['"IM Fell English"', 'serif'],
+				'fell-sc': ['"IM Fell English SC"', 'serif'],
+				'fraktur': ['"UnifrakturCook"', 'serif'],
+				'garamond': ['"EB Garamond"', 'serif'],
+				'mono-data': ['"JetBrains Mono"', 'monospace'],
+				/* legacy aliases — чтобы не ломать оставшийся код */
+				'cinzel': ['"IM Fell English SC"', 'serif'],
+				'cinzel-deco': ['"UnifrakturCook"', 'serif'],
+				'rajdhani': ['"EB Garamond"', 'serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -68,7 +73,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				parchment: {
+					DEFAULT: 'hsl(var(--parchment))',
+					dark: 'hsl(var(--parchment-dark))',
+				},
+				oxblood: 'hsl(var(--oxblood))',
+				copper:  'hsl(var(--copper))',
+				soot:    'hsl(var(--soot))',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,25 +96,26 @@ export default {
 					from: { height: 'var(--radix-accordion-content-height)' },
 					to: { height: '0' }
 				},
-				'glow-pulse': {
-					'0%, 100%': { boxShadow: '0 0 8px hsl(42 90% 52% / 0.15)' },
-					'50%': { boxShadow: '0 0 24px hsl(42 90% 52% / 0.4)' },
-				},
-				'shimmer': {
-					'0%': { backgroundPosition: '-200% center' },
-					'100%': { backgroundPosition: '200% center' },
+				'ember-flicker': {
+					'0%, 100%': { opacity: '0.55', filter: 'brightness(0.95)' },
+					'40%': { opacity: '0.85', filter: 'brightness(1.15)' },
+					'70%': { opacity: '0.65', filter: 'brightness(1.05)' },
 				},
 				'slide-up': {
 					from: { opacity: '0', transform: 'translateY(14px)' },
 					to: { opacity: '1', transform: 'translateY(0)' },
 				},
+				'ink-seep': {
+					from: { opacity: '0', filter: 'blur(6px)' },
+					to:   { opacity: '1', filter: 'blur(0)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
-				'shimmer': 'shimmer 2.5s linear infinite',
+				'ember-flicker': 'ember-flicker 2.8s ease-in-out infinite',
 				'slide-up': 'slide-up 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
+				'ink-seep': 'ink-seep 0.6s ease forwards',
 			}
 		}
 	},
