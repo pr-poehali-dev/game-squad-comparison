@@ -196,52 +196,40 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
               </div>
             </div>
 
+            {/* Подвал: цифры всегда + статы разворачиваются при ховере */}
             <div
-              className="grid grid-cols-4 px-3 py-3"
               style={{
                 background:
                   'linear-gradient(180deg, hsl(222 16% 11%) 0%, hsl(222 18% 8%) 100%)',
                 borderTop: `1px solid hsl(${rarityHue} / 0.3)`,
               }}
             >
-              <Pill icon="Users"  value={unit.stats.troops}          tint="42 76% 58%" />
-              <Pill icon="Crown"  value={unit.stats.leadership}      tint="282 58% 65%" />
-              <Pill icon="Sword"  value={unit.stats.slashingDamage}  tint="18 84% 58%" />
-              <Pill icon="Shield" value={unit.stats.slashingDefense} tint="210 78% 60%" />
-            </div>
+              {/* Всегда видимые 4 числа */}
+              <div className="grid grid-cols-4 px-3 py-3">
+                <Pill icon="Users"  value={unit.stats.troops}          tint="42 76% 58%" />
+                <Pill icon="Crown"  value={unit.stats.leadership}      tint="282 58% 65%" />
+                <Pill icon="Sword"  value={unit.stats.slashingDamage}  tint="18 84% 58%" />
+                <Pill icon="Shield" value={unit.stats.slashingDefense} tint="210 78% 60%" />
+              </div>
 
-            <div
-              className="absolute left-3 right-3 p-3.5 pointer-events-none"
-              style={{
-                top: '54px',
-                background:
-                  'linear-gradient(180deg, hsl(222 20% 10% / 0.98) 0%, hsl(222 22% 7% / 0.98) 100%)',
-                border: `1px solid hsl(${rarityHue} / 0.4)`,
-                borderRadius: '12px',
-                boxShadow: `0 12px 28px hsl(222 40% 2% / 0.6), 0 0 16px hsl(${rarityHue} / 0.15)`,
-                backdropFilter: 'blur(8px)',
-                opacity: hovered && !flipped ? 1 : 0,
-                transform: hovered && !flipped ? 'translateY(0)' : 'translateY(-6px)',
-                transition: 'opacity 0.25s ease, transform 0.25s ease',
-              }}
-            >
+              {/* Статы — плавно раскрываются при ховере */}
               <div
-                className="uppercase text-center mb-2.5 pb-2"
                 style={{
-                  fontFamily: 'Manrope, sans-serif',
-                  fontSize: '0.6rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.22em',
-                  color: `hsl(${rarityHue})`,
-                  borderBottom: `1px solid hsl(${rarityHue} / 0.3)`,
+                  overflow: 'hidden',
+                  maxHeight: hovered && !flipped ? '220px' : '0px',
+                  transition: 'max-height 0.3s cubic-bezier(0.16,1,0.3,1)',
                 }}
               >
-                Характеристики
-              </div>
-              <div className="space-y-2">
-                {CARD_STATS.map(({ key, label, max }) => (
-                  <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
-                ))}
+                <div
+                  className="px-4 pb-4 pt-1 space-y-2"
+                  style={{
+                    borderTop: `1px solid hsl(${rarityHue} / 0.2)`,
+                  }}
+                >
+                  {CARD_STATS.map(({ key, label, max }) => (
+                    <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
