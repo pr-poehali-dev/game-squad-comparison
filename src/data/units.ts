@@ -37,7 +37,7 @@ export const UNITS: Unit[] = [
     id: "shadow-runners",
     name: "Теневые Бегуны",
     class: "Пехота",
-    role: "Разведчик",
+    role: "Борьба с кавалерией",
     rarity: "uncommon",
     description:
       "Быстрая лёгкая пехота, мастера засад и разведывательных операций.",
@@ -69,7 +69,7 @@ export const UNITS: Unit[] = [
     id: "storm-cavalry",
     name: "Штормовая Кавалерия",
     class: "Кавалерия",
-    role: "Урон",
+    role: "Танк",
     rarity: "rare",
     description:
       "Стремительный кавалерийский отряд, способный прорвать любой строй.",
@@ -101,7 +101,7 @@ export const UNITS: Unit[] = [
     id: "royal-longhorns",
     name: "Королевские Длиннолучники",
     class: "Стрелки",
-    role: "Урон",
+    role: "Танк",
     rarity: "rare",
     description:
       "Лучники, чьи стрелы заряжены магической энергией. Поражают врагов на огромной дистанции.",
@@ -133,7 +133,7 @@ export const UNITS: Unit[] = [
     id: "siege-masters",
     name: "Мастера Осады",
     class: "Осадные",
-    role: "Урон",
+    role: "Танк",
     rarity: "uncommon",
     description:
       "Инженеры и расчёты метательных машин. Незаменимы при штурме укреплений.",
@@ -165,7 +165,7 @@ export const UNITS: Unit[] = [
     id: "veil-mages",
     name: "Маги Завесы",
     class: "Магические",
-    role: "Поддержка",
+    role: "Борьба с кавалерией",
     rarity: "epic",
     description:
       "Могущественные маги, управляющие полем боя через наложение заклятий.",
@@ -233,7 +233,7 @@ export const UNITS: Unit[] = [
     id: "death-whisperers",
     name: "Шептуны Смерти",
     class: "Магические",
-    role: "Контроль",
+    role: "Борьба с кавалерией",
     rarity: "legendary",
     description: "Некроманты высшего ранга, способные поднимать павших воинов.",
     lore: "Смерть на поле боя для них — лишь начало. Каждый павший враг пополняет их армию.",
@@ -270,7 +270,7 @@ export const UNITS: Unit[] = [
     id: "golden-crossbows",
     name: "Золотые Арбалетчики",
     class: "Стрелки",
-    role: "Урон",
+    role: "Танк",
     rarity: "uncommon",
     description:
       "Опытные арбалетчики с тяжёлыми осадными арбалетами. Пробивают любую броню.",
@@ -302,7 +302,7 @@ export const UNITS: Unit[] = [
     id: "highland-berserkers",
     name: "Горные Берсерки",
     class: "Пехота",
-    role: "Урон",
+    role: "Танк",
     rarity: "rare",
     description:
       "Неистовые воины с севера, впадающие в боевое безумие при виде крови.",
@@ -334,7 +334,7 @@ export const UNITS: Unit[] = [
     id: "iron-hounds",
     name: "Железные Гончие",
     class: "Кавалерия",
-    role: "Разведчик",
+    role: "Борьба с кавалерией",
     rarity: "common",
     description:
       "Лёгкая кавалерия для быстрой разведки и преследования отступающих.",
@@ -366,7 +366,7 @@ export const UNITS: Unit[] = [
     id: "thunder-cannons",
     name: "Громовые Пушкари",
     class: "Осадные",
-    role: "Урон",
+    role: "Танк",
     rarity: "legendary",
     description:
       "Легендарные артиллеристы с орудиями небывалой разрушительной силы.",

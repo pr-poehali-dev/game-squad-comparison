@@ -1,6 +1,6 @@
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type UnitClass = 'Пехота' | 'Кавалерия' | 'Стрелки' | 'Осадные';
-export type UnitRole = 'Танк' | 'Урон' | 'Поддержка' | 'Разведчик' | 'Контроль';
+export type UnitRole = 'Танк' | 'Борьба с кавалерией' | string;
 
 export type TraitColor = 'green' | 'gray' | 'red';
 

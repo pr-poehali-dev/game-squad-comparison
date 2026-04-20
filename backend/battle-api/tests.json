@@ -17,7 +17,7 @@
           {
             "name": "Лучники",
             "class": "Стрелки",
-            "role": ["Урон"],
+            "role": ["Борьба с кавалерией"],
             "stats": { "health": 50, "troops": 100, "leadership": 40, "moveSpeed": 50, "morale": 60, "piercingDamage": 50, "slashingDamage": 10, "bluntDamage": 5, "piercingDefense": 15, "slashingDefense": 10, "bluntDefense": 10, "piercingPenetration": 35, "slashingPenetration": 5, "bluntPenetration": 5, "block": 5, "blockRecovery": 10, "rangeDistance": 8, "ammo": 30 },
             "abilities": [],
             "traits": []

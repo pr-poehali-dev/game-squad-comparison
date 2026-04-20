@@ -125,7 +125,7 @@ interface UnitFormData {
 function getRawRoles(raw: unknown): UnitRole[] {
   if (Array.isArray(raw)) return raw as UnitRole[];
   if (typeof raw === 'string') return [raw as UnitRole];
-  return ['Урон'];
+  return ['Танк'];
 }
 
 function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations }: {
