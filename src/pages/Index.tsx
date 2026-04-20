@@ -244,7 +244,7 @@ export default function Index() {
           {/* Версия */}
           <div className="px-3 pt-2 pb-1">
             <div className="text-[9px] font-mono-data tracking-widest" style={{ color: 'hsl(215 18% 30%)' }}>
-              v1.0.0 · CB Companion
+              v0.11 · CB Companion
             </div>
           </div>
         </div>

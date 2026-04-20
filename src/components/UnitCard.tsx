@@ -40,7 +40,6 @@ function getRoles(role: UnitRole | UnitRole[]): UnitRole[] {
   return Array.isArray(role) ? role : [role];
 }
 
-
 interface UnitCardProps {
   unit: Unit;
   onClick: () => void;
@@ -50,6 +49,7 @@ interface UnitCardProps {
 
 export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
   const [flipped, setFlipped] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   const roles      = getRoles(unit.role);
   const combatIcon = CLASS_ICONS[unit.class] || 'Sword';
@@ -64,7 +64,6 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
     background: selected
       ? 'linear-gradient(160deg, hsl(42 90% 52% / 0.08), hsl(224 16% 9%))'
       : 'hsl(224 16% 8%)',
-    minHeight: '380px',
   };
 
   return (
@@ -73,67 +72,146 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
       {/* Флип-сцена */}
       <div
         className={`card-flip-scene${flipped ? ' is-flipped' : ''}`}
-        style={{ minHeight: '380px', borderRadius: '3px' }}
+        style={{ borderRadius: '3px' }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       >
         <div className="card-flip-inner">
 
           {/* ══ ЛИЦО ══════════════════════════════════════════ */}
           <div
             className={`card-flip-front border border-rarity-${unit.rarity}${selected ? ' ring-1 ring-primary/60' : ''}`}
-            style={{ ...sharedBorderStyle, cursor: 'pointer', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+            style={{
+              ...sharedBorderStyle,
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              position: 'relative',
+              transition: 'box-shadow 0.2s',
+              boxShadow: hovered && !flipped
+                ? `0 8px 28px hsl(0 0% 0% / 0.5), 0 0 0 1px ${topColor}30`
+                : undefined,
+            }}
             onClick={() => onClick()}
           >
             {/* Полоска редкости */}
             <div style={{ height: '2px', flexShrink: 0, background: `linear-gradient(90deg, transparent, ${topColor}, transparent)` }} />
 
-            {/* Портрет */}
-            <div className="relative flex-shrink-0 overflow-hidden" style={{ aspectRatio: '3/4', background: bgGradient, maxHeight: '52%' }}>
+            {/* Портрет — занимает всё пространство */}
+            <div className="relative overflow-hidden" style={{ background: bgGradient, aspectRatio: '3/4' }}>
               {unit.avatar_url ? (
-                <img src={unit.avatar_url} alt={unit.name} className="w-full h-full object-cover object-top"
-                  style={{ filter: 'brightness(0.92) contrast(1.05)' }} />
+                <img
+                  src={unit.avatar_url}
+                  alt={unit.name}
+                  className="w-full h-full object-cover object-top"
+                  style={{
+                    filter: 'brightness(0.92) contrast(1.05)',
+                    transition: 'transform 0.4s ease',
+                    transform: hovered ? 'scale(1.03)' : 'scale(1)',
+                  }}
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Icon name={combatIcon} size={44} style={{ color: iconColor, opacity: 0.25 }} fallback="Shield" />
+                  <Icon name={combatIcon} size={56} style={{ color: iconColor, opacity: 0.2 }} fallback="Shield" />
                 </div>
               )}
-              <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-                style={{ background: 'linear-gradient(to top, hsl(224 16% 8%), transparent)' }} />
-              <div className="absolute top-2 right-2"><RarityBadge rarity={unit.rarity} /></div>
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-1.5 py-0.5"
+
+              {/* Бейдж редкости */}
+              <div className="absolute top-2 right-2">
+                <RarityBadge rarity={unit.rarity} />
+              </div>
+
+              {/* Иконка класса */}
+              <div className="absolute top-2 left-2 flex items-center gap-1 px-1.5 py-0.5"
                 style={{ background: 'hsl(224 16% 7% / 0.85)', border: `1px solid ${iconColor}35`, borderRadius: '2px' }}>
                 <Icon name={combatIcon} size={9} style={{ color: iconColor }} fallback="Shield" />
                 <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.08em', color: iconColor, textTransform: 'uppercase' }}>
                   {unit.class}
                 </span>
               </div>
-            </div>
 
-            {/* Нижняя часть */}
-            <div className="flex flex-col flex-1 px-3 pt-2 pb-3">
-              <h3 className="text-sm leading-tight text-foreground truncate mb-0.5"
-                style={{ fontFamily: 'Cinzel, serif', fontWeight: 600, letterSpacing: '0.02em' }}>{unit.name}</h3>
-              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={9} />}
-                <div className="flex items-center gap-1 flex-wrap">
-                  {roles.map((role, i) => (
-                    <RoleTooltip key={role} role={role} showDot={i > 0} size="sm" />
+              {/* ── Информационная панель снизу — всегда видна ── */}
+              <div
+                className="absolute inset-x-0 bottom-0 px-3 pt-8 pb-3"
+                style={{
+                  background: 'linear-gradient(to top, hsl(224 16% 7% / 0.98) 60%, transparent)',
+                }}
+              >
+                <h3 className="text-sm leading-tight text-foreground truncate mb-0.5"
+                  style={{ fontFamily: 'Cinzel, serif', fontWeight: 600, letterSpacing: '0.02em' }}>
+                  {unit.name}
+                </h3>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={9} />}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {roles.map((role, i) => (
+                      <RoleTooltip key={role} role={role} showDot={i > 0} size="sm" />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Быстрые цифры всегда видны */}
+                <div className="flex items-center gap-3 mt-1.5">
+                  <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 48%)' }}>
+                    <Icon name="Users" size={9} />
+                    <span className="font-mono-data" style={{ fontSize: '0.6rem' }}>{unit.stats.troops}</span>
+                  </div>
+                  <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 48%)' }}>
+                    <Icon name="Crown" size={9} />
+                    <span className="font-mono-data" style={{ fontSize: '0.6rem' }}>{unit.stats.leadership}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Характеристики — появляются при наведении ── */}
+              <div
+                className="absolute inset-x-0 bottom-0"
+                style={{
+                  padding: '12px',
+                  background: 'linear-gradient(to top, hsl(224 16% 6% / 0.98) 80%, transparent)',
+                  opacity: hovered ? 1 : 0,
+                  transform: hovered ? 'translateY(0)' : 'translateY(8px)',
+                  transition: 'opacity 0.25s ease, transform 0.25s ease',
+                  pointerEvents: hovered ? 'auto' : 'none',
+                }}
+              >
+                {/* Имя + роли */}
+                <h3 className="text-sm leading-tight text-foreground truncate mb-0.5"
+                  style={{ fontFamily: 'Cinzel, serif', fontWeight: 600, letterSpacing: '0.02em' }}>
+                  {unit.name}
+                </h3>
+                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                  {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={9} />}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {roles.map((role, i) => (
+                      <RoleTooltip key={role} role={role} showDot={i > 0} size="sm" />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Статы */}
+                <div className="space-y-1.5">
+                  {CARD_STATS.map(({ key, label, max }) => (
+                    <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
                   ))}
                 </div>
-              </div>
-              <div className="space-y-1.5 flex-1">
-                {CARD_STATS.map(({ key, label, max }) => (
-                  <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
-                ))}
-              </div>
-              <div className="flex justify-between items-center mt-2.5 pt-2"
-                style={{ borderTop: '1px solid hsl(42 90% 52% / 0.1)' }}>
-                <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 42%)' }}>
-                  <Icon name="Users" size={10} />
-                  <span className="font-mono-data" style={{ fontSize: '0.62rem' }}>{unit.stats.troops}</span>
-                </div>
-                <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 42%)' }}>
-                  <Icon name="Crown" size={10} />
-                  <span className="font-mono-data" style={{ fontSize: '0.62rem' }}>{unit.stats.leadership}</span>
+
+                {/* Футер */}
+                <div className="flex justify-between items-center mt-2 pt-2"
+                  style={{ borderTop: '1px solid hsl(42 90% 52% / 0.12)' }}>
+                  <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 42%)' }}>
+                    <Icon name="Users" size={9} />
+                    <span className="font-mono-data" style={{ fontSize: '0.6rem' }}>{unit.stats.troops}</span>
+                  </div>
+                  <div className="flex items-center gap-1" style={{ color: 'hsl(215 18% 42%)' }}>
+                    <Icon name="Crown" size={9} />
+                    <span className="font-mono-data" style={{ fontSize: '0.6rem' }}>{unit.stats.leadership}</span>
+                  </div>
+                  <div style={{ color: 'hsl(215 18% 28%)', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <Icon name="RefreshCw" size={9} />
+                    <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.52rem', letterSpacing: '0.06em' }}>ДЕТАЛИ</span>
+                  </div>
                 </div>
               </div>
             </div>
