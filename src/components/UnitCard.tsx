@@ -5,6 +5,7 @@ import RarityBadge from './RarityBadge';
 import StatBar from './StatBar';
 import Icon from '@/components/ui/icon';
 import StarRating from './StarRating';
+import { useRoles } from '@/hooks/useAppData';
 
 const CLASS_ICONS: Record<string, string> = {
   'Пехота':    'Sword',
@@ -48,6 +49,7 @@ interface UnitCardProps {
 
 export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
   const [flipped, setFlipped] = useState(false);
+  const { roles: roleDefs } = useRoles();
 
   const roles      = getRoles(unit.role);
   const combatIcon = CLASS_ICONS[unit.class] || 'Sword';
@@ -112,9 +114,29 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                 style={{ fontFamily: 'Cinzel, serif', fontWeight: 600, letterSpacing: '0.02em' }}>{unit.name}</h3>
               <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                 {(unit.stars ?? 0) > 0 && <StarRating value={unit.stars ?? 0} size={9} />}
-                <span style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.6rem', color: 'hsl(215 18% 42%)', letterSpacing: '0.04em' }}>
-                  {roles.join(' / ')}
-                </span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  {roles.map((role, i) => {
+                    const def = roleDefs.find(r => r.name === role);
+                    return (
+                      <span key={role}>
+                        {i > 0 && <span style={{ color: 'hsl(215 18% 30%)', fontSize: '0.5rem', marginRight: '2px' }}>·</span>}
+                        <span
+                          title={def?.description || undefined}
+                          style={{
+                            fontFamily: 'Rajdhani, sans-serif',
+                            fontSize: '0.6rem',
+                            color: 'hsl(215 18% 42%)',
+                            letterSpacing: '0.04em',
+                            cursor: def?.description ? 'help' : 'default',
+                            borderBottom: def?.description ? '1px dotted hsl(215 18% 35%)' : 'none',
+                          }}
+                        >
+                          {role}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-1.5 flex-1">
                 {CARD_STATS.map(({ key, label, max }) => (

@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi } from '@/lib/api';
+import { unitsApi, treatiesApi, rolesApi } from '@/lib/api';
 import { Unit, Treaty, UnitStats, Ability, Trait } from '@/data/types';
+
+export interface UnitRoleDef {
+  id: number;
+  name: string;
+  description: string;
+}
 
 // Конвертирует abilities — поддерживает и строки, и объекты Ability
 function parseAbilities(raw: unknown): (string | Ability)[] {
@@ -136,4 +142,41 @@ export function useTreaties() {
   };
 
   return { treaties, loading, error, invalidate };
+}
+
+let cachedRoles: UnitRoleDef[] | null = null;
+let rolesPromise: Promise<UnitRoleDef[]> | null = null;
+
+export function useRoles() {
+  const [roles, setRoles] = useState<UnitRoleDef[]>(cachedRoles || []);
+  const [loading, setLoading] = useState(!cachedRoles);
+
+  const load = useCallback(async () => {
+    if (cachedRoles) { setRoles(cachedRoles); setLoading(false); return; }
+    if (!rolesPromise) {
+      rolesPromise = rolesApi.list().then((data: UnitRoleDef[]) => {
+        cachedRoles = data;
+        return data;
+      });
+    }
+    try {
+      const result = await rolesPromise;
+      setRoles(result);
+    } catch {
+      setRoles([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const invalidate = () => {
+    cachedRoles = null;
+    rolesPromise = null;
+    setLoading(true);
+    load();
+  };
+
+  return { roles, loading, invalidate };
 }

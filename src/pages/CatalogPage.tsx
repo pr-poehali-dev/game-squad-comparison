@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useUnits } from '@/hooks/useAppData';
-import { UnitClass, UnitRole, Rarity } from '@/data/types';
+import { useUnits, useRoles } from '@/hooks/useAppData';
+import { UnitClass, Rarity } from '@/data/types';
 import UnitCard from '@/components/UnitCard';
 import Icon from '@/components/ui/icon';
 
 const CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
-const ROLES: UnitRole[] = ['Танк', 'Урон', 'Поддержка', 'Разведчик', 'Контроль'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const RARITY_LABELS: Record<Rarity, string> = {
   common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Уникальный', legendary: 'Легендарный'
@@ -17,9 +16,11 @@ interface CatalogPageProps {
 
 export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   const { units: UNITS, loading } = useUnits();
+  const { roles } = useRoles();
+
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState<UnitClass | ''>('');
-  const [roleFilter, setRoleFilter] = useState<UnitRole | ''>('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | ''>('');
   const [sortBy, setSortBy] = useState<'name' | 'attack' | 'defense' | 'leadership' | 'stars'>('name');
 
@@ -29,8 +30,8 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
         if (search && !u.name.toLowerCase().includes(search.toLowerCase())) return false;
         if (classFilter && u.class !== classFilter) return false;
         if (roleFilter) {
-          const roles = Array.isArray(u.role) ? u.role : [u.role];
-          if (!roles.includes(roleFilter as import('@/data/types').UnitRole)) return false;
+          const unitRoles = Array.isArray(u.role) ? u.role : [u.role];
+          if (!unitRoles.includes(roleFilter as import('@/data/types').UnitRole)) return false;
         }
         if (rarityFilter && u.rarity !== rarityFilter) return false;
         return true;
@@ -43,7 +44,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
         if (sortBy === 'stars') return (b.stars ?? 0) - (a.stars ?? 0);
         return 0;
       });
-  }, [search, classFilter, roleFilter, rarityFilter, sortBy]);
+  }, [search, classFilter, roleFilter, rarityFilter, sortBy, UNITS]);
 
   const clearFilters = () => {
     setSearch(''); setClassFilter(''); setRoleFilter(''); setRarityFilter('');
@@ -94,11 +95,11 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
 
           <select
             value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value as UnitRole | '')}
+            onChange={e => setRoleFilter(e.target.value)}
             className="bg-muted border border-border rounded-sm px-3 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="">Все роли</option>
-            {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+            {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>
 
           <select

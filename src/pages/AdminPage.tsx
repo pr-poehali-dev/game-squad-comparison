@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, seedApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi, rolesApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { useUnits, useTreaties } from '@/hooks/useAppData';
+import { useUnits, useTreaties, useRoles, UnitRoleDef } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
@@ -11,10 +11,9 @@ import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
 import { GuideBlock } from '@/data/types';
 
-type AdminTab = 'units' | 'treaties';
+type AdminTab = 'units' | 'treaties' | 'roles';
 
 const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
-const UNIT_ROLES: UnitRole[] = ['Танк', 'Урон', 'Поддержка', 'Разведчик', 'Контроль'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const RARITY_LABELS: Record<Rarity, string> = { common: 'Обычный', uncommon: 'Необычный', rare: 'Редкий', epic: 'Уникальный', legendary: 'Легендарный' };
 
@@ -128,10 +127,11 @@ function getRawRoles(raw: unknown): UnitRole[] {
   return ['Урон'];
 }
 
-function UnitModal({ unit, onSave, onClose }: {
+function UnitModal({ unit, onSave, onClose, availableRoles }: {
   unit?: Record<string, unknown> | null;
   onSave: (data: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
+  availableRoles: UnitRoleDef[];
 }) {
   const editing = !!unit;
   const [loading, setLoading] = useState(false);
@@ -268,10 +268,11 @@ function UnitModal({ unit, onSave, onClose }: {
             <div className="col-span-2">
               <label className="text-xs text-muted-foreground block mb-2">Роли (можно несколько)</label>
               <div className="flex flex-wrap gap-2">
-                {UNIT_ROLES.map(r => (
-                  <button key={r} type="button" onClick={() => toggleRole(r)}
-                    className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${form.roles.includes(r) ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'}`}>
-                    {r}
+                {availableRoles.map(r => (
+                  <button key={r.id} type="button" onClick={() => toggleRole(r.name as UnitRole)}
+                    title={r.description || undefined}
+                    className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${form.roles.includes(r.name as UnitRole) ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'}`}>
+                    {r.name}
                   </button>
                 ))}
               </div>
@@ -607,6 +608,7 @@ export default function AdminPage() {
   const { user } = useAuth();
   const { invalidate: invalidateUnits } = useUnits();
   const { invalidate: invalidateTreaties } = useTreaties();
+  const { roles, invalidate: invalidateRoles } = useRoles();
   const [tab, setTab] = useState<AdminTab>('units');
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
@@ -616,6 +618,11 @@ export default function AdminPage() {
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string; kind: 'unit' | 'treaty' } | null>(null);
   const [unitModal, setUnitModal] = useState<{ open: boolean; unit?: Record<string, unknown> | null }>({ open: false });
   const [treatyModal, setTreatyModal] = useState<{ open: boolean; treaty?: Record<string, unknown> | null }>({ open: false });
+
+  // Управление ролями
+  const [roleForm, setRoleForm] = useState({ name: '', description: '' });
+  const [roleEditing, setRoleEditing] = useState<UnitRoleDef | null>(null);
+  const [roleLoading, setRoleLoading] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
 
@@ -695,6 +702,45 @@ export default function AdminPage() {
     }
   };
 
+  const handleSaveRole = async () => {
+    if (!roleForm.name.trim()) return;
+    setRoleLoading(true);
+    try {
+      if (roleEditing) {
+        await rolesApi.update(roleEditing.id, { name: roleForm.name.trim(), description: roleForm.description.trim() });
+        showToast('Роль обновлена');
+      } else {
+        await rolesApi.create({ name: roleForm.name.trim(), description: roleForm.description.trim() });
+        showToast('Роль добавлена');
+      }
+      setRoleForm({ name: '', description: '' });
+      setRoleEditing(null);
+      invalidateRoles();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка сохранения роли', 'error');
+    } finally {
+      setRoleLoading(false);
+    }
+  };
+
+  const handleDeleteRole = async (role: UnitRoleDef) => {
+    setRoleLoading(true);
+    try {
+      await rolesApi.delete(role.id);
+      showToast('Роль удалена');
+      invalidateRoles();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка удаления роли', 'error');
+    } finally {
+      setRoleLoading(false);
+    }
+  };
+
+  const startEditRole = (role: UnitRoleDef) => {
+    setRoleEditing(role);
+    setRoleForm({ name: role.name, description: role.description });
+  };
+
   if (!user?.is_admin) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -727,7 +773,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {(['units', 'treaties'] as AdminTab[]).map(t => (
+        {(['units', 'treaties', 'roles'] as AdminTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -735,7 +781,7 @@ export default function AdminPage() {
               tab === t ? 'border-primary text-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'units' ? 'Отряды' : 'Трактаты'}
+            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : 'Роли'}
           </button>
         ))}
       </div>
@@ -840,9 +886,87 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Roles Tab */}
+      {tab === 'roles' && (
+        <div className="max-w-xl">
+          <div className="bg-card border border-border rounded-sm p-4 mb-4">
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
+              {roleEditing ? 'Редактировать роль' : 'Новая роль'}
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Название *</label>
+                <input
+                  type="text"
+                  value={roleForm.name}
+                  onChange={e => setRoleForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Например: Осада"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Описание (для тултипа)</label>
+                <textarea
+                  value={roleForm.description}
+                  onChange={e => setRoleForm(f => ({ ...f, description: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Что умеет этот тип отряда..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveRole}
+                  disabled={roleLoading || !roleForm.name.trim()}
+                  className="flex items-center gap-2 px-4 py-2 text-xs bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  <Icon name={roleLoading ? 'Loader' : (roleEditing ? 'Save' : 'Plus')} size={12} className={roleLoading ? 'animate-spin' : ''} />
+                  {roleEditing ? 'Сохранить' : 'Добавить'}
+                </button>
+                {roleEditing && (
+                  <button
+                    onClick={() => { setRoleEditing(null); setRoleForm({ name: '', description: '' }); }}
+                    className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                  >
+                    Отмена
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {roles.map(role => (
+              <div key={role.id} className="bg-card border border-border rounded-sm p-3 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground">{role.name}</div>
+                  {role.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => startEditRole(role)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                  >
+                    <Icon name="Pencil" size={11} /> Изменить
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRole(role)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-destructive/40 text-destructive rounded-sm hover:bg-destructive/10 transition-colors"
+                  >
+                    <Icon name="Trash2" size={11} /> Удалить
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       {unitModal.open && (
-        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} />
+        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} />
       )}
       {treatyModal.open && (
         <TreatyModal treaty={treatyModal.treaty} onSave={handleSaveTreaty} onClose={() => setTreatyModal({ open: false })} />

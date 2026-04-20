@@ -6,6 +6,7 @@ const URLS = {
   upload: 'https://functions.poehali.dev/26151075-4ef3-4b29-8d16-c82a04dd0e83',
   forum: 'https://functions.poehali.dev/914f3bd8-b9e4-4dfa-b16a-e3dda3710d6e',
   battle: 'https://functions.poehali.dev/e55b6676-4af3-410b-99a4-d9faac5243bb',
+  rolesApi: 'https://functions.poehali.dev/36953fca-cdb1-4ebc-8482-8ba8556d1389',
 };
 
 function getSessionId(): string {
@@ -86,6 +87,17 @@ export const forumApi = {
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'hide_post', post_id }) }),
   getNotifications: () => request(`${URLS.forum}?action=notifications`),
   readNotifications: () => request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'read_notifications' }) }),
+};
+
+// Roles
+export const rolesApi = {
+  list: () => request(URLS.rolesApi),
+  create: (data: { name: string; description: string }) =>
+    request(URLS.rolesApi, { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: number, data: { name: string; description: string }) =>
+    request(`${URLS.rolesApi}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: number) =>
+    request(`${URLS.rolesApi}/${id}`, { method: 'DELETE' }),
 };
 
 // Treaties
