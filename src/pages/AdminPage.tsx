@@ -158,7 +158,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
   });
 
   const set = (key: keyof UnitFormData, val: unknown) => setForm(f => ({ ...f, [key]: val }));
-  const setStat = (key: string, val: string) => setForm(f => ({ ...f, stats: { ...f.stats, [key]: parseInt(val) || 0 } }));
+  const setStat = (key: string, val: string) => setForm(f => ({ ...f, stats: { ...f.stats, [key]: parseFloat(val) || 0 } }));
 
   const toggleRole = (r: UnitRole) => setForm(f => ({
     ...f,
@@ -446,7 +446,9 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
                           value={form.stats[key as keyof typeof DEFAULT_UNIT_STATS] ?? 0}
                           onChange={e => setStat(key, e.target.value)}
                           className={inputCls + ' font-mono-data'}
-                          min={-9999} max={9999}
+                          step="0.01"
+                          min={-9999}
+                          max={key === 'health' ? 30000 : 9999}
                         />
                       </div>
                     ))}
