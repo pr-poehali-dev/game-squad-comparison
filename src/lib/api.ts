@@ -93,11 +93,11 @@ export const forumApi = {
 export const rolesApi = {
   list: () => request(URLS.rolesApi),
   create: (data: { name: string; description: string }) =>
-    request(URLS.rolesApi, { method: 'POST', body: JSON.stringify(data) }),
+    request(URLS.rolesApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
   update: (id: number, data: { name: string; description: string }) =>
-    request(`${URLS.rolesApi}/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    request(URLS.rolesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: number) =>
-    request(`${URLS.rolesApi}/${id}`, { method: 'DELETE' }),
+    request(URLS.rolesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
 
 // Treaties

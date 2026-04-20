@@ -40,6 +40,89 @@ function getRoles(role: UnitRole | UnitRole[]): UnitRole[] {
   return Array.isArray(role) ? role : [role];
 }
 
+/* ── Тултип для роли ──────────────────────────────────────── */
+function RoleTooltip({ role, description, showDot }: { role: string; description?: string; showDot: boolean }) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {showDot && (
+        <span style={{ color: 'hsl(215 18% 30%)', fontSize: '0.5rem' }}>·</span>
+      )}
+      <span
+        onMouseEnter={() => description && setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        style={{
+          position: 'relative',
+          fontFamily: 'Rajdhani, sans-serif',
+          fontSize: '0.6rem',
+          color: 'hsl(215 18% 42%)',
+          letterSpacing: '0.04em',
+          cursor: description ? 'help' : 'default',
+          borderBottom: description ? '1px dotted hsl(215 18% 35%)' : 'none',
+          display: 'inline-block',
+        }}
+      >
+        {role}
+        {visible && description && (
+          <span
+            style={{
+              position: 'absolute',
+              bottom: 'calc(100% + 6px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 999,
+              width: '180px',
+              padding: '7px 10px',
+              background: 'hsl(224 16% 10%)',
+              border: '1px solid hsl(42 90% 52% / 0.3)',
+              borderRadius: '3px',
+              boxShadow: '0 8px 24px hsl(0 0% 0% / 0.5)',
+              fontFamily: 'Rajdhani, sans-serif',
+              fontSize: '0.7rem',
+              fontWeight: 400,
+              lineHeight: 1.5,
+              letterSpacing: '0.02em',
+              color: 'hsl(38 15% 75%)',
+              textTransform: 'none',
+              pointerEvents: 'none',
+              whiteSpace: 'normal',
+            }}
+          >
+            {/* Стрелочка вниз */}
+            <span style={{
+              position: 'absolute',
+              bottom: '-5px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '5px solid transparent',
+              borderRight: '5px solid transparent',
+              borderTop: '5px solid hsl(42 90% 52% / 0.3)',
+            }} />
+            <span style={{
+              position: 'absolute',
+              bottom: '-4px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: '4px solid hsl(224 16% 10%)',
+            }} />
+            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 600, color: 'hsl(42 90% 52%)', display: 'block', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              {role}
+            </span>
+            {description}
+          </span>
+        )}
+      </span>
+    </span>
+  );
+}
+
 interface UnitCardProps {
   unit: Unit;
   onClick: () => void;
@@ -118,22 +201,7 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                   {roles.map((role, i) => {
                     const def = roleDefs.find(r => r.name === role);
                     return (
-                      <span key={role}>
-                        {i > 0 && <span style={{ color: 'hsl(215 18% 30%)', fontSize: '0.5rem', marginRight: '2px' }}>·</span>}
-                        <span
-                          title={def?.description || undefined}
-                          style={{
-                            fontFamily: 'Rajdhani, sans-serif',
-                            fontSize: '0.6rem',
-                            color: 'hsl(215 18% 42%)',
-                            letterSpacing: '0.04em',
-                            cursor: def?.description ? 'help' : 'default',
-                            borderBottom: def?.description ? '1px dotted hsl(215 18% 35%)' : 'none',
-                          }}
-                        >
-                          {role}
-                        </span>
-                      </span>
+                      <RoleTooltip key={role} role={role} description={def?.description} showDot={i > 0} />
                     );
                   })}
                 </div>
