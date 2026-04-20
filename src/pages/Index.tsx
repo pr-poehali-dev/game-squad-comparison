@@ -145,14 +145,14 @@ export default function Index() {
               className="leading-none"
               style={{
                 fontFamily: '"UnifrakturCook", serif',
-                fontSize: '1.35rem',
+                fontSize: '1.55rem',
                 fontWeight: 700,
                 color: 'hsl(40 40% 88%)',
                 letterSpacing: '0.02em',
                 textShadow: '0 2px 0 hsl(0 0% 0% / 0.6)',
               }}
             >
-              Компаньонъ
+              Хоругвь
             </div>
             <div
               className="mt-1 uppercase"
@@ -164,7 +164,7 @@ export default function Index() {
                 letterSpacing: '0.3em',
               }}
             >
-              Гильдейскiй Реэстръ
+              Реэстръ ратныхъ
             </div>
           </div>
         </div>
