@@ -25,43 +25,73 @@ const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: bool
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
 ];
 
-/* Средневековая эмблема: рыцарский щит с крестом и шевроном. Без магии. */
-function ShieldEmblem({ size = 30 }: { size?: number }) {
+/* Эмблема «Между двух эпох»: рыцарский щит с золотым шевроном
+   и рубиновым крестом, в богатой градиентной заливке. */
+function ShieldEmblem({ size = 34 }: { size?: number }) {
+  const id = 'sh-' + size;
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* корпус щита */}
+    <svg width={size} height={size} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id={`${id}-body`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="hsl(222 16% 18%)" />
+          <stop offset="100%" stopColor="hsl(222 20% 9%)" />
+        </linearGradient>
+        <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%"  stopColor="hsl(48 80% 72%)" />
+          <stop offset="55%" stopColor="hsl(42 76% 54%)" />
+          <stop offset="100%" stopColor="hsl(30 64% 40%)" />
+        </linearGradient>
+        <linearGradient id={`${id}-blood`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor="hsl(355 72% 56%)" />
+          <stop offset="100%" stopColor="hsl(350 62% 38%)" />
+        </linearGradient>
+      </defs>
       <path
-        d="M16 2 L28 6 V15 C28 22 21 28 16 30 C11 28 4 22 4 15 V6 L16 2 Z"
-        fill="hsl(24 14% 12%)"
-        stroke="hsl(18 52% 42%)"
-        strokeWidth="1.3"
+        d="M18 2 L32 6 V17 C32 25 23.5 31 18 33 C12.5 31 4 25 4 17 V6 L18 2 Z"
+        fill={`url(#${id}-body)`}
+        stroke={`url(#${id}-gold)`}
+        strokeWidth="1.5"
       />
-      {/* шеврон */}
-      <path
-        d="M7 14 L16 8 L25 14"
-        stroke="hsl(18 52% 42%)"
-        strokeWidth="1.3"
-        fill="none"
-        strokeLinecap="square"
-      />
-      {/* крест */}
-      <path d="M16 12 V24 M11 18 H21" stroke="hsl(4 48% 40%)" strokeWidth="1.5" strokeLinecap="square" />
-      {/* заклёпки */}
-      <circle cx="16" cy="5" r="0.9" fill="hsl(18 52% 42%)" />
-      <circle cx="7" cy="7" r="0.9" fill="hsl(18 52% 42%)" />
-      <circle cx="25" cy="7" r="0.9" fill="hsl(18 52% 42%)" />
+      {/* Шеврон */}
+      <path d="M8 16 L18 10 L28 16" stroke={`url(#${id}-gold)`} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      {/* Крест */}
+      <path d="M18 14 V27 M13 20 H23" stroke={`url(#${id}-blood)`} strokeWidth="2.2" strokeLinecap="round" />
+      {/* Блик */}
+      <path d="M6 9 L16 4" stroke="hsl(42 76% 70% / 0.35)" strokeWidth="0.8" strokeLinecap="round" />
+      {/* Заклёпки золотые */}
+      <circle cx="18" cy="5.5" r="1.1" fill="hsl(42 76% 58%)" />
+      <circle cx="8"  cy="7.5" r="1"   fill="hsl(42 76% 58%)" />
+      <circle cx="28" cy="7.5" r="1"   fill="hsl(42 76% 58%)" />
     </svg>
   );
 }
 
-/* Разделитель: двойная тонкая линия с ромбом-камнем посередине */
+/* Разделитель: градиентная линия + золотой ромб */
 function OrnateDivider() {
   return (
-    <div className="px-4 py-2">
-      <div className="flex items-center gap-2 opacity-70">
-        <div className="flex-1 h-0 border-t border-primary/30" />
-        <span className="w-[5px] h-[5px] bg-primary/80 rotate-45" />
-        <div className="flex-1 h-0 border-t border-primary/30" />
+    <div className="px-5 py-2.5">
+      <div className="flex items-center gap-2.5">
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, hsl(42 76% 58% / 0.5), transparent)',
+          }}
+        />
+        <span
+          className="w-[6px] h-[6px] rotate-45"
+          style={{
+            background: 'linear-gradient(135deg, hsl(48 80% 72%), hsl(32 64% 40%))',
+            boxShadow: '0 0 6px hsl(42 76% 58% / 0.6)',
+          }}
+        />
+        <div
+          className="flex-1 h-px"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, hsl(42 76% 58% / 0.5), transparent)',
+          }}
+        />
       </div>
     </div>
   );
@@ -127,86 +157,120 @@ export default function Index() {
         lg:relative lg:translate-x-0 lg:flex
       `}
         style={{
-          width: '232px',
+          width: '248px',
           background:
-            'linear-gradient(180deg, hsl(24 10% 5%) 0%, hsl(20 10% 4%) 100%)',
-          borderRight: '1px solid hsl(30 14% 14%)',
-          boxShadow: 'inset -1px 0 0 hsl(18 52% 42% / 0.15)',
+            'linear-gradient(180deg, hsl(222 20% 8%) 0%, hsl(222 22% 5%) 100%)',
+          borderRight: '1px solid hsl(222 14% 14%)',
+          boxShadow:
+            'inset -1px 0 0 hsl(42 76% 50% / 0.08), 4px 0 24px hsl(222 40% 2% / 0.4)',
         }}
       >
-        {/* Медная полоска сверху — «кованая планка» */}
+        {/* Золотая планка сверху */}
         <div className="h-[3px] sidebar-top-accent" />
 
-        {/* ── Бренд — гильдейская печать ─ */}
+        {/* ── Бренд ─ */}
         <div className="px-5 py-6 flex items-center gap-3 relative">
-          <ShieldEmblem size={34} />
+          <div
+            className="relative"
+            style={{
+              filter: 'drop-shadow(0 4px 12px hsl(42 76% 40% / 0.35))',
+            }}
+          >
+            <ShieldEmblem size={40} />
+          </div>
           <div className="flex-1 min-w-0">
             <div
-              className="leading-none"
+              className="leading-none text-gradient-gold"
               style={{
-                fontFamily: '"UnifrakturCook", serif',
-                fontSize: '1.55rem',
-                fontWeight: 700,
-                color: 'hsl(40 40% 88%)',
-                letterSpacing: '0.02em',
-                textShadow: '0 2px 0 hsl(0 0% 0% / 0.6)',
+                fontFamily: '"Cinzel Decorative", serif',
+                fontSize: '1.35rem',
+                fontWeight: 900,
+                letterSpacing: '0.04em',
               }}
             >
               Хоругвь
             </div>
             <div
-              className="mt-1 uppercase"
+              className="mt-1.5 uppercase"
               style={{
-                fontFamily: '"IM Fell English SC", serif',
-                fontSize: '0.58rem',
-                fontWeight: 400,
-                color: 'hsl(18 52% 48%)',
-                letterSpacing: '0.3em',
+                fontFamily: '"Manrope", sans-serif',
+                fontSize: '0.6rem',
+                fontWeight: 600,
+                color: 'hsl(42 40% 60% / 0.8)',
+                letterSpacing: '0.25em',
               }}
             >
-              Реэстръ ратныхъ
+              Каталог · MMXXVI
             </div>
           </div>
         </div>
 
         <OrnateDivider />
 
-        {/* ── Навигация — строки реестра ─ */}
-        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto scrollbar-thin">
+        {/* ── Навигация — современная с активной заливкой ─ */}
+        <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto scrollbar-thin">
           {visibleNav.map(item => {
             const isActive = page === item.id && !detailUnitId;
             return (
               <button
                 key={item.id}
                 onClick={() => navigateTo(item.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-[0.95rem] transition-all duration-150 group relative"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 relative group overflow-hidden"
                 style={{
-                  fontFamily: '"IM Fell English", serif',
-                  fontWeight: 400,
-                  letterSpacing: '0.03em',
-                  color: isActive ? 'hsl(40 42% 92%)' : 'hsl(30 12% 52%)',
+                  fontFamily: '"Manrope", sans-serif',
+                  fontSize: '0.92rem',
+                  fontWeight: isActive ? 700 : 500,
+                  letterSpacing: '0.01em',
+                  color: isActive ? 'hsl(42 76% 72%)' : 'hsl(222 10% 62%)',
                   background: isActive
-                    ? 'linear-gradient(90deg, hsl(18 52% 42% / 0.22), transparent 85%)'
+                    ? 'linear-gradient(90deg, hsl(42 76% 50% / 0.16) 0%, hsl(42 76% 50% / 0.04) 60%, transparent 100%)'
                     : 'transparent',
+                  borderRadius: '10px',
                   borderLeft: isActive
-                    ? '2px solid hsl(18 52% 48%)'
-                    : '2px solid transparent',
+                    ? '3px solid hsl(42 76% 58%)'
+                    : '3px solid transparent',
+                  transition: 'all 0.22s ease',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'hsl(222 14% 14%)';
+                    e.currentTarget.style.color = 'hsl(38 18% 90%)';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = 'hsl(222 10% 62%)';
+                  }
                 }}
               >
-                {!isActive && (
-                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                    style={{ background: 'hsl(18 52% 42% / 0.08)' }} />
-                )}
-                <Icon
-                  name={item.icon}
-                  size={16}
-                  style={{ color: isActive ? 'hsl(18 62% 56%)' : 'hsl(30 12% 44%)' }}
-                />
+                <span
+                  className="flex items-center justify-center w-7 h-7 rounded-md"
+                  style={{
+                    background: isActive
+                      ? 'linear-gradient(135deg, hsl(42 76% 50% / 0.25), hsl(42 76% 40% / 0.1))'
+                      : 'hsl(222 14% 12%)',
+                    border: isActive
+                      ? '1px solid hsl(42 76% 58% / 0.4)'
+                      : '1px solid hsl(222 14% 18%)',
+                  }}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={15}
+                    style={{
+                      color: isActive ? 'hsl(42 80% 68%)' : 'hsl(222 8% 58%)',
+                    }}
+                  />
+                </span>
                 <span className="relative">{item.label}</span>
                 {isActive && (
                   <span
                     className="ml-auto w-[6px] h-[6px] rotate-45"
-                    style={{ background: 'hsl(18 52% 48%)' }}
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(48 80% 72%), hsl(32 64% 40%))',
+                      boxShadow: '0 0 6px hsl(42 76% 58% / 0.6)',
+                    }}
                   />
                 )}
               </button>
@@ -216,50 +280,68 @@ export default function Index() {
 
         <OrnateDivider />
 
-        {/* ── Пользователь — восковая печать ─ */}
-        <div className="px-2 py-3 space-y-1">
+        {/* ── Пользователь — карточка с градиентом ─ */}
+        <div className="px-3 py-3 space-y-2">
           {!authLoading && (
             user ? (
               <>
                 <div
-                  className="px-3 py-2.5"
+                  className="p-3 rounded-xl relative overflow-hidden"
                   style={{
-                    background: 'hsl(4 48% 26% / 0.22)',
-                    border: '1px solid hsl(4 48% 36% / 0.45)',
-                    boxShadow: 'inset 0 1px 0 hsl(4 48% 50% / 0.25)',
+                    background:
+                      'linear-gradient(135deg, hsl(222 16% 12%) 0%, hsl(222 18% 9%) 100%)',
+                    border: '1px solid hsl(42 76% 50% / 0.25)',
+                    boxShadow:
+                      'inset 0 1px 0 hsl(42 76% 60% / 0.08), 0 4px 12px hsl(222 40% 2% / 0.4)',
                   }}
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-7 h-7 flex items-center justify-center flex-shrink-0 rotate-45"
+                      className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-lg"
                       style={{
-                        background: 'hsl(4 48% 36%)',
-                        border: '1px solid hsl(4 48% 50%)',
-                        boxShadow: 'inset 0 1px 0 hsl(4 48% 60% / 0.35)',
+                        background:
+                          'linear-gradient(135deg, hsl(48 80% 68%) 0%, hsl(32 64% 40%) 100%)',
+                        boxShadow:
+                          'inset 0 1px 0 hsl(52 90% 80% / 0.5), 0 2px 6px hsl(42 76% 30% / 0.4)',
                       }}
                     >
-                      <span className="-rotate-45">
-                        <Icon name="User" size={12} style={{ color: 'hsl(40 40% 92%)' }} />
-                      </span>
+                      <Icon name="User" size={16} style={{ color: 'hsl(222 30% 10%)' }} />
                     </div>
                     <div className="min-w-0">
                       <div
-                        className="text-[0.92rem] truncate"
-                        style={{ fontFamily: '"IM Fell English", serif', color: 'hsl(40 30% 88%)' }}
+                        className="truncate"
+                        style={{
+                          fontFamily: '"Manrope", sans-serif',
+                          fontSize: '0.92rem',
+                          fontWeight: 700,
+                          color: 'hsl(38 24% 92%)',
+                        }}
                       >
                         {user.username}
                       </div>
-                      {user.is_admin && (
+                      {user.is_admin ? (
                         <div
-                          className="uppercase"
+                          className="uppercase mt-0.5"
                           style={{
-                            fontFamily: '"IM Fell English SC", serif',
-                            fontSize: '0.55rem',
-                            color: 'hsl(18 62% 56%)',
-                            letterSpacing: '0.24em',
+                            fontFamily: '"Manrope", sans-serif',
+                            fontSize: '0.58rem',
+                            fontWeight: 700,
+                            color: 'hsl(355 72% 68%)',
+                            letterSpacing: '0.2em',
                           }}
                         >
-                          Смотритель
+                          ✦ Смотритель
+                        </div>
+                      ) : (
+                        <div
+                          className="mt-0.5"
+                          style={{
+                            fontFamily: '"Manrope", sans-serif',
+                            fontSize: '0.68rem',
+                            color: 'hsl(222 8% 50%)',
+                          }}
+                        >
+                          Воевода
                         </div>
                       )}
                     </div>
@@ -267,59 +349,72 @@ export default function Index() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all"
                   style={{
-                    fontFamily: '"IM Fell English", serif',
-                    color: 'hsl(30 12% 50%)',
+                    fontFamily: '"Manrope", sans-serif',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    color: 'hsl(222 10% 58%)',
+                    background: 'transparent',
+                    border: '1px solid hsl(222 14% 18%)',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'hsl(4 62% 58%)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'hsl(30 12% 50%)')}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = 'hsl(355 72% 68%)';
+                    e.currentTarget.style.borderColor = 'hsl(355 62% 40%)';
+                    e.currentTarget.style.background = 'hsl(355 62% 30% / 0.1)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'hsl(222 10% 58%)';
+                    e.currentTarget.style.borderColor = 'hsl(222 14% 18%)';
+                    e.currentTarget.style.background = 'transparent';
+                  }}
                 >
                   <Icon name="LogOut" size={14} />
-                  Покинуть
+                  Выйти
                 </button>
               </>
             ) : (
               <button
                 onClick={() => navigateTo('auth')}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-all"
-                style={{
-                  fontFamily: '"IM Fell English", serif',
-                  color: page === 'auth' ? 'hsl(40 42% 92%)' : 'hsl(30 12% 55%)',
-                  background:
-                    page === 'auth' ? 'hsl(18 52% 42% / 0.18)' : 'transparent',
-                  borderLeft:
-                    page === 'auth' ? '2px solid hsl(18 52% 48%)' : '2px solid transparent',
-                }}
+                className="btn-primary w-full justify-center"
+                style={{ borderRadius: '10px' }}
               >
                 <Icon name="LogIn" size={14} />
-                Войти в реестръ
+                Войти
               </button>
             )
           )}
 
-          {/* Клеймо мастерской */}
-          <div className="px-3 pt-3 pb-1 flex items-center justify-between">
+          {/* Клеймо */}
+          <div className="pt-3 flex items-center justify-between">
             <div
-              className="font-mono-data"
-              style={{ color: 'hsl(30 10% 30%)', fontSize: '0.58rem', letterSpacing: '0.2em' }}
+              className="font-mono-data uppercase"
+              style={{ color: 'hsl(222 8% 34%)', fontSize: '0.6rem', letterSpacing: '0.22em' }}
             >
-              ANNO · MMXXVI
+              v·0.12
             </div>
-            <div
-              style={{
-                fontFamily: '"IM Fell English SC", serif',
-                color: 'hsl(18 52% 42% / 0.5)',
-                fontSize: '0.58rem',
-                letterSpacing: '0.25em',
-              }}
-            >
-              v·XI
+            <div className="flex items-center gap-1.5">
+              <span
+                className="w-1 h-1 rounded-full"
+                style={{ background: 'hsl(150 48% 50%)', boxShadow: '0 0 6px hsl(150 48% 50%)' }}
+              />
+              <span
+                className="uppercase"
+                style={{
+                  fontFamily: '"Manrope", sans-serif',
+                  fontSize: '0.58rem',
+                  fontWeight: 600,
+                  color: 'hsl(150 32% 52%)',
+                  letterSpacing: '0.18em',
+                }}
+              >
+                в строю
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Медная полоска снизу */}
+        {/* Золотая планка снизу */}
         <div className="h-[3px] sidebar-top-accent" />
       </aside>
 
@@ -327,7 +422,7 @@ export default function Index() {
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-30 lg:hidden"
-          style={{ background: 'hsl(20 10% 3% / 0.85)', backdropFilter: 'blur(2px)' }}
+          style={{ background: 'hsl(222 30% 3% / 0.85)', backdropFilter: 'blur(4px)' }}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -335,82 +430,95 @@ export default function Index() {
       {/* ── Основной контент ─────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
 
-        {/* ── Топ-бар: геральдическая плашка ─ */}
+        {/* ── Топ-бар ─ */}
         <header
-          className="h-14 flex items-center px-4 lg:px-7 gap-4 relative"
+          className="h-16 flex items-center px-4 lg:px-8 gap-4 relative"
           style={{
             background:
-              'linear-gradient(180deg, hsl(26 12% 10%) 0%, hsl(22 10% 7%) 100%)',
-            borderBottom: '1px solid hsl(18 52% 42% / 0.35)',
-            boxShadow: 'inset 0 -1px 0 hsl(18 52% 42% / 0.15), 0 2px 0 hsl(0 0% 0% / 0.35)',
+              'linear-gradient(180deg, hsl(222 18% 9%) 0%, hsl(222 20% 6%) 100%)',
+            borderBottom: '1px solid hsl(222 14% 16%)',
+            boxShadow:
+              'inset 0 -1px 0 hsl(42 76% 50% / 0.06), 0 4px 20px hsl(222 40% 2% / 0.3)',
           }}
         >
-          {/* Гильошная нить-рамка снизу */}
+          {/* Золотая нить снизу */}
           <div
-            className="absolute left-0 right-0 bottom-0 h-[2px] opacity-60"
+            className="absolute left-0 right-0 bottom-0 h-px"
             style={{
               background:
-                'repeating-linear-gradient(90deg, hsl(18 52% 42%) 0 6px, transparent 6px 12px)',
+                'linear-gradient(90deg, transparent, hsl(42 76% 58% / 0.5) 30%, hsl(42 76% 58%) 50%, hsl(42 76% 58% / 0.5) 70%, transparent)',
             }}
           />
 
           {/* Мобильное меню */}
           <button
-            className="lg:hidden transition-colors"
-            style={{ color: 'hsl(30 12% 55%)' }}
+            className="lg:hidden p-2 rounded-lg transition-all"
+            style={{
+              color: 'hsl(222 10% 62%)',
+              background: 'hsl(222 14% 14%)',
+              border: '1px solid hsl(222 14% 18%)',
+            }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            onMouseEnter={e => (e.currentTarget.style.color = 'hsl(18 62% 56%)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'hsl(30 12% 55%)')}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = 'hsl(42 76% 68%)';
+              e.currentTarget.style.borderColor = 'hsl(42 76% 50% / 0.5)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = 'hsl(222 10% 62%)';
+              e.currentTarget.style.borderColor = 'hsl(222 14% 18%)';
+            }}
           >
-            <Icon name="Menu" size={20} />
+            <Icon name="Menu" size={18} />
           </button>
 
-          {/* Хлебные крошки в свитковом стиле */}
-          <div className="flex items-center gap-2.5">
+          {/* Хлебные крошки */}
+          <div className="flex items-center gap-3">
             <span
-              className="w-[7px] h-[7px] rotate-45"
-              style={{ background: 'hsl(18 52% 48%)', boxShadow: '0 0 0 1px hsl(4 48% 24%)' }}
+              className="w-2 h-2 rotate-45"
+              style={{
+                background: 'linear-gradient(135deg, hsl(48 80% 72%), hsl(32 64% 40%))',
+                boxShadow: '0 0 8px hsl(42 76% 58% / 0.6)',
+              }}
             />
             <button
               className="transition-colors"
               style={{
-                fontFamily: '"IM Fell English SC", serif',
-                fontSize: '0.85rem',
-                fontWeight: 400,
-                letterSpacing: '0.18em',
-                color: 'hsl(40 28% 78%)',
-                textTransform: 'uppercase',
+                fontFamily: '"Cormorant Garamond", serif',
+                fontSize: '1.25rem',
+                fontWeight: 600,
+                color: 'hsl(38 22% 90%)',
+                letterSpacing: '0.005em',
               }}
               onClick={() => { setPage('catalog'); setDetailUnitId(null); setForumTopicId(null); }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'hsl(18 62% 56%)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'hsl(40 28% 78%)')}
+              onMouseEnter={e => (e.currentTarget.style.color = 'hsl(42 76% 72%)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'hsl(38 22% 90%)')}
             >
               {currentLabel}
             </button>
             {detailUnitId && (
               <>
-                <span style={{ color: 'hsl(18 52% 42% / 0.6)', fontSize: '0.7rem' }}>—</span>
+                <Icon name="ChevronRight" size={16} style={{ color: 'hsl(42 76% 50% / 0.5)' }} />
                 <span
+                  className="italic"
                   style={{
-                    fontFamily: '"IM Fell English", serif',
-                    fontSize: '0.9rem',
-                    fontStyle: 'italic',
-                    color: 'hsl(40 28% 70%)',
+                    fontFamily: '"Cormorant Garamond", serif',
+                    fontSize: '1.1rem',
+                    color: 'hsl(222 10% 62%)',
                   }}
                 >
-                  грамота отряда
+                  подробности отряда
                 </span>
               </>
             )}
             {page === 'forum' && forumTopicId && (
               <>
-                <span style={{ color: 'hsl(18 52% 42% / 0.6)', fontSize: '0.7rem' }}>—</span>
+                <Icon name="ChevronRight" size={16} style={{ color: 'hsl(42 76% 50% / 0.5)' }} />
                 <span
+                  className="italic"
                   style={{
-                    fontFamily: '"IM Fell English", serif',
-                    fontSize: '0.9rem',
-                    fontStyle: 'italic',
-                    color: 'hsl(40 28% 70%)',
+                    fontFamily: '"Cormorant Garamond", serif',
+                    fontSize: '1.1rem',
+                    color: 'hsl(222 10% 62%)',
                   }}
                 >
                   обсуждение

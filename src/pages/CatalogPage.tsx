@@ -14,6 +14,13 @@ const RARITY_LABELS: Record<Rarity, string> = {
   legendary: 'Легендарный',
 };
 
+const CLASS_META: Record<UnitClass, { icon: string; hue: string }> = {
+  'Пехота':     { icon: 'Sword',     hue: '220 10% 60%' },
+  'Кавалерия':  { icon: 'Zap',       hue: '42 76% 58%'  },
+  'Стрелки':    { icon: 'Crosshair', hue: '150 48% 50%' },
+  'Осадные':    { icon: 'Hammer',    hue: '18 84% 58%'  },
+};
+
 interface CatalogPageProps {
   onSelectUnit: (id: string) => void;
 }
@@ -59,234 +66,328 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
 
   const hasFilters = search || classFilter || roleFilter || rarityFilter;
 
+  /* статистика */
+  const classCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    UNITS.forEach(u => (m[u.class] = (m[u.class] ?? 0) + 1));
+    return m;
+  }, [UNITS]);
+
+  const legendaryCount = useMemo(
+    () => UNITS.filter(u => u.rarity === 'legendary').length,
+    [UNITS],
+  );
+
   if (loading)
     return (
-      <div className="flex items-center justify-center py-28 text-muted-foreground">
-        <Icon name="Loader" size={18} className="animate-spin mr-2" />
-        <span className="font-fell italic">составляется реестръ…</span>
+      <div className="flex items-center justify-center py-28">
+        <div className="flex items-center gap-3">
+          <Icon name="Loader" size={20} className="animate-spin" style={{ color: 'hsl(42 76% 58%)' }} />
+          <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.15rem', fontStyle: 'italic', color: 'hsl(222 10% 62%)' }}>
+            загружаем каталог…
+          </span>
+        </div>
       </div>
     );
 
   const selectStyle: React.CSSProperties = {
-    fontFamily: '"IM Fell English", serif',
-    fontSize: '0.88rem',
-    color: 'hsl(40 24% 82%)',
-    background: 'hsl(24 10% 9%)',
-    border: '1px solid hsl(30 14% 22%)',
-    padding: '0.4rem 0.7rem',
-    borderRadius: 0,
-    boxShadow: 'inset 0 1px 0 hsl(0 0% 0% / 0.4)',
+    fontFamily: 'Manrope, sans-serif',
+    fontSize: '0.86rem',
+    fontWeight: 500,
+    color: 'hsl(38 18% 86%)',
+    background: 'hsl(222 16% 12%)',
+    border: '1px solid hsl(222 14% 20%)',
+    padding: '0.55rem 0.85rem',
+    borderRadius: '8px',
     outline: 'none',
+    cursor: 'pointer',
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto">
-      {/* ── ЗАГОЛОВОК — гербовой лист ─────────────────────── */}
-      <header className="mb-10 relative">
-        <div className="flex items-center justify-center gap-4 mb-3">
-          <span className="flex-1 h-px bg-primary/30" />
-          <span className="w-2 h-2 bg-primary rotate-45" />
-          <span
-            className="uppercase"
+    <div className="max-w-[1400px] mx-auto animate-fade-in">
+      {/* ═════ HERO ═════ */}
+      <section className="mb-10 relative">
+        {/* Декоративные световые пятна */}
+        <div
+          className="absolute -top-10 left-1/4 w-96 h-96 rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, hsl(42 76% 50% / 0.12) 0%, transparent 60%)',
+            filter: 'blur(40px)',
+          }}
+        />
+        <div
+          className="absolute top-10 right-1/4 w-80 h-80 rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, hsl(354 62% 44% / 0.1) 0%, transparent 60%)',
+            filter: 'blur(40px)',
+          }}
+        />
+
+        <div className="relative">
+          {/* Эпиграф */}
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <span className="h-px w-10 bg-primary/40" />
+            <span
+              className="uppercase font-mono-data"
+              style={{
+                fontSize: '0.68rem',
+                letterSpacing: '0.38em',
+                color: 'hsl(42 76% 58%)',
+              }}
+            >
+              ◆ MMXXVI · глава I ◆
+            </span>
+            <span className="h-px w-10 bg-primary/40" />
+          </div>
+
+          {/* Большой заголовок */}
+          <h1
+            className="text-center"
             style={{
-              fontFamily: '"IM Fell English SC", serif',
-              fontSize: '0.72rem',
-              letterSpacing: '0.42em',
-              color: 'hsl(18 52% 52%)',
+              fontFamily: 'Cormorant Garamond, serif',
+              fontSize: 'clamp(2.8rem, 6.5vw, 5.2rem)',
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: 'hsl(38 24% 94%)',
             }}
           >
-            Гильдейскiй реэстръ
-          </span>
-          <span className="w-2 h-2 bg-primary rotate-45" />
-          <span className="flex-1 h-px bg-primary/30" />
+            Каталог{' '}
+            <span className="text-gradient-gold" style={{ fontStyle: 'italic' }}>
+              отрядов
+            </span>
+          </h1>
+
+          <p
+            className="text-center mt-5 max-w-2xl mx-auto"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '1.02rem',
+              color: 'hsl(222 8% 62%)',
+              lineHeight: 1.6,
+            }}
+          >
+            Полный реестр рот, хоругвей и дружин с характеристиками, умениями и возможностью
+            применить трактаты. Выбирай героев, сравнивай их и строй идеальное войско.
+          </p>
+
+          {/* Быстрая статистика */}
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
+            <StatChip
+              icon="Users"
+              label="Всего отрядов"
+              value={UNITS.length}
+              hue="42 76% 58%"
+            />
+            <StatChip
+              icon="Flame"
+              label="Легендарных"
+              value={legendaryCount}
+              hue="18 84% 58%"
+            />
+            {(Object.keys(classCounts) as UnitClass[]).slice(0, 4).map(cls => (
+              <StatChip
+                key={cls}
+                icon={CLASS_META[cls]?.icon ?? 'Shield'}
+                label={cls}
+                value={classCounts[cls]}
+                hue={CLASS_META[cls]?.hue ?? '222 10% 60%'}
+              />
+            ))}
+          </div>
         </div>
+      </section>
 
-        <h1
-          className="text-center"
-          style={{
-            fontFamily: '"UnifrakturCook", serif',
-            fontSize: 'clamp(2.2rem, 5vw, 3.8rem)',
-            fontWeight: 700,
-            color: 'hsl(40 38% 90%)',
-            textShadow:
-              '0 2px 0 hsl(0 0% 0% / 0.7), 0 0 30px hsl(18 52% 42% / 0.25)',
-            letterSpacing: '0.01em',
-            lineHeight: 1,
-          }}
-        >
-          Книга Отрядовъ
-        </h1>
-
-        <p
-          className="text-center mt-3 italic"
-          style={{
-            fontFamily: '"IM Fell English", serif',
-            fontSize: '1.05rem',
-            color: 'hsl(30 18% 58%)',
-          }}
-        >
-          Записи о всехъ ротахъ, хоругвяхъ и дружинахъ, ведомыхъ сей гильдiею.
-        </p>
-
-        <div
-          className="mt-5 text-center font-mono-data"
-          style={{ color: 'hsl(18 52% 42% / 0.8)', fontSize: '0.72rem', letterSpacing: '0.28em' }}
-        >
-          {String(filtered.length).padStart(3, '0')} ⁄ {String(UNITS.length).padStart(3, '0')} ВНЕСЕНО
-        </div>
-      </header>
-
-      {/* ── ПАНЕЛЬ ФИЛЬТРОВ — писцовая таблица ─────────────── */}
+      {/* ═════ ПАНЕЛЬ ФИЛЬТРОВ ═════ */}
       <div
-        className="mb-8 relative"
+        className="mb-8 relative overflow-hidden"
         style={{
           background:
-            'linear-gradient(180deg, hsl(26 12% 10%) 0%, hsl(22 10% 7%) 100%)',
-          border: '1px solid hsl(30 14% 20%)',
+            'linear-gradient(180deg, hsl(222 16% 12%) 0%, hsl(222 18% 8%) 100%)',
+          border: '1px solid hsl(222 14% 18%)',
+          borderRadius: '16px',
           boxShadow:
-            'inset 0 1px 0 hsl(30 30% 28% / 0.2), 0 4px 14px hsl(0 0% 0% / 0.35)',
+            'inset 0 1px 0 hsl(42 30% 40% / 0.06), 0 12px 28px hsl(222 40% 2% / 0.4)',
         }}
       >
-        {/* Геральдические уголки */}
-        <span className="absolute -top-[3px] -left-[3px] w-[6px] h-[6px] bg-primary rotate-45" />
-        <span className="absolute -top-[3px] -right-[3px] w-[6px] h-[6px] bg-primary rotate-45" />
-        <span className="absolute -bottom-[3px] -left-[3px] w-[6px] h-[6px] bg-primary rotate-45" />
-        <span className="absolute -bottom-[3px] -right-[3px] w-[6px] h-[6px] bg-primary rotate-45" />
+        {/* Золотая лента сверху */}
+        <div
+          className="h-[2px] w-full"
+          style={{
+            background:
+              'linear-gradient(90deg, transparent, hsl(42 76% 58% / 0.6) 50%, transparent)',
+          }}
+        />
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 lg:p-6 space-y-4">
           {/* Поиск */}
           <div className="relative">
             <Icon
               name="Search"
-              size={15}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2"
-              style={{ color: 'hsl(18 52% 45%)' }}
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2"
+              style={{ color: 'hsl(42 76% 58%)' }}
             />
             <input
               type="text"
-              placeholder="Найти отрядъ по имени…"
+              placeholder="Найти отряд по названию…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-3"
+              className="w-full input-rich"
               style={{
-                ...selectStyle,
-                padding: '0.65rem 0.8rem 0.65rem 2.4rem',
+                padding: '0.9rem 1rem 0.9rem 3rem',
                 fontSize: '1rem',
-                fontStyle: 'italic',
+                fontWeight: 500,
               }}
             />
           </div>
 
           {/* Фильтры */}
           <div className="flex flex-wrap items-center gap-2.5">
-            <FilterLabel>Классъ</FilterLabel>
+            <FilterLabel>Класс</FilterLabel>
             <select
               value={classFilter}
               onChange={e => setClassFilter(e.target.value as UnitClass | '')}
               style={selectStyle}
             >
-              <option value="">Всякiй</option>
+              <option value="">Все</option>
               {CLASSES.map(c => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+                <option key={c} value={c}>{c}</option>
               ))}
             </select>
 
-            <FilterLabel>Назначенiе</FilterLabel>
+            <FilterLabel>Роль</FilterLabel>
             <select
               value={roleFilter}
               onChange={e => setRoleFilter(e.target.value)}
               style={selectStyle}
             >
-              <option value="">Всякое</option>
+              <option value="">Любая</option>
               {roles.map(r => (
-                <option key={r.id} value={r.name}>
-                  {r.name}
-                </option>
+                <option key={r.id} value={r.name}>{r.name}</option>
               ))}
             </select>
 
-            <FilterLabel>Рангъ</FilterLabel>
+            <FilterLabel>Ранг</FilterLabel>
             <select
               value={rarityFilter}
               onChange={e => setRarityFilter(e.target.value as Rarity | '')}
               style={selectStyle}
             >
-              <option value="">Всякiй</option>
+              <option value="">Любой</option>
               {RARITIES.map(r => (
-                <option key={r} value={r}>
-                  {RARITY_LABELS[r]}
-                </option>
+                <option key={r} value={r}>{RARITY_LABELS[r]}</option>
               ))}
             </select>
 
             <div className="ml-auto flex items-center gap-2">
-              <FilterLabel>Упорядочить</FilterLabel>
+              <FilterLabel>Сортировка</FilterLabel>
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as typeof sortBy)}
                 style={selectStyle}
               >
-                <option value="name">по имени</option>
-                <option value="stars">по звёздамъ</option>
-                <option value="attack">по натиску</option>
-                <option value="defense">по защите</option>
-                <option value="leadership">по лидерству</option>
+                <option value="name">По названию</option>
+                <option value="stars">По рейтингу</option>
+                <option value="attack">По атаке</option>
+                <option value="defense">По защите</option>
+                <option value="leadership">По лидерству</option>
               </select>
 
               {hasFilters && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1 px-3 py-2 transition-colors"
-                  style={{
-                    fontFamily: '"IM Fell English", serif',
-                    fontSize: '0.85rem',
-                    fontStyle: 'italic',
-                    color: 'hsl(30 12% 58%)',
-                    border: '1px solid hsl(30 14% 22%)',
-                    background: 'transparent',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.color = 'hsl(4 62% 58%)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = 'hsl(30 12% 58%)')}
+                  className="btn-ghost"
+                  style={{ padding: '0.55rem 0.9rem', fontSize: '0.78rem' }}
                 >
-                  <Icon name="X" size={13} />
-                  сбросить
+                  <Icon name="X" size={14} />
+                  Сбросить
                 </button>
               )}
             </div>
           </div>
+
+          {/* Счётчик результатов */}
+          <div
+            className="flex items-center gap-2 pt-1"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '0.78rem',
+              color: 'hsl(222 8% 56%)',
+            }}
+          >
+            <span
+              className="font-mono-data font-semibold px-2 py-0.5 rounded"
+              style={{
+                background: 'hsl(42 76% 50% / 0.12)',
+                color: 'hsl(42 76% 68%)',
+                border: '1px solid hsl(42 76% 50% / 0.3)',
+              }}
+            >
+              {filtered.length}
+            </span>
+            найдено из {UNITS.length}
+          </div>
         </div>
       </div>
 
-      {/* ── СЕТКА ОТРЯДОВ ─ */}
+      {/* ═════ СЕТКА ═════ */}
       {filtered.length === 0 ? (
-        <div className="text-center py-24">
-          <Icon
-            name="ScrollText"
-            size={56}
-            className="mx-auto mb-4"
-            style={{ color: 'hsl(18 52% 42% / 0.35)' }}
-          />
-          <p
-            className="italic"
+        <div
+          className="text-center py-24 rounded-2xl"
+          style={{
+            background:
+              'linear-gradient(180deg, hsl(222 16% 10%) 0%, hsl(222 18% 7%) 100%)',
+            border: '1px dashed hsl(222 14% 22%)',
+          }}
+        >
+          <div
+            className="w-20 h-20 mx-auto mb-5 rounded-2xl flex items-center justify-center"
             style={{
-              fontFamily: '"IM Fell English", serif',
-              fontSize: '1.1rem',
-              color: 'hsl(30 14% 52%)',
+              background:
+                'linear-gradient(135deg, hsl(222 14% 14%) 0%, hsl(222 18% 10%) 100%)',
+              border: '1px solid hsl(222 14% 20%)',
             }}
           >
-            Ни одного отряда по сему условiю не найдено.
+            <Icon name="SearchX" size={36} style={{ color: 'hsl(42 76% 58% / 0.65)' }} />
+          </div>
+          <h3
+            style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontSize: '1.8rem',
+              fontWeight: 600,
+              color: 'hsl(38 22% 88%)',
+            }}
+          >
+            Ничего не найдено
+          </h3>
+          <p
+            className="mt-2"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '0.92rem',
+              color: 'hsl(222 8% 58%)',
+            }}
+          >
+            Попробуйте изменить фильтры или поисковый запрос.
           </p>
+          {hasFilters && (
+            <button onClick={clearFilters} className="btn-primary mt-6">
+              <Icon name="X" size={15} />
+              Сбросить фильтры
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map(unit => (
-            <UnitCard
+          {filtered.map((unit, i) => (
+            <div
               key={unit.id}
-              unit={unit}
-              onClick={() => onSelectUnit(unit.id)}
-            />
+              className="animate-slide-up"
+              style={{ animationDelay: `${Math.min(i * 25, 500)}ms`, opacity: 0 }}
+            >
+              <UnitCard unit={unit} onClick={() => onSelectUnit(unit.id)} />
+            </div>
           ))}
         </div>
       )}
@@ -294,18 +395,79 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   );
 }
 
+/* ─── Вспомогательные компоненты ─── */
+
 function FilterLabel({ children }: { children: React.ReactNode }) {
   return (
     <span
       className="uppercase"
       style={{
-        fontFamily: '"IM Fell English SC", serif',
-        fontSize: '0.62rem',
-        letterSpacing: '0.28em',
-        color: 'hsl(18 52% 48%)',
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '0.64rem',
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        color: 'hsl(42 40% 58%)',
       }}
     >
       {children}
     </span>
+  );
+}
+
+function StatChip({
+  icon,
+  label,
+  value,
+  hue,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  hue: string;
+}) {
+  return (
+    <div
+      className="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue} / 0.12) 0%, hsl(222 16% 10%) 100%)`,
+        border: `1px solid hsl(${hue} / 0.35)`,
+        boxShadow: `inset 0 1px 0 hsl(${hue} / 0.15), 0 4px 12px hsl(222 40% 2% / 0.3)`,
+      }}
+    >
+      <span
+        className="w-8 h-8 rounded-lg flex items-center justify-center"
+        style={{
+          background: `hsl(${hue} / 0.2)`,
+          border: `1px solid hsl(${hue} / 0.4)`,
+        }}
+      >
+        <Icon name={icon} size={15} style={{ color: `hsl(${hue})` }} />
+      </span>
+      <div>
+        <div
+          className="font-mono-data"
+          style={{
+            fontSize: '1.05rem',
+            fontWeight: 600,
+            color: `hsl(${hue})`,
+            lineHeight: 1,
+          }}
+        >
+          {value}
+        </div>
+        <div
+          className="uppercase mt-0.5"
+          style={{
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '0.58rem',
+            fontWeight: 600,
+            letterSpacing: '0.14em',
+            color: 'hsl(222 8% 58%)',
+          }}
+        >
+          {label}
+        </div>
+      </div>
+    </div>
   );
 }

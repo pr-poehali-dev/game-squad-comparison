@@ -14,21 +14,23 @@ export default {
 		container: {
 			center: true,
 			padding: '2rem',
-			screens: {
-				'2xl': '1400px'
-			}
+			screens: { '2xl': '1400px' }
 		},
 		extend: {
 			fontFamily: {
-				'fell': ['"IM Fell English"', 'serif'],
-				'fell-sc': ['"IM Fell English SC"', 'serif'],
-				'fraktur': ['"UnifrakturCook"', 'serif'],
-				'garamond': ['"EB Garamond"', 'serif'],
-				'mono-data': ['"JetBrains Mono"', 'monospace'],
-				/* legacy aliases — чтобы не ломать оставшийся код */
-				'cinzel': ['"IM Fell English SC"', 'serif'],
-				'cinzel-deco': ['"UnifrakturCook"', 'serif'],
-				'rajdhani': ['"EB Garamond"', 'serif'],
+				'display':  ['"Cinzel Decorative"', 'serif'],
+				'serif':    ['"Cormorant Garamond"', 'serif'],
+				'sans':     ['"Manrope"', 'system-ui', 'sans-serif'],
+				'mono-data':['"JetBrains Mono"', 'monospace'],
+
+				/* legacy aliases */
+				'fell':      ['"Cormorant Garamond"', 'serif'],
+				'fell-sc':   ['"Cormorant Garamond"', 'serif'],
+				'fraktur':   ['"Cinzel Decorative"', 'serif'],
+				'garamond':  ['"Cormorant Garamond"', 'serif'],
+				'cinzel':      ['"Cormorant Garamond"', 'serif'],
+				'cinzel-deco': ['"Cinzel Decorative"', 'serif'],
+				'rajdhani':    ['"Manrope"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
@@ -74,6 +76,9 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				crimson: 'hsl(var(--crimson))',
+				gold:    'hsl(var(--gold))',
+				slate2:  'hsl(var(--slate2))',
 				parchment: {
 					DEFAULT: 'hsl(var(--parchment))',
 					dark: 'hsl(var(--parchment-dark))',
@@ -88,34 +93,37 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
-				'accordion-down': {
-					from: { height: '0' },
-					to: { height: 'var(--radix-accordion-content-height)' }
-				},
-				'accordion-up': {
-					from: { height: 'var(--radix-accordion-content-height)' },
-					to: { height: '0' }
-				},
-				'ember-flicker': {
-					'0%, 100%': { opacity: '0.55', filter: 'brightness(0.95)' },
-					'40%': { opacity: '0.85', filter: 'brightness(1.15)' },
-					'70%': { opacity: '0.65', filter: 'brightness(1.05)' },
-				},
+				'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
+				'accordion-up':   { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },
 				'slide-up': {
 					from: { opacity: '0', transform: 'translateY(14px)' },
-					to: { opacity: '1', transform: 'translateY(0)' },
+					to:   { opacity: '1', transform: 'translateY(0)' },
 				},
-				'ink-seep': {
-					from: { opacity: '0', filter: 'blur(6px)' },
-					to:   { opacity: '1', filter: 'blur(0)' },
+				'fade-in': {
+					from: { opacity: '0' },
+					to:   { opacity: '1' },
+				},
+				'gold-pulse': {
+					'0%,100%': { boxShadow: '0 0 0 0 hsl(42 78% 55% / 0)' },
+					'50%':     { boxShadow: '0 0 32px 4px hsl(42 78% 55% / 0.35)' },
+				},
+				'shimmer': {
+					'0%':   { backgroundPosition: '-200% center' },
+					'100%': { backgroundPosition: '200% center' },
 				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'ember-flicker': 'ember-flicker 2.8s ease-in-out infinite',
-				'slide-up': 'slide-up 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
-				'ink-seep': 'ink-seep 0.6s ease forwards',
+				'accordion-up':   'accordion-up 0.2s ease-out',
+				'slide-up':   'slide-up 0.45s cubic-bezier(0.16,1,0.3,1) forwards',
+				'fade-in':    'fade-in 0.4s ease forwards',
+				'gold-pulse': 'gold-pulse 3s ease-in-out infinite',
+				'shimmer':    'shimmer 2.5s linear infinite',
+			},
+			backgroundImage: {
+				'brass':     'linear-gradient(135deg, hsl(42 72% 62%) 0%, hsl(36 64% 48%) 50%, hsl(30 56% 38%) 100%)',
+				'crimson':   'linear-gradient(135deg, hsl(355 68% 48%) 0%, hsl(350 60% 36%) 100%)',
+				'slate-deep':'linear-gradient(180deg, hsl(222 16% 11%) 0%, hsl(224 18% 7%) 100%)',
 			}
 		}
 	},

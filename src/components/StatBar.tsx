@@ -2,8 +2,8 @@ interface StatBarProps {
   label: string;
   value: number;
   max?: number;
-  bonus?: number;        // от трактатов
-  abilityBonus?: number; // от умений
+  bonus?: number;
+  abilityBonus?: number;
   unitLabel?: string;
 }
 
@@ -31,11 +31,11 @@ export default function StatBar({
         <span
           className="uppercase"
           style={{
-            fontFamily: '"IM Fell English SC", serif',
-            fontSize: '0.62rem',
-            fontWeight: 400,
-            letterSpacing: '0.2em',
-            color: 'hsl(30 14% 48%)',
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: '0.6rem',
+            fontWeight: 700,
+            letterSpacing: '0.16em',
+            color: 'hsl(222 8% 58%)',
           }}
         >
           {label}
@@ -43,7 +43,7 @@ export default function StatBar({
         <div className="flex items-baseline gap-1.5">
           <span
             className="font-mono-data"
-            style={{ fontSize: '0.8rem', color: 'hsl(40 28% 82%)' }}
+            style={{ fontSize: '0.8rem', fontWeight: 600, color: 'hsl(38 24% 90%)' }}
           >
             {value}
             {unitLabel ? ` ${unitLabel}` : ''}
@@ -53,7 +53,8 @@ export default function StatBar({
               className="font-mono-data"
               style={{
                 fontSize: '0.72rem',
-                color: treatyPositive ? 'hsl(90 42% 58%)' : 'hsl(4 62% 58%)',
+                fontWeight: 600,
+                color: treatyPositive ? 'hsl(150 48% 60%)' : 'hsl(0 72% 60%)',
               }}
             >
               {treatyPositive ? '+' : ''}
@@ -65,9 +66,10 @@ export default function StatBar({
               className="font-mono-data"
               style={{
                 fontSize: '0.72rem',
+                fontWeight: 600,
                 color: abilityPositive
-                  ? 'hsl(198 40% 58%)'
-                  : 'hsl(18 72% 58%)',
+                  ? 'hsl(210 78% 65%)'
+                  : 'hsl(18 84% 62%)',
               }}
             >
               {abilityPositive ? '+' : ''}
@@ -77,7 +79,6 @@ export default function StatBar({
         </div>
       </div>
 
-      {/* Кованая канавка со ржавой заливкой */}
       <div className="stat-bar">
         <div className="relative h-full">
           {abilityBonus !== 0 && (
@@ -86,8 +87,10 @@ export default function StatBar({
               style={{
                 width: `${Math.max(basePct, abilityPct)}%`,
                 background: abilityPositive
-                  ? 'hsl(198 40% 42% / 0.45)'
-                  : 'hsl(18 72% 45% / 0.45)',
+                  ? 'linear-gradient(180deg, hsl(210 78% 60%), hsl(210 70% 42%))'
+                  : 'linear-gradient(180deg, hsl(18 84% 58%), hsl(12 72% 40%))',
+                opacity: 0.65,
+                borderRadius: '3px',
               }}
             />
           )}
@@ -97,8 +100,10 @@ export default function StatBar({
               style={{
                 width: `${Math.max(basePct, treatyPct)}%`,
                 background: treatyPositive
-                  ? 'hsl(90 42% 42% / 0.5)'
-                  : 'hsl(4 62% 42% / 0.5)',
+                  ? 'linear-gradient(180deg, hsl(150 48% 55%), hsl(150 44% 36%))'
+                  : 'linear-gradient(180deg, hsl(0 72% 58%), hsl(354 62% 38%))',
+                opacity: 0.7,
+                borderRadius: '3px',
               }}
             />
           )}

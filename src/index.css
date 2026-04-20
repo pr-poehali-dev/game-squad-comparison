@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── 3D Card Flip ───────────────────────────────────────── */
+/* ══════════ 3D Card Flip ══════════ */
 .card-flip-scene {
   perspective: 1200px;
 }
@@ -31,71 +31,73 @@
 
 @layer base {
   :root {
-    /* ─── ПАЛИТРА: ТЁМНОЕ СРЕДНЕВЕКОВЬЕ ────────────────────
-       Сажа / уголь, холст пергамента, ржавая кровь (oxblood),
-       старая медь. Без золота, без синевы, без магии. */
+    /* ═══ Палитра: между двух эпох ═══
+       Тёмный сланец, глубокие тени, бордово-рубиновый акцент
+       и тёплое античное золото. Современно, но с благородством. */
 
-    /* Фон — копчёный уголь (тёплый, но глухой) */
-    --background: 24 8% 6%;
-    --foreground: 40 24% 84%;
+    /* Фон — глубокий тёмно-сланцевый с едва заметным синевой */
+    --background: 222 18% 7%;
+    --foreground: 38 20% 92%;
 
-    /* Карточки — чуть светлее, с коричневой теплотой */
-    --card: 26 10% 9%;
-    --card-foreground: 40 24% 84%;
+    /* Карточки — чуть светлее, без коричневого */
+    --card: 222 16% 10%;
+    --card-foreground: 38 20% 92%;
 
-    --popover: 26 10% 9%;
-    --popover-foreground: 40 24% 84%;
+    --popover: 222 18% 9%;
+    --popover-foreground: 38 20% 92%;
 
-    /* Primary — старая медь/ржавчина (не золото!) */
-    --primary: 18 52% 42%;
-    --primary-foreground: 40 30% 92%;
+    /* Primary — античное золото (тёплое, насыщенное) */
+    --primary: 42 76% 58%;
+    --primary-foreground: 222 20% 8%;
 
-    /* Secondary — тёмный камень */
-    --secondary: 24 8% 12%;
-    --secondary-foreground: 40 20% 70%;
+    /* Secondary — графитовый слой */
+    --secondary: 222 14% 14%;
+    --secondary-foreground: 38 18% 86%;
 
     /* Muted */
-    --muted: 24 8% 10%;
-    --muted-foreground: 30 10% 48%;
+    --muted: 222 14% 13%;
+    --muted-foreground: 222 8% 56%;
 
-    /* Accent — ржавая кровь / oxblood */
-    --accent: 4 48% 32%;
-    --accent-foreground: 40 30% 92%;
+    /* Accent — глубокий рубиновый/бордо (кровь рыцарского плаща) */
+    --accent: 354 62% 44%;
+    --accent-foreground: 38 30% 96%;
 
-    /* Destructive — кровь свежая */
-    --destructive: 0 62% 38%;
-    --destructive-foreground: 40 30% 92%;
+    /* Destructive */
+    --destructive: 0 72% 52%;
+    --destructive-foreground: 38 30% 96%;
 
-    /* Границы — тусклая медь */
-    --border: 30 14% 16%;
-    --input: 26 10% 11%;
-    --ring: 18 52% 42%;
+    /* Border — тонкая графитовая */
+    --border: 222 14% 18%;
+    --input: 222 14% 14%;
+    --ring: 42 76% 58%;
 
-    --radius: 0;
+    --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar-background: 24 10% 5%;
-    --sidebar-foreground: 40 24% 82%;
-    --sidebar-primary: 18 52% 42%;
-    --sidebar-primary-foreground: 40 30% 92%;
-    --sidebar-accent: 26 10% 10%;
-    --sidebar-accent-foreground: 40 24% 84%;
-    --sidebar-border: 30 14% 14%;
-    --sidebar-ring: 18 52% 42%;
+    --sidebar-background: 222 20% 6%;
+    --sidebar-foreground: 38 20% 90%;
+    --sidebar-primary: 42 76% 58%;
+    --sidebar-primary-foreground: 222 20% 8%;
+    --sidebar-accent: 222 14% 12%;
+    --sidebar-accent-foreground: 38 20% 92%;
+    --sidebar-border: 222 14% 14%;
+    --sidebar-ring: 42 76% 58%;
 
-    /* Rarity — геральдические цвета (не игровые!) */
-    --rarity-common: 30 10% 48%; /* серая сталь */
-    --rarity-uncommon: 70 22% 38%; /* мшистый камень */
-    --rarity-rare: 198 30% 42%; /* тусклая лазурь */
-    --rarity-epic: 280 20% 40%; /* пурпур кардинала */
-    --rarity-legendary: 14 62% 44%; /* ржавая киноварь */
+    /* Ранги — богатые, современные, но с историческими отсылками */
+    --rarity-common: 220 10% 60%; /* полированная сталь */
+    --rarity-uncommon: 150 48% 50%; /* нефрит/лавр */
+    --rarity-rare: 210 78% 58%; /* королевская лазурь */
+    --rarity-epic: 282 58% 60%; /* аметист кардинала */
+    --rarity-legendary: 18 84% 58%; /* пылающий янтарь */
 
-    /* Декоративные */
-    --parchment: 38 32% 74%;
+    /* Дополнительные */
+    --crimson: 354 62% 44%;
+    --gold: 42 76% 58%;
+    --slate2: 222 14% 14%;
+    --parchment: 38 32% 78%;
     --parchment-dark: 34 24% 54%;
-    --oxblood: 4 48% 32%;
-    --copper: 18 52% 42%;
-    --soot: 20 10% 8%;
+    --oxblood: 354 62% 34%;
+    --copper: 24 64% 46%;
+    --soot: 222 16% 8%;
   }
 }
 
@@ -109,82 +111,116 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: "EB Garamond", Georgia, serif;
+    font-family:
+      "Manrope",
+      system-ui,
+      -apple-system,
+      sans-serif;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 1.5;
+    font-size: 15px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    min-height: 100vh;
 
-    /* Фоновая фактура: тёплый виньет, пергаментная зернистость, старая бумага */
+    /* Фон: глубокий градиент + микрозернистость + световые пятна */
     background-color: hsl(var(--background));
     background-image:
-      /* дымный виньет по углам */
+      /* золотое пятно слева-сверху (как витраж) */
       radial-gradient(
-        ellipse 80% 60% at 50% 0%,
-        hsl(18 40% 18% / 0.18) 0%,
-        transparent 60%
+        ellipse 60% 40% at 0% 0%,
+        hsl(42 70% 40% / 0.08) 0%,
+        transparent 55%
       ),
-      radial-gradient(
-        ellipse 120% 90% at 50% 100%,
-        hsl(0 0% 0% / 0.5) 0%,
-        transparent 60%
-      ),
-      /* крапины-зернышки, как на старой гравюре */
-        url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0.6 0'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+      /* рубиновое пятно справа-снизу */
+        radial-gradient(
+          ellipse 60% 40% at 100% 100%,
+          hsl(354 62% 34% / 0.1) 0%,
+          transparent 55%
+        ),
+      /* основная сланцевая заливка */
+        linear-gradient(180deg, hsl(222 20% 8%) 0%, hsl(222 18% 5%) 100%),
+      /* зернистость */
+        url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.1 0 0 0 0 0.12 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
     background-attachment: fixed;
   }
 
-  /* Заголовки — тяжёлая староанглийская антиква */
+  /* Заголовки: засечный Cormorant — мост между эпохами */
   h1,
   h2,
   h3 {
-    font-family: "IM Fell English SC", "EB Garamond", serif;
-    letter-spacing: 0.02em;
-    font-weight: 400;
+    font-family: "Cormorant Garamond", Georgia, serif;
+    letter-spacing: -0.01em;
+    font-weight: 600;
     color: hsl(var(--foreground));
   }
+  h1 {
+    font-weight: 700;
+  }
+
   h4,
   h5,
   h6 {
-    font-family: "IM Fell English SC", serif;
-    letter-spacing: 0.08em;
-    font-weight: 400;
-    text-transform: uppercase;
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
+  .font-display {
+    font-family: "Cinzel Decorative", serif;
+  }
+  .font-serif {
+    font-family: "Cormorant Garamond", Georgia, serif;
+  }
+  .font-sans {
+    font-family: "Manrope", sans-serif;
+  }
   .font-mono-data {
     font-family: "JetBrains Mono", monospace;
   }
-  .font-fell {
-    font-family: "IM Fell English", serif;
-  }
-  .font-fell-sc {
-    font-family: "IM Fell English SC", serif;
-  }
-  .font-fraktur {
-    font-family: "UnifrakturCook", "IM Fell English", serif;
-  }
-  .font-garamond {
-    font-family: "EB Garamond", serif;
-  }
 
-  /* Legacy aliases — на случай оставшихся упоминаний в коде */
+  /* Legacy aliases */
   .font-cinzel {
-    font-family: "IM Fell English SC", serif;
-    letter-spacing: 0.02em;
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 600;
   }
   .font-cinzel-deco {
-    font-family: "UnifrakturCook", serif;
+    font-family: "Cinzel Decorative", serif;
   }
   .font-rajdhani {
-    font-family: "EB Garamond", serif;
+    font-family: "Manrope", sans-serif;
+  }
+  .font-fell {
+    font-family: "Cormorant Garamond", serif;
+  }
+  .font-fell-sc {
+    font-family: "Cormorant Garamond", serif;
+  }
+  .font-fraktur {
+    font-family: "Cinzel Decorative", serif;
+  }
+  .font-garamond {
+    font-family: "Cormorant Garamond", serif;
   }
 }
 
 @layer utilities {
-  /* ─── Пергамент-поверхность ──────────────────────────────
-     Тёплый, пыльный, с лёгкими пятнами сажи */
+  /* ══════════ Поверхности ══════════ */
+
+  /* Богатая карточка: градиент + внутренние блики + рамка */
+  .surface-rich {
+    background: linear-gradient(
+      180deg,
+      hsl(222 16% 12%) 0%,
+      hsl(222 18% 8%) 100%
+    );
+    border: 1px solid hsl(222 14% 18%);
+    box-shadow:
+      inset 0 1px 0 hsl(42 30% 40% / 0.08),
+      0 8px 24px hsl(222 40% 2% / 0.4);
+  }
+
   .surface-parchment {
-    background-color: hsl(36 22% 82%);
+    background-color: hsl(36 26% 82%);
     color: hsl(24 20% 14%);
     background-image:
       radial-gradient(
@@ -196,48 +232,59 @@
         ellipse at 75% 80%,
         hsl(18 30% 24% / 0.14),
         transparent 50%
-      ),
-      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.22 0 0 0 0 0.15 0 0 0 0.35 0'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23p)' opacity='0.6'/%3E%3C/svg%3E");
+      );
   }
 
-  .surface-soot {
-    background-color: hsl(24 10% 7%);
-    background-image:
-      radial-gradient(
-        ellipse at 50% 0%,
-        hsl(18 40% 20% / 0.12),
-        transparent 55%
-      ),
-      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.12 0 0 0 0 0.08 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='360' height='360' filter='url(%23s)' opacity='0.45'/%3E%3C/svg%3E");
+  /* ══════════ Текст/градиенты ══════════ */
+
+  .text-gradient-gold {
+    background: linear-gradient(
+      135deg,
+      hsl(48 80% 72%) 0%,
+      hsl(42 76% 58%) 45%,
+      hsl(30 64% 40%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px hsl(42 76% 50% / 0.25);
   }
 
-  /* ─── Stat bars ──────────────────────────────────────────
-     Не линии, а кованые перекладины: тёмная канавка + тёплая
-     медная заливка с лёгкой шероховатостью */
+  .text-gradient-crimson {
+    background: linear-gradient(
+      135deg,
+      hsl(355 72% 62%) 0%,
+      hsl(350 62% 42%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ══════════ Статы: кованая канавка с золотой заливкой ══════════ */
   .stat-bar {
-    @apply h-[6px] overflow-hidden;
-    position: relative;
-    background: hsl(24 10% 12%);
+    @apply h-[7px] overflow-hidden relative;
+    background: hsl(222 16% 9%);
+    border-radius: 4px;
     box-shadow:
-      inset 0 1px 0 hsl(0 0% 0% / 0.6),
-      inset 0 -1px 0 hsl(30 14% 20% / 0.4);
-    border-top: 1px solid hsl(24 10% 4%);
-    border-bottom: 1px solid hsl(30 14% 18%);
+      inset 0 1px 2px hsl(0 0% 0% / 0.7),
+      inset 0 -1px 0 hsl(222 14% 20% / 0.5);
   }
   .stat-bar-fill {
     @apply h-full transition-all duration-700;
     background: linear-gradient(
       180deg,
-      hsl(18 60% 52%) 0%,
-      hsl(14 62% 40%) 60%,
-      hsl(10 60% 30%) 100%
+      hsl(48 82% 68%) 0%,
+      hsl(42 76% 54%) 50%,
+      hsl(32 64% 38%) 100%
     );
     box-shadow:
-      inset 0 1px 0 hsl(30 70% 60% / 0.4),
-      0 0 4px hsl(18 52% 42% / 0.3);
+      inset 0 1px 0 hsl(52 90% 78% / 0.5),
+      0 0 8px hsl(42 76% 58% / 0.4);
+    border-radius: 3px;
   }
 
-  /* ─── Rarity цвета ──────────────────────────────────────── */
+  /* ══════════ Ранги ══════════ */
   .rarity-common {
     color: hsl(var(--rarity-common));
   }
@@ -255,171 +302,167 @@
   }
 
   .border-rarity-common {
-    border-color: hsl(var(--rarity-common) / 0.35);
+    border-color: hsl(var(--rarity-common) / 0.4);
   }
   .border-rarity-uncommon {
-    border-color: hsl(var(--rarity-uncommon) / 0.4);
+    border-color: hsl(var(--rarity-uncommon) / 0.45);
   }
   .border-rarity-rare {
-    border-color: hsl(var(--rarity-rare) / 0.45);
+    border-color: hsl(var(--rarity-rare) / 0.5);
   }
   .border-rarity-epic {
-    border-color: hsl(var(--rarity-epic) / 0.45);
+    border-color: hsl(var(--rarity-epic) / 0.5);
   }
   .border-rarity-legendary {
-    border-color: hsl(var(--rarity-legendary) / 0.55);
+    border-color: hsl(var(--rarity-legendary) / 0.6);
   }
 
-  /* ─── Hover карточки: "тиснение", а не свечение ───────── */
+  /* Hover карточек — приподнятое золотое свечение */
   .card-hover {
-    @apply transition-all duration-200;
+    @apply transition-all duration-300;
   }
   .card-hover:hover {
-    border-color: hsl(var(--primary) / 0.6);
+    border-color: hsl(var(--primary) / 0.55);
+    transform: translateY(-3px);
     box-shadow:
-      0 10px 24px hsl(0 0% 0% / 0.55),
-      inset 0 1px 0 hsl(30 30% 30% / 0.3),
-      inset 0 0 0 1px hsl(var(--primary) / 0.15);
-    transform: translateY(-1px);
+      0 14px 36px hsl(222 40% 2% / 0.55),
+      0 0 28px hsl(var(--primary) / 0.18),
+      inset 0 1px 0 hsl(42 60% 60% / 0.15);
   }
 
-  /* ─── Кнопка: кованая железная табличка ──────────────────
-     Прямоугольник с потёртой медной рамкой, без clip-path. */
-  .btn-med {
+  /* ══════════ Кнопки ══════════ */
+
+  /* Главная: латунная с градиентом и блеском */
+  .btn-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.72rem 1.4rem;
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(222 30% 8%);
+    background: linear-gradient(
+      180deg,
+      hsl(48 80% 68%) 0%,
+      hsl(42 76% 54%) 60%,
+      hsl(34 64% 42%) 100%
+    );
+    border: 1px solid hsl(30 60% 32%);
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 0 hsl(52 90% 80% / 0.55),
+      inset 0 -1px 0 hsl(24 64% 26% / 0.6),
+      0 4px 14px hsl(42 76% 40% / 0.35),
+      0 0 0 1px hsl(42 76% 54% / 0.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 40%,
+      hsl(52 90% 82% / 0.35) 50%,
+      transparent 60%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 hsl(52 90% 82% / 0.6),
+      0 8px 22px hsl(42 76% 40% / 0.5);
+  }
+  .btn-primary:hover::before {
+    transform: translateX(100%);
+  }
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  /* Вторичная: тёмная с рубиновой подсветкой */
+  .btn-ghost {
     position: relative;
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    padding: 0.5rem 1.1rem;
-    font-family: "IM Fell English SC", serif;
-    font-weight: 400;
-    font-size: 0.85rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: hsl(40 30% 90%);
-    background: linear-gradient(
-      180deg,
-      hsl(24 14% 16%) 0%,
-      hsl(20 12% 10%) 100%
-    );
-    border: 1px solid hsl(var(--primary) / 0.55);
-    box-shadow:
-      inset 0 1px 0 hsl(30 40% 30% / 0.35),
-      inset 0 -1px 0 hsl(0 0% 0% / 0.5),
-      0 2px 0 hsl(0 0% 0% / 0.4);
+    padding: 0.7rem 1.3rem;
+    font-family: "Manrope", sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    color: hsl(38 18% 80%);
+    background: hsl(222 16% 13%);
+    border: 1px solid hsl(222 14% 22%);
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.2s ease;
   }
-  .btn-med:hover {
-    background: linear-gradient(
-      180deg,
-      hsl(24 18% 20%) 0%,
-      hsl(20 14% 12%) 100%
-    );
-    border-color: hsl(var(--primary));
-    color: hsl(40 40% 96%);
-  }
-  .btn-med:active {
-    transform: translateY(1px);
-    box-shadow: inset 0 2px 4px hsl(0 0% 0% / 0.6);
-  }
-
-  /* Совместимость со старым классом */
-  .btn-cb {
-    @apply btn-med;
-    clip-path: none;
-  }
-
-  /* ─── Геральдические уголки на блоке ─────────────────────
-     4 маленьких ромба в углах, как у старых гравюр */
-  .heraldic-frame {
-    position: relative;
-    border: 1px solid hsl(var(--primary) / 0.35);
-    background: hsl(var(--card));
-  }
-  .heraldic-frame::before,
-  .heraldic-frame::after,
-  .heraldic-frame > .h-corner-bl,
-  .heraldic-frame > .h-corner-br {
-    content: "";
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: hsl(var(--primary) / 0.85);
-    transform: rotate(45deg);
-  }
-  .heraldic-frame::before {
-    top: -3px;
-    left: -3px;
-  }
-  .heraldic-frame::after {
-    top: -3px;
-    right: -3px;
-  }
-  .heraldic-frame > .h-corner-bl {
-    bottom: -3px;
-    left: -3px;
-  }
-  .heraldic-frame > .h-corner-br {
-    bottom: -3px;
-    right: -3px;
-  }
-
-  /* Совместимость с существующим .cb-frame — превращаем в heraldic */
-  .cb-frame {
-    position: relative;
-    border: 1px solid hsl(var(--primary) / 0.25);
-  }
-  .cb-frame::before,
-  .cb-frame::after {
-    content: "";
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: hsl(var(--primary) / 0.7);
-    transform: rotate(45deg);
-  }
-  .cb-frame::before {
-    top: -3px;
-    left: -3px;
-  }
-  .cb-frame::after {
-    bottom: -3px;
-    right: -3px;
-  }
-
-  /* ─── Сечение-разделитель: двойная линия с ромбом ──────── */
-  .divider-med {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: hsl(var(--primary) / 0.7);
-  }
-  .divider-med::before,
-  .divider-med::after {
-    content: "";
-    flex: 1;
-    height: 0;
-    border-top: 1px solid hsl(var(--primary) / 0.45);
-    border-bottom: 1px solid hsl(var(--primary) / 0.15);
-    padding-top: 2px;
-  }
-  .divider-med > .diamond {
-    width: 6px;
-    height: 6px;
-    background: hsl(var(--primary));
-    transform: rotate(45deg);
+  .btn-ghost:hover {
+    background: hsl(222 16% 16%);
+    border-color: hsl(var(--primary) / 0.6);
+    color: hsl(42 76% 68%);
   }
 
   /* Совместимость */
-  .divider-gold {
+  .btn-med,
+  .btn-cb {
+    @apply btn-primary;
+    clip-path: none;
+  }
+
+  /* ══════════ Рамки ══════════ */
+
+  /* Геральдический угловой акцент — тонкие золотые "усики" */
+  .heraldic-frame {
     position: relative;
+    border: 1px solid hsl(var(--primary) / 0.3);
+    border-radius: 8px;
+  }
+  .heraldic-frame::before,
+  .heraldic-frame::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid hsl(var(--primary));
+  }
+  .heraldic-frame::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+    border-top-left-radius: 8px;
+  }
+  .heraldic-frame::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+    border-bottom-right-radius: 8px;
+  }
+
+  .cb-frame {
+    @apply heraldic-frame;
+  }
+
+  /* ══════════ Разделители ══════════ */
+  .divider-ornate {
     display: flex;
     align-items: center;
     gap: 0.75rem;
   }
-  .divider-gold::before,
-  .divider-gold::after {
+  .divider-ornate::before,
+  .divider-ornate::after {
     content: "";
     flex: 1;
     height: 1px;
@@ -430,76 +473,81 @@
       transparent
     );
   }
-
-  /* ─── Текстовые утилиты ──────────────────────────────────── */
-  .text-ink {
-    color: hsl(24 20% 14%);
+  .divider-gold {
+    @apply divider-ornate;
   }
-  .text-copper {
+
+  /* ══════════ Текст ══════════ */
+  .text-gold {
     color: hsl(var(--primary));
   }
-  .text-oxblood {
+  .text-crimson {
     color: hsl(var(--accent));
   }
-  .text-ember {
-    color: hsl(18 72% 55%);
+  .text-copper {
+    color: hsl(24 64% 56%);
   }
 
   .glow-gold {
-    box-shadow: 0 0 18px hsl(var(--primary) / 0.18);
+    box-shadow:
+      0 0 20px hsl(var(--primary) / 0.2),
+      0 0 40px hsl(var(--primary) / 0.08);
   }
   .text-glow-gold {
-    text-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+    text-shadow: 0 0 16px hsl(var(--primary) / 0.5);
   }
 
-  /* ─── Секционный заголовок (уже в font-fell-sc) ───────── */
+  /* ══════════ Section title ══════════ */
   .section-title {
-    font-family: "IM Fell English SC", serif;
+    font-family: "Manrope", sans-serif;
     font-size: 0.72rem;
-    font-weight: 400;
-    letter-spacing: 0.22em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: hsl(var(--primary) / 0.85);
+    color: hsl(var(--primary));
   }
 
-  /* ─── Активный nav-item ─────────────────────────────────── */
+  /* ══════════ Nav active ══════════ */
   .nav-active {
-    background: linear-gradient(90deg, hsl(var(--primary) / 0.18), transparent);
-    color: hsl(40 40% 94%);
-    border-left: 2px solid hsl(var(--primary));
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.18),
+      hsl(var(--primary) / 0.04) 60%,
+      transparent
+    );
+    color: hsl(42 76% 72%);
+    border-left: 3px solid hsl(var(--primary));
   }
 
-  /* ─── Скроллбар ────────────────────────────────────────── */
+  /* ══════════ Scrollbar ══════════ */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.25) transparent;
+    scrollbar-color: hsl(var(--primary) / 0.35) transparent;
   }
   .scrollbar-thin::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
   .scrollbar-thin::-webkit-scrollbar-track {
     background: transparent;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.3);
+    background: hsl(var(--primary) / 0.35);
+    border-radius: 3px;
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.55);
+    background: hsl(var(--primary) / 0.65);
   }
 
-  /* ─── Анимации ─────────────────────────────────────────── */
+  /* ══════════ Анимации ══════════ */
   .animate-fade-in {
-    animation: fadeIn 0.35s ease forwards;
+    animation: fadeIn 0.4s ease forwards;
   }
   .animate-slide-up {
-    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   .animate-glow-pulse {
-    animation: emberFlicker 2.8s ease-in-out infinite;
-  }
-  .animate-ink-seep {
-    animation: inkSeep 0.6s ease forwards;
+    animation: goldPulse 3.5s ease-in-out infinite;
   }
 
   @keyframes fadeIn {
@@ -515,88 +563,77 @@
   @keyframes slideUp {
     from {
       opacity: 0;
-      transform: translateY(16px);
+      transform: translateY(18px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  @keyframes emberFlicker {
+  @keyframes goldPulse {
     0%,
     100% {
-      box-shadow: 0 0 8px hsl(18 72% 45% / 0.18);
+      box-shadow: 0 0 14px hsl(var(--primary) / 0.18);
     }
-    40% {
-      box-shadow: 0 0 18px hsl(14 70% 50% / 0.38);
-    }
-    70% {
-      box-shadow: 0 0 12px hsl(18 72% 45% / 0.22);
-    }
-  }
-  @keyframes inkSeep {
-    from {
-      opacity: 0;
-      filter: blur(6px);
-    }
-    to {
-      opacity: 1;
-      filter: blur(0);
+    50% {
+      box-shadow: 0 0 28px hsl(var(--primary) / 0.4);
     }
   }
 
-  /* ─── Игровые теги/бейджи — плашка с потёртой рамкой ──── */
+  /* ══════════ Бейджи ══════════ */
   .game-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    padding: 0.12rem 0.55rem;
-    font-family: "IM Fell English SC", serif;
-    font-size: 0.68rem;
-    font-weight: 400;
-    letter-spacing: 0.14em;
+    padding: 0.22rem 0.65rem;
+    font-family: "Manrope", sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     border: 1px solid hsl(var(--border));
     background: hsl(var(--secondary));
-    color: hsl(40 22% 78%);
-    clip-path: none;
+    color: hsl(38 18% 82%);
+    border-radius: 6px;
   }
 
-  /* ─── Акцент-полоса сверху сайдбара ────────────────────── */
+  /* ══════════ Акцентная полоса сайдбара ══════════ */
   .sidebar-top-accent {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      hsl(var(--primary) / 0.5) 25%,
+      hsl(var(--primary) / 0.55) 20%,
       hsl(var(--primary)) 50%,
-      hsl(var(--primary) / 0.5) 75%,
+      hsl(var(--primary) / 0.55) 80%,
       transparent 100%
     );
   }
 
-  /* ─── Поле ввода в средневековом стиле ─────────────────── */
+  /* ══════════ Поля ввода ══════════ */
+  .input-rich,
   .input-med,
   .input-cb {
-    background: hsl(var(--input));
-    border: 1px solid hsl(var(--border));
-    border-bottom: 1px solid hsl(var(--primary) / 0.5);
-    border-radius: 0;
-    padding: 0.4rem 0.7rem;
-    font-family: "EB Garamond", serif;
-    font-size: 0.95rem;
+    background: hsl(222 16% 11%);
+    border: 1px solid hsl(222 14% 20%);
+    border-radius: 8px;
+    padding: 0.65rem 0.9rem;
+    font-family: "Manrope", sans-serif;
+    font-size: 0.92rem;
     color: hsl(var(--foreground));
-    transition:
-      border-color 0.2s,
-      box-shadow 0.2s;
+    transition: all 0.2s;
     outline: none;
+    box-shadow: inset 0 1px 2px hsl(0 0% 0% / 0.3);
   }
+  .input-rich:focus,
   .input-med:focus,
   .input-cb:focus {
-    border-color: hsl(var(--primary) / 0.8);
-    box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.15);
+    border-color: hsl(var(--primary) / 0.7);
+    box-shadow:
+      inset 0 1px 2px hsl(0 0% 0% / 0.3),
+      0 0 0 3px hsl(var(--primary) / 0.15);
   }
 
-  /* ─── RichEditor ────────────────────────────────────────── */
+  /* ══════════ RichEditor ══════════ */
   .rich-editor:empty:before {
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
@@ -618,18 +655,18 @@
   }
   .rich-editor h3 {
     font-size: 1.1rem;
-    font-weight: 400;
+    font-weight: 700;
     margin: 0.5rem 0;
-    font-family: "IM Fell English SC", serif;
-    letter-spacing: 0.05em;
+    font-family: "Cormorant Garamond", serif;
   }
   .rich-editor blockquote {
-    border-left: 2px solid hsl(var(--primary) / 0.6);
-    padding: 4px 12px;
-    margin: 6px 0;
+    border-left: 3px solid hsl(var(--primary));
+    padding: 6px 14px;
+    margin: 8px 0;
     color: hsl(var(--muted-foreground));
     font-style: italic;
     background: hsl(var(--primary) / 0.05);
+    border-radius: 0 6px 6px 0;
   }
   .rich-editor ul {
     list-style: disc;
@@ -641,14 +678,13 @@
   }
   .rich-editor img {
     max-width: 100%;
-    border-radius: 0;
+    border-radius: 6px;
   }
   .rich-editor a {
     color: hsl(var(--primary));
     text-decoration: underline;
   }
 
-  /* ─── Форум-контент ─────────────────────────────────────── */
   .forum-content b,
   .forum-content strong {
     font-weight: 700;
@@ -665,18 +701,18 @@
   }
   .forum-content h3 {
     font-size: 1.1rem;
-    font-weight: 400;
+    font-weight: 700;
     margin: 0.5rem 0;
-    font-family: "IM Fell English SC", serif;
-    letter-spacing: 0.05em;
+    font-family: "Cormorant Garamond", serif;
   }
   .forum-content blockquote {
-    border-left: 2px solid hsl(var(--primary) / 0.6);
-    padding: 4px 12px;
-    margin: 6px 0;
+    border-left: 3px solid hsl(var(--primary));
+    padding: 6px 14px;
+    margin: 8px 0;
     color: hsl(var(--muted-foreground));
     font-style: italic;
     background: hsl(var(--primary) / 0.05);
+    border-radius: 0 6px 6px 0;
   }
   .forum-content ul {
     list-style: disc;
@@ -688,7 +724,7 @@
   }
   .forum-content img {
     max-width: 100%;
-    border-radius: 0;
+    border-radius: 6px;
     margin: 4px 0;
   }
   .forum-content a {
@@ -696,14 +732,16 @@
     text-decoration: underline;
   }
 
-  /* ─── Каплица капителью: первая буква как в рукописи ───── */
+  /* Drop-cap для эпических вводных */
   .drop-cap::first-letter {
-    font-family: "UnifrakturCook", serif;
-    font-size: 3.2em;
+    font-family: "Cinzel Decorative", serif;
+    font-size: 3.6em;
     float: left;
     line-height: 0.85;
-    padding: 0.12em 0.12em 0 0;
-    color: hsl(var(--primary));
-    text-shadow: 0 2px 0 hsl(0 0% 0% / 0.5);
+    padding: 0.08em 0.14em 0 0;
+    background: linear-gradient(135deg, hsl(48 80% 70%), hsl(32 64% 44%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

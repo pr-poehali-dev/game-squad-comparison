@@ -1,24 +1,71 @@
 import Icon from '@/components/ui/icon';
 
-/* ─── Мелкие кирпичики страницы ─────────────────────────── */
+/* ─── Блоки ─── */
 
-function SectionHeader({ icon, title }: { icon: string; title: string }) {
+function SectionHeader({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
   return (
-    <div className="flex items-center gap-3 mb-5">
-      <span className="w-[7px] h-[7px] rotate-45 bg-primary shrink-0" />
-      <Icon name={icon} size={18} style={{ color: 'hsl(18 62% 58%)' }} />
-      <h2
-        className="uppercase"
+    <div className="flex items-start gap-4 mb-6">
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
         style={{
-          fontFamily: '"IM Fell English SC", serif',
-          fontSize: '1.05rem',
-          letterSpacing: '0.22em',
-          color: 'hsl(40 32% 84%)',
+          background:
+            'linear-gradient(135deg, hsl(42 76% 50% / 0.25) 0%, hsl(30 64% 36% / 0.1) 100%)',
+          border: '1px solid hsl(42 76% 58% / 0.45)',
+          boxShadow: 'inset 0 1px 0 hsl(42 76% 60% / 0.25), 0 4px 12px hsl(42 76% 40% / 0.2)',
         }}
       >
-        {title}
-      </h2>
-      <span className="flex-1 h-px bg-primary/25" />
+        <Icon name={icon} size={22} style={{ color: 'hsl(42 80% 68%)' }} />
+      </div>
+      <div className="flex-1 min-w-0 pt-1">
+        <h2
+          style={{
+            fontFamily: 'Cormorant Garamond, serif',
+            fontSize: '1.9rem',
+            fontWeight: 700,
+            color: 'hsl(38 24% 94%)',
+            letterSpacing: '-0.015em',
+            lineHeight: 1.1,
+          }}
+        >
+          {title}
+        </h2>
+        {subtitle && (
+          <p
+            className="mt-1"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '0.88rem',
+              color: 'hsl(222 8% 58%)',
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={`relative p-7 md:p-9 rounded-2xl overflow-hidden ${className}`}
+      style={{
+        background:
+          'linear-gradient(180deg, hsl(222 16% 12%) 0%, hsl(222 20% 7%) 100%)',
+        border: '1px solid hsl(222 14% 18%)',
+        boxShadow:
+          'inset 0 1px 0 hsl(42 30% 40% / 0.08), 0 12px 28px hsl(222 40% 2% / 0.4)',
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 right-0 h-px"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, hsl(42 76% 58% / 0.5) 50%, transparent)',
+        }}
+      />
+      {children}
     </div>
   );
 }
@@ -28,9 +75,10 @@ function Paragraph({ children, className = '' }: { children: React.ReactNode; cl
     <p
       className={`leading-relaxed ${className}`}
       style={{
-        fontFamily: '"IM Fell English", serif',
-        fontSize: '1.02rem',
-        color: 'hsl(30 22% 74%)',
+        fontFamily: 'Manrope, sans-serif',
+        fontSize: '1rem',
+        color: 'hsl(222 8% 74%)',
+        lineHeight: 1.65,
       }}
     >
       {children}
@@ -38,253 +86,226 @@ function Paragraph({ children, className = '' }: { children: React.ReactNode; cl
   );
 }
 
-function Scroll({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="relative p-7 md:p-9"
-      style={{
-        background:
-          'linear-gradient(180deg, hsl(26 12% 10%) 0%, hsl(22 10% 7%) 100%)',
-        border: '1px solid hsl(30 14% 20%)',
-        boxShadow:
-          'inset 0 1px 0 hsl(30 30% 28% / 0.22), 0 4px 14px hsl(0 0% 0% / 0.35)',
-      }}
-    >
-      <span className="absolute -top-[3px] -left-[3px] w-[6px] h-[6px] rotate-45 bg-primary" />
-      <span className="absolute -top-[3px] -right-[3px] w-[6px] h-[6px] rotate-45 bg-primary" />
-      <span className="absolute -bottom-[3px] -left-[3px] w-[6px] h-[6px] rotate-45 bg-primary" />
-      <span className="absolute -bottom-[3px] -right-[3px] w-[6px] h-[6px] rotate-45 bg-primary" />
-      {children}
-    </div>
-  );
-}
-
-/* ─── Страница О проекте ────────────────────────────────── */
+/* ─── Страница ─── */
 
 export default function AboutPage() {
   return (
-    <div className="max-w-3xl mx-auto pb-16">
-      {/* Герб-заголовок */}
-      <header className="mb-10 text-center">
-        <div className="flex items-center justify-center gap-4 mb-3">
-          <span className="flex-1 h-px bg-primary/30" />
-          <span className="w-2 h-2 bg-primary rotate-45" />
-          <span
-            className="uppercase"
+    <div className="max-w-4xl mx-auto pb-20 animate-fade-in">
+      {/* HERO */}
+      <header className="mb-14 relative">
+        <div
+          className="absolute -top-10 left-1/4 w-96 h-96 rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, hsl(42 76% 50% / 0.15) 0%, transparent 60%)',
+            filter: 'blur(40px)',
+          }}
+        />
+        <div
+          className="absolute top-20 right-1/4 w-72 h-72 rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, hsl(354 62% 44% / 0.1) 0%, transparent 60%)',
+            filter: 'blur(40px)',
+          }}
+        />
+
+        <div className="relative text-center">
+          <div className="flex items-center justify-center gap-3 mb-5">
+            <span className="h-px w-10 bg-primary/40" />
+            <span
+              className="uppercase font-mono-data"
+              style={{
+                fontSize: '0.68rem',
+                letterSpacing: '0.38em',
+                color: 'hsl(42 76% 58%)',
+              }}
+            >
+              ◆ О проекте ◆
+            </span>
+            <span className="h-px w-10 bg-primary/40" />
+          </div>
+
+          <h1
             style={{
-              fontFamily: '"IM Fell English SC", serif',
-              fontSize: '0.72rem',
-              letterSpacing: '0.42em',
-              color: 'hsl(18 52% 52%)',
+              fontFamily: 'Cormorant Garamond, serif',
+              fontSize: 'clamp(2.8rem, 6.5vw, 5rem)',
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: 'hsl(38 24% 94%)',
             }}
           >
-            Грамота
-          </span>
-          <span className="w-2 h-2 bg-primary rotate-45" />
-          <span className="flex-1 h-px bg-primary/30" />
+            Между{' '}
+            <span className="text-gradient-gold" style={{ fontStyle: 'italic' }}>
+              двух эпох
+            </span>
+          </h1>
+
+          <p
+            className="mt-5 max-w-2xl mx-auto"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: '1.08rem',
+              color: 'hsl(222 8% 66%)',
+              lineHeight: 1.6,
+            }}
+          >
+            Современный справочник по отрядам с духом средневековых хроник. Здесь
+            каждая хоругвь — это герб, цифры и история, собранные в одной удобной
+            витрине.
+          </p>
         </div>
-
-        <h1
-          style={{
-            fontFamily: '"UnifrakturCook", serif',
-            fontSize: 'clamp(2rem, 4.5vw, 3.3rem)',
-            fontWeight: 700,
-            color: 'hsl(40 38% 90%)',
-            textShadow: '0 2px 0 hsl(0 0% 0% / 0.7)',
-            lineHeight: 1,
-          }}
-        >
-          О Хоругви
-        </h1>
-
-        <p
-          className="mt-4 italic mx-auto max-w-xl"
-          style={{
-            fontFamily: '"IM Fell English", serif',
-            fontSize: '1.05rem',
-            color: 'hsl(30 18% 58%)',
-          }}
-        >
-          «Сiе есть указъ гильдейскаго писца, въ коемъ изъяснено назначенiе книги
-          и порядокъ пользованiя оною.»
-        </p>
       </header>
 
       <div className="space-y-6">
-        {/* ── Что такое Хоругвь ── */}
-        <Scroll>
-          <SectionHeader icon="Flame" title="Что такое Хоругвь" />
+        {/* О проекте */}
+        <Card>
+          <SectionHeader
+            icon="BookOpen"
+            title="Что это такое"
+            subtitle="Коротко о «Хоругви»"
+          />
           <Paragraph className="drop-cap mb-4">
-            Хоругвь — это боевое знамя, вокругъ котораго собирается дружина, и всякiй
-            отрядъ имѣетъ своё. Сiя книга — именно таковъ штандартъ: подъ нимъ собраны
-            всѣ ведомыя ротамъ характеристики, трактаты и боевыя искусства, дабы
-            воевода могъ въ единый мигъ уразумѣть достоинства и слабости своего войска.
+            «Хоругвь» — это каталог отрядов, собранный для тех, кто любит
+            планировать состав войска осмысленно. Мы взяли средневековую эстетику
+            гербов, печатей и хроник, соединили её с современным интерфейсом, удобным
+            поиском и гибкими фильтрами — и получили рабочий инструмент, в который
+            приятно возвращаться.
           </Paragraph>
           <Paragraph>
-            Здѣсь нѣтъ магiи и чародѣйства — токмо сталь, доспѣхъ, дисциплина и
-            прiобрѣтённый кровью опытъ. Каждый отрядъ записанъ писцомъ въ особую
-            грамоту: рангъ, классъ, назначенiе, рѣчь о былыхъ подвигахъ и реэстръ
-            статей.
+            Здесь нет сложных правил и магических порталов: только данные об
+            отрядах, их характеристики, умения, черты и связанные с ними трактаты.
+            Всё можно сравнить, сопоставить и собрать идеальную роту под свою задачу.
           </Paragraph>
-        </Scroll>
+        </Card>
 
-        {/* ── Разделы книги ── */}
-        <Scroll>
-          <SectionHeader icon="BookOpenText" title="Разделы книги" />
-          <div className="space-y-5">
+        {/* Разделы */}
+        <Card>
+          <SectionHeader
+            icon="LayoutGrid"
+            title="Разделы"
+            subtitle="Куда можно заглянуть"
+          />
+          <div className="grid sm:grid-cols-2 gap-4">
             {[
               {
                 icon: 'LayoutGrid',
-                title: 'Каталогъ',
+                title: 'Каталог отрядов',
                 desc:
-                  'Полный реэстръ всехъ отрядовъ. Отборъ по классу (пѣхота, кавалерiя, стрѣлки, осадныя машины), назначенiю (танкъ, борьба съ кавалерiею и иныя) и рангу — отъ простаго до легендарнаго.',
+                  'Сердце проекта. Все отряды с фильтрами по классу, роли и рангу. Поиск по названию, сортировка по параметрам.',
+                hue: '42 76% 58%',
               },
               {
                 icon: 'Swords',
-                title: 'Сравненiе',
+                title: 'Сравнение',
                 desc:
-                  'Поставьте рядомъ до четырёхъ отрядовъ и сравните ихъ плечомъ къ плечу. Лучшiе показатели самостоятельно отмѣчаются писцомъ.',
+                  'Поставьте до 4 отрядов рядом. Лучшие значения подсвечиваются автоматически — видно, кто сильнее и в чём.',
+                hue: '354 62% 54%',
               },
               {
                 icon: 'ScrollText',
                 title: 'Трактаты',
                 desc:
-                  'Укрѣпительныя грамоты, примѣнимыя къ отрядамъ совмѣстныхъ классовъ. Итоговыя числа пересчитываются на глазахъ — видно, что прибавитъ стали, а что убавитъ скорости.',
+                  'Прикладывайте совместимые трактаты к отрядам и сразу видите итоговые характеристики. Бонусы считаются мгновенно.',
+                hue: '282 58% 60%',
               },
               {
                 icon: 'MessageSquare',
-                title: 'Форумъ',
+                title: 'Форум',
                 desc:
-                  'Мѣсто, гдѣ воеводы бесѣдуютъ о построенiяхъ, разбираютъ походы и делятся наставленiями. Писцы принимаютъ правки и предложенiя.',
+                  'Обсуждения, стратегии, предложения правок. Здесь можно написать напрямую писцу — автору каталога.',
+                hue: '210 78% 58%',
               },
-              {
-                icon: 'FileSearch',
-                title: 'Грамота отряда',
-                desc:
-                  'Откройте любую карточку — и писецъ вынесетъ вамъ подробный листъ: всѣ характеристики, лѣтопись рода, боевыя искусства и примѣнённые трактаты.',
-              },
-            ].map(item => (
-              <div key={item.title} className="flex gap-4">
-                <div
-                  className="w-9 h-9 rotate-45 flex items-center justify-center flex-shrink-0 mt-1"
-                  style={{
-                    background: 'hsl(18 52% 42% / 0.2)',
-                    border: '1px solid hsl(18 52% 48%)',
-                    boxShadow: 'inset 0 1px 0 hsl(18 52% 60% / 0.25)',
-                  }}
-                >
-                  <span className="-rotate-45">
-                    <Icon name={item.icon} size={16} style={{ color: 'hsl(18 62% 58%)' }} />
-                  </span>
-                </div>
-                <div>
-                  <div
-                    className="mb-1"
-                    style={{
-                      fontFamily: '"IM Fell English SC", serif',
-                      fontSize: '1rem',
-                      letterSpacing: '0.08em',
-                      color: 'hsl(40 32% 86%)',
-                    }}
-                  >
-                    {item.title}
-                  </div>
-                  <div
-                    className="leading-relaxed"
-                    style={{
-                      fontFamily: '"IM Fell English", serif',
-                      fontSize: '0.94rem',
-                      color: 'hsl(30 16% 62%)',
-                    }}
-                  >
-                    {item.desc}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Scroll>
-
-        {/* ── Статьи отряда ── */}
-        <Scroll>
-          <SectionHeader icon="Scale" title="Статьи отряда" />
-          <Paragraph className="mb-5">
-            Подъ «статьею» разумеется числовая мѣра достоинства отряда. Писецъ ведётъ
-            счётъ по единой шкалѣ, дабы всякiй воевода судилъ по справедливости:
-          </Paragraph>
-          <div className="grid sm:grid-cols-2 gap-3.5">
-            {[
-              { stat: 'Численность',  desc: 'Сколько душъ въ строю — отъ сего зависитъ устойчивость роты.' },
-              { stat: 'Лидерство',    desc: 'Сколько стоитъ нанять и удержать сiю хоругвь въ войскѣ.' },
-              { stat: 'Скорость',     desc: 'Какъ быстро отрядъ одолѣваетъ поле сраженiя.' },
-              { stat: 'Мораль',       desc: 'Стойкость духа при потеряхъ и натискѣ.' },
-              { stat: 'Натискъ',      desc: 'Уронъ въ ближней сѣчѣ — рубящiй, проникающiй и дробящiй.' },
-              { stat: 'Защита',       desc: 'Сопротивленiе тремъ родамъ урона и прочность доспѣха.' },
-              { stat: 'Пробиванiе',   desc: 'Способность обойти броню противника тремя родами оружiя.' },
-              { stat: 'Дальность',    desc: 'Для стрѣлковъ и осадныхъ — на сколько клѣтокъ бьётъ.' },
-              { stat: 'Блокъ',        desc: 'Умѣнiе щитомъ или оружiемъ отвести ударъ.' },
-              { stat: 'Боезапасъ',    desc: 'Сколько стрѣлъ, болтовъ или снарядовъ у роты при себѣ.' },
             ].map(item => (
               <div
-                key={item.stat}
-                className="flex gap-3 py-2 px-3"
+                key={item.title}
+                className="p-5 rounded-xl transition-all group cursor-default"
                 style={{
-                  borderLeft: '2px solid hsl(18 52% 42% / 0.5)',
-                  background: 'hsl(24 10% 6%)',
+                  background: `linear-gradient(180deg, hsl(${item.hue} / 0.08), hsl(222 18% 8%))`,
+                  border: `1px solid hsl(${item.hue} / 0.3)`,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = `hsl(${item.hue} / 0.6)`;
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = `0 12px 24px hsl(222 40% 2% / 0.5), 0 0 20px hsl(${item.hue} / 0.15)`;
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = `hsl(${item.hue} / 0.3)`;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <span
-                  className="uppercase shrink-0"
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
                   style={{
-                    fontFamily: '"IM Fell English SC", serif',
-                    fontSize: '0.72rem',
-                    letterSpacing: '0.18em',
-                    color: 'hsl(18 62% 58%)',
-                    width: '6.5rem',
+                    background: `linear-gradient(135deg, hsl(${item.hue} / 0.25), hsl(${item.hue} / 0.08))`,
+                    border: `1px solid hsl(${item.hue} / 0.5)`,
                   }}
                 >
-                  {item.stat}
-                </span>
-                <span
+                  <Icon name={item.icon} size={18} style={{ color: `hsl(${item.hue})` }} />
+                </div>
+                <div
                   style={{
-                    fontFamily: '"IM Fell English", serif',
-                    fontSize: '0.88rem',
-                    color: 'hsl(30 16% 64%)',
+                    fontFamily: 'Cormorant Garamond, serif',
+                    fontSize: '1.25rem',
+                    fontWeight: 700,
+                    color: 'hsl(38 24% 92%)',
+                    marginBottom: '0.4rem',
+                  }}
+                >
+                  {item.title}
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '0.86rem',
+                    color: 'hsl(222 8% 62%)',
+                    lineHeight: 1.5,
                   }}
                 >
                   {item.desc}
-                </span>
+                </div>
               </div>
             ))}
           </div>
-        </Scroll>
+        </Card>
 
-        {/* ── Ранги отрядов ── */}
-        <Scroll>
-          <SectionHeader icon="Award" title="Ранги отрядовъ" />
-          <div className="flex flex-wrap gap-3">
+        {/* Ранги */}
+        <Card>
+          <SectionHeader
+            icon="Award"
+            title="Ранги отрядов"
+            subtitle="Пять ступеней геральдической иерархии"
+          />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {[
-              { label: 'Обычный',     hue: '30 10% 48%',  lore: 'Рядовая пѣхота, подёнщики брани.' },
-              { label: 'Необычный',   hue: '70 22% 38%',  lore: 'Проверенные временемъ вольныя роты.' },
-              { label: 'Редкій',      hue: '198 30% 42%', lore: 'Дружины подъ знаменемъ короны.' },
-              { label: 'Уникальный',  hue: '280 20% 40%', lore: 'Вассалы высокой крови.' },
-              { label: 'Легендарный', hue: '14 62% 44%',  lore: 'О нихъ складываютъ пѣсни.' },
+              { label: 'Обычный',     hue: '220 10% 60%',  lore: 'Рядовая пехота городских ополчений.' },
+              { label: 'Необычный',   hue: '150 48% 50%',  lore: 'Закалённые ветераны длинных походов.' },
+              { label: 'Редкий',      hue: '210 78% 58%',  lore: 'Королевские хоругви под гербом.' },
+              { label: 'Уникальный',  hue: '282 58% 60%',  lore: 'Вассалы высокой крови и славы.' },
+              { label: 'Легендарный', hue: '18 84% 58%',   lore: 'Те, о ком слагают песни у костра.' },
             ].map(r => (
               <div
                 key={r.label}
-                className="flex-1 min-w-[180px] p-3"
+                className="p-4 rounded-xl relative overflow-hidden"
                 style={{
-                  background: `hsl(${r.hue} / 0.16)`,
-                  border: `1px solid hsl(${r.hue} / 0.6)`,
-                  boxShadow: `inset 0 1px 0 hsl(${r.hue} / 0.3)`,
+                  background: `linear-gradient(180deg, hsl(${r.hue} / 0.18), hsl(222 18% 8%))`,
+                  border: `1px solid hsl(${r.hue} / 0.45)`,
+                  boxShadow: `inset 0 1px 0 hsl(${r.hue} / 0.25)`,
                 }}
               >
                 <div
-                  className="uppercase mb-1"
+                  className="absolute top-0 left-0 right-0 h-px"
                   style={{
-                    fontFamily: '"IM Fell English SC", serif',
-                    fontSize: '0.82rem',
-                    letterSpacing: '0.18em',
+                    background: `linear-gradient(90deg, transparent, hsl(${r.hue}) 50%, transparent)`,
+                  }}
+                />
+                <div
+                  className="uppercase mb-2"
+                  style={{
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
                     color: `hsl(${r.hue})`,
                     textShadow: '0 1px 0 hsl(0 0% 0% / 0.5)',
                   }}
@@ -294,9 +315,9 @@ export default function AboutPage() {
                 <div
                   className="italic leading-snug"
                   style={{
-                    fontFamily: '"IM Fell English", serif',
-                    fontSize: '0.84rem',
-                    color: 'hsl(30 16% 62%)',
+                    fontFamily: 'Cormorant Garamond, serif',
+                    fontSize: '0.96rem',
+                    color: 'hsl(222 10% 72%)',
                   }}
                 >
                   {r.lore}
@@ -304,95 +325,138 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        </Scroll>
+        </Card>
 
-        {/* ── Замѣтка писца ── */}
-        <Scroll>
-          <SectionHeader icon="Feather" title="Замѣтка писца" />
-          <Paragraph>
-            Записи ведутся въ ручную и пополняются по мѣрѣ прибытiя новыхъ дружинъ.
-            Ежели найдёте ошибку, обнаружите пропущенный отрядъ или пожелаете
-            предложить правку — обратитесь къ писцу черезъ форумъ или по нижеслѣдующимъ
-            каналамъ. Писецъ сей работаетъ честно и правокъ не чуждается.
-          </Paragraph>
-        </Scroll>
-
-        {/* ── Контакты ── */}
-        <Scroll>
-          <SectionHeader icon="Mail" title="Какъ связаться" />
-          <div className="space-y-3">
+        {/* Характеристики */}
+        <Card>
+          <SectionHeader
+            icon="BarChart3"
+            title="Характеристики"
+            subtitle="Что стоит за цифрами каждой карточки"
+          />
+          <div className="grid sm:grid-cols-2 gap-3">
             {[
-              { icon: 'Globe',          label: 'Мастерская',  value: 'poehali.dev' },
-              { icon: 'MessageCircle',  label: 'Телеграмъ',   value: '@developer' },
-              { icon: 'MessageSquare',  label: 'Форумъ',      value: 'разделъ «Форумъ» въ реэстрѣ' },
-            ].map(c => (
+              { stat: 'Численность', desc: 'Сколько бойцов в строю — основа устойчивости роты.' },
+              { stat: 'Лидерство',   desc: 'Стоимость найма и содержания отряда в войске.' },
+              { stat: 'Скорость',    desc: 'Как быстро отряд перемещается по полю боя.' },
+              { stat: 'Мораль',      desc: 'Стойкость духа при потерях и натиске противника.' },
+              { stat: 'Атака',       desc: 'Урон в ближней сече — рубящий, колющий, дробящий.' },
+              { stat: 'Защита',      desc: 'Сопротивление трём видам урона и прочность доспеха.' },
+              { stat: 'Пробитие',    desc: 'Способность обойти броню противника.' },
+              { stat: 'Дальность',   desc: 'Для стрелков и осадных — расстояние атаки.' },
+              { stat: 'Блок',        desc: 'Умение щитом или оружием отражать удары.' },
+              { stat: 'Боезапас',    desc: 'Сколько снарядов у отряда при себе.' },
+            ].map(item => (
               <div
-                key={c.label}
-                className="flex items-center gap-3 py-2 px-3"
+                key={item.stat}
+                className="flex gap-3 p-3 rounded-lg"
                 style={{
-                  borderLeft: '2px solid hsl(18 52% 42% / 0.5)',
-                  background: 'hsl(24 10% 6%)',
+                  background: 'hsl(222 16% 10%)',
+                  border: '1px solid hsl(222 14% 18%)',
                 }}
               >
-                <Icon name={c.icon} size={15} style={{ color: 'hsl(18 62% 58%)' }} />
                 <span
-                  className="uppercase"
+                  className="uppercase shrink-0"
                   style={{
-                    fontFamily: '"IM Fell English SC", serif',
-                    fontSize: '0.7rem',
-                    letterSpacing: '0.22em',
-                    color: 'hsl(18 52% 52%)',
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.12em',
+                    color: 'hsl(42 76% 64%)',
                     width: '7rem',
+                    paddingTop: '2px',
                   }}
                 >
-                  {c.label}
+                  {item.stat}
                 </span>
                 <span
-                  className="font-mono-data"
-                  style={{ color: 'hsl(40 28% 80%)', fontSize: '0.88rem' }}
+                  style={{
+                    fontFamily: 'Manrope, sans-serif',
+                    fontSize: '0.86rem',
+                    color: 'hsl(222 8% 70%)',
+                    lineHeight: 1.45,
+                  }}
                 >
-                  {c.value}
+                  {item.desc}
                 </span>
               </div>
             ))}
           </div>
-        </Scroll>
+        </Card>
 
-        {/* Подпись-печать */}
-        <div className="text-center pt-6">
-          <div className="inline-flex flex-col items-center gap-2">
-            <div
-              className="w-14 h-14 rotate-45 flex items-center justify-center"
-              style={{
-                background: 'hsl(4 48% 32%)',
-                border: '1px solid hsl(4 48% 44%)',
-                boxShadow:
-                  'inset 0 1px 0 hsl(4 48% 60% / 0.35), 0 4px 10px hsl(0 0% 0% / 0.5)',
-              }}
-            >
-              <span
-                className="-rotate-45 uppercase"
+        {/* Контакты */}
+        <Card>
+          <SectionHeader
+            icon="Mail"
+            title="Связь с писцом"
+            subtitle="Нашли ошибку, хотите предложить правку или отряд?"
+          />
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[
+              { icon: 'Globe',         label: 'Сайт',     value: 'poehali.dev',                      hue: '42 76% 58%'  },
+              { icon: 'MessageCircle', label: 'Telegram', value: '@developer',                        hue: '210 78% 58%' },
+              { icon: 'MessageSquare', label: 'Форум',    value: 'раздел внутри каталога',            hue: '282 58% 60%' },
+            ].map(c => (
+              <div
+                key={c.label}
+                className="p-4 rounded-xl flex flex-col gap-2"
                 style={{
-                  fontFamily: '"IM Fell English SC", serif',
-                  fontSize: '0.7rem',
-                  letterSpacing: '0.18em',
-                  color: 'hsl(40 40% 94%)',
+                  background: `linear-gradient(180deg, hsl(${c.hue} / 0.1), hsl(222 18% 8%))`,
+                  border: `1px solid hsl(${c.hue} / 0.3)`,
                 }}
               >
-                Х·П
-              </span>
-            </div>
-            <div
-              className="italic"
+                <div className="flex items-center gap-2">
+                  <Icon name={c.icon} size={16} style={{ color: `hsl(${c.hue})` }} />
+                  <span
+                    className="uppercase"
+                    style={{
+                      fontFamily: 'Manrope, sans-serif',
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.18em',
+                      color: `hsl(${c.hue})`,
+                    }}
+                  >
+                    {c.label}
+                  </span>
+                </div>
+                <div
+                  className="font-mono-data"
+                  style={{ color: 'hsl(38 20% 88%)', fontSize: '0.92rem', fontWeight: 500 }}
+                >
+                  {c.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Подпись */}
+        <div className="text-center pt-6 pb-4">
+          <div className="inline-flex items-center gap-3">
+            <span className="h-px w-12 bg-primary/40" />
+            <span
+              className="uppercase font-mono-data"
               style={{
-                fontFamily: '"IM Fell English", serif',
-                fontSize: '0.88rem',
-                color: 'hsl(30 14% 54%)',
+                fontSize: '0.68rem',
+                letterSpacing: '0.32em',
+                color: 'hsl(42 50% 54%)',
               }}
             >
-              Печать писца · Anno MMXXVI
-            </div>
+              ANNO · MMXXVI
+            </span>
+            <span className="h-px w-12 bg-primary/40" />
           </div>
+          <p
+            className="italic mt-3"
+            style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontSize: '1rem',
+              color: 'hsl(222 8% 52%)',
+            }}
+          >
+            «Сделано с заботой — для тех, кто любит стратегию и детали.»
+          </p>
         </div>
       </div>
     </div>
