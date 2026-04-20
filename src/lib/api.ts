@@ -8,6 +8,7 @@ const URLS = {
   battle: 'https://functions.poehali.dev/e55b6676-4af3-410b-99a4-d9faac5243bb',
   rolesApi: 'https://functions.poehali.dev/36953fca-cdb1-4ebc-8482-8ba8556d1389',
   formationsApi: 'https://functions.poehali.dev/d8bb45c5-f402-46c5-ac74-722186fd2a5d',
+  gameApi: 'https://functions.poehali.dev/23edd385-7e13-41cb-a5d2-0a5cc4b4b5f7',
 };
 
 function getSessionId(): string {
@@ -110,6 +111,13 @@ export const rolesApi = {
     request(URLS.rolesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: number) =>
     request(URLS.rolesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
+};
+
+// Game
+export const gameApi = {
+  leaderboard: () => request(URLS.gameApi),
+  saveScore: (score: number, misses: number) =>
+    request(URLS.gameApi, { method: 'POST', body: JSON.stringify({ action: 'save', score, misses }) }),
 };
 
 // Treaties

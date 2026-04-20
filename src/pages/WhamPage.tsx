@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { gameApi } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 /* ─── Константы ─── */
 const COLS = 4;
@@ -256,8 +258,16 @@ function ComboFloat({ value, x, y }: { value: number; x: number; y: number }) {
   );
 }
 
+interface LeaderRow {
+  username: string;
+  best_score: number;
+  best_misses: number;
+  games_played: number;
+}
+
 /* ─── Главный компонент ─── */
 export default function WhamPage() {
+  const { user } = useAuth();
   const [holes, setHoles] = useState<Hole[]>(
     Array.from({ length: HOLES }, (_, i) => ({ id: i, state: 'empty', timer: null }))
   );
@@ -272,6 +282,28 @@ export default function WhamPage() {
   const [splashes, setSplashes] = useState<{ id: number; x: number; y: number }[]>([]);
   const [combos, setCombos] = useState<{ id: number; value: number; x: number; y: number }[]>([]);
   const splashIdRef = useRef(0);
+
+  // Рейтинг
+  const [leaderboard, setLeaderboard] = useState<LeaderRow[]>([]);
+  const [lbLoading, setLbLoading] = useState(true);
+  const [scoreSaved, setScoreSaved] = useState(false);
+  const finalScore = useRef(0);
+  const finalMisses = useRef(0);
+
+  const loadLeaderboard = useCallback(async () => {
+    setLbLoading(true);
+    try {
+      const data = await gameApi.leaderboard();
+      setLeaderboard(Array.isArray(data) ? data : []);
+    } catch { /* ignore */ } finally {
+      setLbLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadLeaderboard(); }, [loadLeaderboard]);
+
+  useEffect(() => { finalScore.current = score; }, [score]);
+  useEffect(() => { finalMisses.current = misses; }, [misses]);
 
   const holesRef = useRef(holes);
   holesRef.current = holes;
@@ -363,6 +395,15 @@ export default function WhamPage() {
     return () => clearInterval(interval);
   }, [running]);
 
+  /* ─ Сохранение результата при game over ─ */
+  useEffect(() => {
+    if (!gameOver || !user) return;
+    setScoreSaved(false);
+    gameApi.saveScore(finalScore.current, finalMisses.current)
+      .then(() => { setScoreSaved(true); loadLeaderboard(); })
+      .catch(() => {});
+  }, [gameOver, user, loadLeaderboard]);
+
   /* ─ Удар по рыцарю ─ */
   const handleHit = useCallback((id: number, e: React.MouseEvent) => {
     const hole = holesRef.current[id];
@@ -423,6 +464,9 @@ export default function WhamPage() {
     setSplashes([]);
     setCombos([]);
     setGameOver(false);
+    setScoreSaved(false);
+    finalScore.current = 0;
+    finalMisses.current = 0;
     setRunning(true);
   };
 
@@ -685,7 +729,7 @@ export default function WhamPage() {
           <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 10, color: 'hsl(38 15% 70%)', marginBottom: 8 }}>
             ИТОГ: {score} ОЧКОВ
           </div>
-          <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 8, color: 'hsl(0 60% 55%)', marginBottom: 20 }}>
+          <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 8, color: 'hsl(0 60% 55%)', marginBottom: 16 }}>
             ПРОМАХОВ: {misses}
           </div>
 
@@ -695,7 +739,7 @@ export default function WhamPage() {
             fontSize: 9,
             color: score >= 40 ? '#ffaa00' : score >= 20 ? '#aaddff' : '#778899',
             textShadow: score >= 40 ? '0 0 12px #ffaa00' : 'none',
-            marginBottom: 20,
+            marginBottom: 16,
             lineHeight: 2,
           }}>
             {score >= 60 ? '👑 ЛЕГЕНДА ТУРНИРА' :
@@ -703,6 +747,18 @@ export default function WhamPage() {
              score >= 20 ? '🛡 ДОСТОЙНЫЙ РЫЦАРЬ' :
              '🤡 НОВОБРАНЕЦ'}
           </div>
+
+          {/* Статус сохранения */}
+          {user ? (
+            <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 7, marginBottom: 16,
+              color: scoreSaved ? '#00ff88' : 'hsl(215 18% 45%)' }}>
+              {scoreSaved ? '✓ РЕЗУЛЬТАТ СОХРАНЁН' : '... СОХРАНЯЮ...'}
+            </div>
+          ) : (
+            <div style={{ fontFamily: '"Press Start 2P", monospace', fontSize: 7, marginBottom: 16, color: 'hsl(42 90% 52% / 0.6)', lineHeight: 2 }}>
+              Войди в аккаунт,<br />чтобы попасть в рейтинг!
+            </div>
+          )}
 
           <button
             onClick={startGame}
@@ -724,6 +780,102 @@ export default function WhamPage() {
           </button>
         </div>
       )}
+
+      {/* ── Таблица рейтинга ── */}
+      <div style={{ marginTop: 32, maxWidth: 600 }}>
+        <div style={{
+          fontFamily: '"Press Start 2P", monospace',
+          fontSize: 11,
+          color: 'hsl(42 90% 52%)',
+          textShadow: '2px 2px 0 #7a4500',
+          marginBottom: 16,
+          letterSpacing: '0.08em',
+        }}>
+          🏆 ТАБЛИЦА РЕЙТИНГА
+        </div>
+
+        <div style={{
+          background: 'hsl(224 20% 7%)',
+          border: '3px solid hsl(42 90% 52% / 0.3)',
+          overflow: 'hidden',
+        }}>
+          {/* Шапка */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '36px 1fr 90px 70px 60px',
+            gap: 0,
+            padding: '10px 14px',
+            background: 'hsl(42 90% 52% / 0.1)',
+            borderBottom: '2px solid hsl(42 90% 52% / 0.25)',
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: 6,
+            color: 'hsl(42 90% 52%)',
+            letterSpacing: '0.06em',
+          }}>
+            <div>#</div>
+            <div>ИГРОК</div>
+            <div style={{ textAlign: 'right' }}>РЕКОРД</div>
+            <div style={{ textAlign: 'right' }}>ПРОМАХИ</div>
+            <div style={{ textAlign: 'right' }}>ИГР</div>
+          </div>
+
+          {lbLoading ? (
+            <div style={{ padding: '24px', textAlign: 'center', fontFamily: '"Press Start 2P", monospace', fontSize: 7, color: 'hsl(215 18% 40%)' }}>
+              ЗАГРУЗКА...
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', fontFamily: '"Press Start 2P", monospace', fontSize: 7, color: 'hsl(215 18% 40%)', lineHeight: 2 }}>
+              Пока никто не играл.<br />Будь первым!
+            </div>
+          ) : (
+            leaderboard.map((row, idx) => {
+              const isMe = user?.username === row.username;
+              const medals = ['🥇', '🥈', '🥉'];
+              const place = idx < 3 ? medals[idx] : `${idx + 1}`;
+              const isTop = idx < 3;
+              return (
+                <div
+                  key={row.username}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '36px 1fr 90px 70px 60px',
+                    gap: 0,
+                    padding: '9px 14px',
+                    borderBottom: '1px solid hsl(215 18% 12%)',
+                    background: isMe
+                      ? 'hsl(42 90% 52% / 0.08)'
+                      : isTop ? 'hsl(224 20% 9%)' : 'transparent',
+                    fontFamily: '"Press Start 2P", monospace',
+                    fontSize: 7,
+                    alignItems: 'center',
+                    borderLeft: isMe ? '3px solid hsl(42 90% 52%)' : '3px solid transparent',
+                  }}
+                >
+                  <div style={{ fontSize: idx < 3 ? 14 : 7, color: isTop ? 'hsl(42 90% 52%)' : 'hsl(215 18% 35%)' }}>
+                    {place}
+                  </div>
+                  <div style={{ color: isMe ? 'hsl(42 90% 55%)' : 'hsl(38 15% 72%)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {row.username}{isMe ? ' ◀' : ''}
+                  </div>
+                  <div style={{ textAlign: 'right', color: isTop ? '#ffdd66' : 'hsl(38 15% 60%)', fontWeight: 700 }}>
+                    {row.best_score}
+                  </div>
+                  <div style={{ textAlign: 'right', color: 'hsl(0 60% 55%)' }}>
+                    {row.best_misses}
+                  </div>
+                  <div style={{ textAlign: 'right', color: 'hsl(215 18% 40%)' }}>
+                    {row.games_played}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div style={{ marginTop: 10, fontFamily: '"Press Start 2P", monospace', fontSize: 6, color: 'hsl(215 18% 30%)', lineHeight: 2 }}>
+          Топ-20 · Учитывается лучший результат за все игры
+        </div>
+      </div>
     </div>
   );
 }
