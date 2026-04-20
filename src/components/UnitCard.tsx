@@ -211,8 +211,9 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
             </div>
 
             <div
-              className="absolute left-3 right-3 bottom-[68px] p-3.5 pointer-events-none"
+              className="absolute left-3 right-3 p-3.5 pointer-events-none"
               style={{
+                top: '54px',
                 background:
                   'linear-gradient(180deg, hsl(222 20% 10% / 0.98) 0%, hsl(222 22% 7% / 0.98) 100%)',
                 border: `1px solid hsl(${rarityHue} / 0.4)`,
@@ -220,7 +221,7 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                 boxShadow: `0 12px 28px hsl(222 40% 2% / 0.6), 0 0 16px hsl(${rarityHue} / 0.15)`,
                 backdropFilter: 'blur(8px)',
                 opacity: hovered && !flipped ? 1 : 0,
-                transform: hovered && !flipped ? 'translateY(0)' : 'translateY(10px)',
+                transform: hovered && !flipped ? 'translateY(0)' : 'translateY(-6px)',
                 transition: 'opacity 0.25s ease, transform 0.25s ease',
               }}
             >
