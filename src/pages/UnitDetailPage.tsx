@@ -6,6 +6,7 @@ import StarRating from '@/components/StarRating';
 import StatBar from '@/components/StatBar';
 import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
+import RoleTooltip from '@/components/RoleTooltip';
 
 const CLASS_ICONS: Record<string, string> = {
   'Пехота': 'Sword', 'Кавалерия': 'Zap', 'Стрелки': 'Crosshair', 'Осадные': 'Hammer',
@@ -218,7 +219,11 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
                 <div className="flex items-center flex-wrap gap-2 mt-1">
                   <span className="text-sm text-muted-foreground">{unit.class}</span>
                   <span className="text-muted-foreground">·</span>
-                  <span className="text-sm text-muted-foreground">{roles.join(', ')}</span>
+                  <span className="flex items-center gap-1 flex-wrap">
+                    {roles.map((role, i) => (
+                      <RoleTooltip key={role} role={role} showDot={i > 0} size="md" />
+                    ))}
+                  </span>
                   <span className="text-muted-foreground">·</span>
                   <RarityBadge rarity={unit.rarity} size="md" />
                 </div>
