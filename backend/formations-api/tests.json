@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "GET formations list",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

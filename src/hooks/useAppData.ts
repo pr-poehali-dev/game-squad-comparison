@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, rolesApi } from '@/lib/api';
-import { Unit, Treaty, UnitStats, Ability, Trait } from '@/data/types';
+import { unitsApi, treatiesApi, rolesApi, formationsApi } from '@/lib/api';
+import { Unit, Treaty, UnitStats, Ability, Trait, Formation } from '@/data/types';
 
 export interface UnitRoleDef {
   id: number;
@@ -51,6 +51,7 @@ function apiToUnit(u: Record<string, unknown>): Unit {
     guide_upgrade: Array.isArray(u.guide_upgrade) ? u.guide_upgrade : [],
     guide_gameplay: Array.isArray(u.guide_gameplay) ? u.guide_gameplay : [],
     stats: (u.stats as UnitStats) || {} as UnitStats,
+    formations: Array.isArray(u.formations) ? (u.formations as number[]) : [],
   };
 }
 
@@ -179,4 +180,41 @@ export function useRoles() {
   };
 
   return { roles, loading, invalidate };
+}
+
+let cachedFormations: Formation[] | null = null;
+let formationsPromise: Promise<Formation[]> | null = null;
+
+export function useFormations() {
+  const [formations, setFormations] = useState<Formation[]>(cachedFormations || []);
+  const [loading, setLoading] = useState(!cachedFormations);
+
+  const load = useCallback(async () => {
+    if (cachedFormations) { setFormations(cachedFormations); setLoading(false); return; }
+    if (!formationsPromise) {
+      formationsPromise = formationsApi.list().then((data: Formation[]) => {
+        cachedFormations = data;
+        return data;
+      });
+    }
+    try {
+      const result = await formationsPromise;
+      setFormations(result);
+    } catch {
+      setFormations([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const invalidate = () => {
+    cachedFormations = null;
+    formationsPromise = null;
+    setLoading(true);
+    load();
+  };
+
+  return { formations, loading, invalidate };
 }

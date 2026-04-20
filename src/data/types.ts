@@ -59,6 +59,13 @@ export interface GuideBlock {
   content: string;  // текст или URL изображения
 }
 
+export interface Formation {
+  id: number;
+  name: string;
+  description: string;
+  avatar_url: string;
+}
+
 export interface Unit {
   id: string;
   name: string;
@@ -72,6 +79,7 @@ export interface Unit {
   traits?: Trait[];
   avatar_url?: string;
   stars?: number; // 0–5, шаг 0.5
-  guide_upgrade?: GuideBlock[];   // Рекомендации по прокачке
-  guide_gameplay?: GuideBlock[];  // Рекомендации по игре
+  guide_upgrade?: GuideBlock[];
+  guide_gameplay?: GuideBlock[];
+  formations?: number[]; // массив ID построений
 }

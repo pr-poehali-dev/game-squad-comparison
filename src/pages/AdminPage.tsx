@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, seedApi, rolesApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { useUnits, useTreaties, useRoles, UnitRoleDef } from '@/hooks/useAppData';
+import { useUnits, useTreaties, useRoles, useFormations, UnitRoleDef } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
-import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor } from '@/data/types';
+import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor, Formation } from '@/data/types';
 import { ALL_STATS, STAT_GROUPS } from '@/data/statGroups';
 import AvatarUpload from '@/components/AvatarUpload';
 import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
 import { GuideBlock } from '@/data/types';
 
-type AdminTab = 'units' | 'treaties' | 'roles';
+type AdminTab = 'units' | 'treaties' | 'roles' | 'formations';
 
 const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
@@ -119,6 +119,7 @@ interface UnitFormData {
   abilities: AbilityDraft[];
   traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
+  formations: number[];
 }
 
 function getRawRoles(raw: unknown): UnitRole[] {
@@ -127,11 +128,12 @@ function getRawRoles(raw: unknown): UnitRole[] {
   return ['Урон'];
 }
 
-function UnitModal({ unit, onSave, onClose, availableRoles }: {
+function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations }: {
   unit?: Record<string, unknown> | null;
   onSave: (data: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
   availableRoles: UnitRoleDef[];
+  availableFormations: Formation[];
 }) {
   const editing = !!unit;
   const [loading, setLoading] = useState(false);
@@ -152,6 +154,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles }: {
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
     traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
+    formations: Array.isArray(unit?.formations) ? (unit.formations as number[]) : [],
   });
 
   const set = (key: keyof UnitFormData, val: unknown) => setForm(f => ({ ...f, [key]: val }));
@@ -160,6 +163,11 @@ function UnitModal({ unit, onSave, onClose, availableRoles }: {
   const toggleRole = (r: UnitRole) => setForm(f => ({
     ...f,
     roles: f.roles.includes(r) ? f.roles.filter(x => x !== r) : [...f.roles, r],
+  }));
+
+  const toggleFormation = (id: number) => setForm(f => ({
+    ...f,
+    formations: f.formations.includes(id) ? f.formations.filter(x => x !== id) : [...f.formations, id],
   }));
 
   // Умения
@@ -221,6 +229,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles }: {
         abilities,
         traits,
         stats: form.stats,
+        formations: form.formations,
       });
       onClose();
     } catch (err: unknown) {
@@ -276,6 +285,28 @@ function UnitModal({ unit, onSave, onClose, availableRoles }: {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-muted-foreground block mb-2">Построения (можно несколько)</label>
+              {availableFormations.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Нет доступных построений. Создайте их во вкладке «Построения».</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableFormations.map(f => {
+                    const selected = form.formations.includes(f.id);
+                    return (
+                      <button key={f.id} type="button" onClick={() => toggleFormation(f.id)}
+                        title={f.description || undefined}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-sm border transition-colors ${selected ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'}`}>
+                        {f.avatar_url && (
+                          <img src={f.avatar_url} alt="" className="w-4 h-4 rounded-sm object-cover flex-shrink-0" />
+                        )}
+                        {f.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
             <div className="col-span-2">
               <label className="text-xs text-muted-foreground block mb-1.5">Описание</label>
@@ -609,6 +640,7 @@ export default function AdminPage() {
   const { invalidate: invalidateUnits } = useUnits();
   const { invalidate: invalidateTreaties } = useTreaties();
   const { roles, invalidate: invalidateRoles } = useRoles();
+  const { formations, invalidate: invalidateFormations } = useFormations();
   const [tab, setTab] = useState<AdminTab>('units');
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
@@ -623,6 +655,11 @@ export default function AdminPage() {
   const [roleForm, setRoleForm] = useState({ name: '', description: '' });
   const [roleEditing, setRoleEditing] = useState<UnitRoleDef | null>(null);
   const [roleLoading, setRoleLoading] = useState(false);
+
+  // Управление построениями
+  const [formationForm, setFormationForm] = useState({ name: '', description: '', avatar_url: '' });
+  const [formationEditing, setFormationEditing] = useState<Formation | null>(null);
+  const [formationLoading, setFormationLoading] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
 
@@ -741,6 +778,53 @@ export default function AdminPage() {
     setRoleForm({ name: role.name, description: role.description });
   };
 
+  const handleSaveFormation = async () => {
+    if (!formationForm.name.trim()) return;
+    setFormationLoading(true);
+    try {
+      if (formationEditing) {
+        await formationsApi.update(formationEditing.id, {
+          name: formationForm.name.trim(),
+          description: formationForm.description.trim(),
+          avatar_url: formationForm.avatar_url.trim(),
+        });
+        showToast('Построение обновлено');
+      } else {
+        await formationsApi.create({
+          name: formationForm.name.trim(),
+          description: formationForm.description.trim(),
+          avatar_url: formationForm.avatar_url.trim(),
+        });
+        showToast('Построение добавлено');
+      }
+      setFormationForm({ name: '', description: '', avatar_url: '' });
+      setFormationEditing(null);
+      invalidateFormations();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка сохранения', 'error');
+    } finally {
+      setFormationLoading(false);
+    }
+  };
+
+  const handleDeleteFormation = async (f: Formation) => {
+    setFormationLoading(true);
+    try {
+      await formationsApi.delete(f.id);
+      showToast('Построение удалено');
+      invalidateFormations();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка удаления', 'error');
+    } finally {
+      setFormationLoading(false);
+    }
+  };
+
+  const startEditFormation = (f: Formation) => {
+    setFormationEditing(f);
+    setFormationForm({ name: f.name, description: f.description, avatar_url: f.avatar_url });
+  };
+
   if (!user?.is_admin) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -773,7 +857,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {(['units', 'treaties', 'roles'] as AdminTab[]).map(t => (
+        {(['units', 'treaties', 'roles', 'formations'] as AdminTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -781,7 +865,7 @@ export default function AdminPage() {
               tab === t ? 'border-primary text-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : 'Роли'}
+            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : 'Построения'}
           </button>
         ))}
       </div>
@@ -964,9 +1048,90 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Formations Tab */}
+      {tab === 'formations' && (
+        <div className="max-w-xl">
+          <div className="bg-card border border-border rounded-sm p-4 mb-4">
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
+              {formationEditing ? 'Редактировать построение' : 'Новое построение'}
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Название *</label>
+                <input type="text" value={formationForm.name}
+                  onChange={e => setFormationForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Например: Черепаха" />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Описание (для тултипа)</label>
+                <textarea value={formationForm.description}
+                  onChange={e => setFormationForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Описание тактики и преимуществ построения..." />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Аватарка</label>
+                <AvatarUpload
+                  value={formationForm.avatar_url}
+                  onChange={url => setFormationForm(f => ({ ...f, avatar_url: url }))}
+                  aspectRatio="1/1"
+                  label="Иконка построения"
+                  folder="formations"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSaveFormation}
+                  disabled={formationLoading || !formationForm.name.trim()}
+                  className="flex items-center gap-2 px-4 py-2 text-xs bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 disabled:opacity-50 transition-colors">
+                  <Icon name={formationLoading ? 'Loader' : (formationEditing ? 'Save' : 'Plus')} size={12} className={formationLoading ? 'animate-spin' : ''} />
+                  {formationEditing ? 'Сохранить' : 'Добавить'}
+                </button>
+                {formationEditing && (
+                  <button onClick={() => { setFormationEditing(null); setFormationForm({ name: '', description: '', avatar_url: '' }); }}
+                    className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors">
+                    Отмена
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {formations.map(f => (
+              <div key={f.id} className="bg-card border border-border rounded-sm p-3 flex items-start gap-3">
+                {f.avatar_url && (
+                  <img src={f.avatar_url} alt={f.name} className="w-10 h-10 rounded-sm object-cover flex-shrink-0 border border-border" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground">{f.name}</div>
+                  {f.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{f.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button onClick={() => startEditFormation(f)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-sm hover:bg-muted transition-colors">
+                    <Icon name="Pencil" size={11} /> Изменить
+                  </button>
+                  <button onClick={() => handleDeleteFormation(f)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-destructive/40 text-destructive rounded-sm hover:bg-destructive/10 transition-colors">
+                    <Icon name="Trash2" size={11} /> Удалить
+                  </button>
+                </div>
+              </div>
+            ))}
+            {formations.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">Построений пока нет</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       {unitModal.open && (
-        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} />
+        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} availableFormations={formations} />
       )}
       {treatyModal.open && (
         <TreatyModal treaty={treatyModal.treaty} onSave={handleSaveTreaty} onClose={() => setTreatyModal({ open: false })} />

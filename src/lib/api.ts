@@ -7,6 +7,7 @@ const URLS = {
   forum: 'https://functions.poehali.dev/914f3bd8-b9e4-4dfa-b16a-e3dda3710d6e',
   battle: 'https://functions.poehali.dev/e55b6676-4af3-410b-99a4-d9faac5243bb',
   rolesApi: 'https://functions.poehali.dev/36953fca-cdb1-4ebc-8482-8ba8556d1389',
+  formationsApi: 'https://functions.poehali.dev/d8bb45c5-f402-46c5-ac74-722186fd2a5d',
 };
 
 function getSessionId(): string {
@@ -87,6 +88,17 @@ export const forumApi = {
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'hide_post', post_id }) }),
   getNotifications: () => request(`${URLS.forum}?action=notifications`),
   readNotifications: () => request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'read_notifications' }) }),
+};
+
+// Formations
+export const formationsApi = {
+  list: () => request(URLS.formationsApi),
+  create: (data: { name: string; description: string; avatar_url: string }) =>
+    request(URLS.formationsApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
+  update: (id: number, data: { name: string; description: string; avatar_url: string }) =>
+    request(URLS.formationsApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
+  delete: (id: number) =>
+    request(URLS.formationsApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
 
 // Roles

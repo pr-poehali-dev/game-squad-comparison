@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useUnits, useTreaties } from '@/hooks/useAppData';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useUnits, useTreaties, useFormations } from '@/hooks/useAppData';
 import { STAT_GROUPS } from '@/data/statGroups';
-import { UnitStats, Ability, Trait, UnitRole, GuideBlock } from '@/data/types';
+import { UnitStats, Ability, Trait, UnitRole, GuideBlock, Formation } from '@/data/types';
 import StarRating from '@/components/StarRating';
 import StatBar from '@/components/StatBar';
 import RarityBadge from '@/components/RarityBadge';
@@ -124,6 +125,70 @@ function TraitTag({ trait }: { trait: Trait }) {
   );
 }
 
+// ── Тег построения с тултипом (портал) ──
+function FormationTag({ formation }: { formation: Formation }) {
+  const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!visible) return;
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPos({ x: rect.left + rect.width / 2, y: rect.top - 8 });
+  }, [visible]);
+
+  return (
+    <>
+      <div
+        ref={ref}
+        onMouseEnter={() => formation.description && setVisible(true)}
+        onMouseLeave={() => setVisible(false)}
+        className="flex items-center gap-2 px-3 py-2 rounded-sm border border-border bg-muted/40 cursor-help transition-colors hover:border-primary/40"
+      >
+        {formation.avatar_url && (
+          <img src={formation.avatar_url} alt={formation.name}
+            className="w-8 h-8 rounded-sm object-cover flex-shrink-0 border border-border" />
+        )}
+        <div>
+          <div className="text-xs font-semibold text-foreground" style={{ fontFamily: 'Rajdhani, sans-serif', letterSpacing: '0.04em' }}>
+            {formation.name}
+          </div>
+          {formation.description && (
+            <div className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+              <Icon name="Info" size={9} className="opacity-60" />
+              <span>Наведи для описания</span>
+            </div>
+          )}
+        </div>
+      </div>
+      {visible && formation.description && createPortal(
+        <div style={{
+          position: 'fixed', left: pos.x, top: pos.y,
+          transform: 'translate(-50%, -100%)',
+          zIndex: 9999, width: '240px', padding: '10px 14px',
+          background: 'hsl(224 20% 9%)',
+          border: '1px solid hsl(42 90% 52% / 0.35)',
+          borderRadius: '3px',
+          boxShadow: '0 12px 32px hsl(0 0% 0% / 0.6)',
+          pointerEvents: 'none',
+        }}>
+          <div style={{ fontFamily: 'Cinzel, serif', fontSize: '0.65rem', fontWeight: 600, color: 'hsl(42 90% 52%)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
+            {formation.name}
+          </div>
+          <div style={{ fontFamily: 'Rajdhani, sans-serif', fontSize: '0.8rem', lineHeight: 1.55, color: 'hsl(38 15% 72%)' }}>
+            {formation.description}
+          </div>
+          <div style={{ position: 'absolute', bottom: '-6px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '6px solid hsl(42 90% 52% / 0.35)' }} />
+          <div style={{ position: 'absolute', bottom: '-4px', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid hsl(224 20% 9%)' }} />
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
 // ── Секция руководства ──
 function GuideSection({ title, icon, blocks }: { title: string; icon: string; blocks: GuideBlock[] }) {
   if (!blocks || blocks.length === 0) return null;
@@ -164,6 +229,7 @@ interface UnitDetailPageProps {
 export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: UnitDetailPageProps) {
   const { units } = useUnits();
   const { treaties } = useTreaties();
+  const { formations: allFormations } = useFormations();
   const [activeGroup, setActiveGroup] = useState(0);
 
   const unit = units.find(u => u.id === unitId);
@@ -190,6 +256,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
   });
 
   const traits = unit.traits || [];
+  const unitFormations = allFormations.filter(f => (unit.formations || []).includes(f.id));
 
   return (
     <div>
@@ -247,6 +314,19 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack }: Unit
               </h2>
               <div className="flex flex-wrap gap-2">
                 {traits.map((tr, i) => <TraitTag key={i} trait={tr} />)}
+              </div>
+            </div>
+          )}
+
+          {/* Построения */}
+          {unitFormations.length > 0 && (
+            <div className="bg-card border border-border rounded-sm p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2 uppercase tracking-widest">
+                <Icon name="Shield" size={14} className="text-primary" />
+                Построения
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {unitFormations.map(f => <FormationTag key={f.id} formation={f} />)}
               </div>
             </div>
           )}
