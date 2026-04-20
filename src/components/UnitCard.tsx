@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Unit, UnitRole } from '@/data/types';
 import { CARD_STATS } from '@/data/statGroups';
 import RarityBadge from './RarityBadge';
@@ -40,9 +41,86 @@ function getRoles(role: UnitRole | UnitRole[]): UnitRole[] {
   return Array.isArray(role) ? role : [role];
 }
 
-/* ── Тултип для роли ──────────────────────────────────────── */
+/* ── Тултип для роли (через портал, не обрезается overflow) ── */
 function RoleTooltip({ role, description, showDot }: { role: string; description?: string; showDot: boolean }) {
   const [visible, setVisible] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const triggerRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!visible) return;
+    const el = triggerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPos({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 8,
+    });
+  }, [visible]);
+
+  const tooltipEl = visible && description ? createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y,
+        transform: 'translate(-50%, -100%)',
+        zIndex: 9999,
+        width: '200px',
+        padding: '8px 12px',
+        background: 'hsl(224 20% 9%)',
+        border: '1px solid hsl(42 90% 52% / 0.35)',
+        borderRadius: '3px',
+        boxShadow: '0 12px 32px hsl(0 0% 0% / 0.6)',
+        pointerEvents: 'none',
+      }}
+    >
+      <div style={{
+        fontFamily: 'Cinzel, serif',
+        fontSize: '0.6rem',
+        fontWeight: 600,
+        color: 'hsl(42 90% 52%)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        marginBottom: '4px',
+      }}>
+        {role}
+      </div>
+      <div style={{
+        fontFamily: 'Rajdhani, sans-serif',
+        fontSize: '0.75rem',
+        fontWeight: 400,
+        lineHeight: 1.5,
+        color: 'hsl(38 15% 72%)',
+      }}>
+        {description}
+      </div>
+      {/* Стрелка вниз */}
+      <div style={{
+        position: 'absolute',
+        bottom: '-6px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 0,
+        height: 0,
+        borderLeft: '6px solid transparent',
+        borderRight: '6px solid transparent',
+        borderTop: '6px solid hsl(42 90% 52% / 0.35)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        bottom: '-4px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 0,
+        height: 0,
+        borderLeft: '5px solid transparent',
+        borderRight: '5px solid transparent',
+        borderTop: '5px solid hsl(224 20% 9%)',
+      }} />
+    </div>,
+    document.body
+  ) : null;
 
   return (
     <span className="inline-flex items-center gap-1">
@@ -50,10 +128,10 @@ function RoleTooltip({ role, description, showDot }: { role: string; description
         <span style={{ color: 'hsl(215 18% 30%)', fontSize: '0.5rem' }}>·</span>
       )}
       <span
+        ref={triggerRef}
         onMouseEnter={() => description && setVisible(true)}
         onMouseLeave={() => setVisible(false)}
         style={{
-          position: 'relative',
           fontFamily: 'Rajdhani, sans-serif',
           fontSize: '0.6rem',
           color: 'hsl(215 18% 42%)',
@@ -64,61 +142,8 @@ function RoleTooltip({ role, description, showDot }: { role: string; description
         }}
       >
         {role}
-        {visible && description && (
-          <span
-            style={{
-              position: 'absolute',
-              bottom: 'calc(100% + 6px)',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 999,
-              width: '180px',
-              padding: '7px 10px',
-              background: 'hsl(224 16% 10%)',
-              border: '1px solid hsl(42 90% 52% / 0.3)',
-              borderRadius: '3px',
-              boxShadow: '0 8px 24px hsl(0 0% 0% / 0.5)',
-              fontFamily: 'Rajdhani, sans-serif',
-              fontSize: '0.7rem',
-              fontWeight: 400,
-              lineHeight: 1.5,
-              letterSpacing: '0.02em',
-              color: 'hsl(38 15% 75%)',
-              textTransform: 'none',
-              pointerEvents: 'none',
-              whiteSpace: 'normal',
-            }}
-          >
-            {/* Стрелочка вниз */}
-            <span style={{
-              position: 'absolute',
-              bottom: '-5px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '5px solid transparent',
-              borderRight: '5px solid transparent',
-              borderTop: '5px solid hsl(42 90% 52% / 0.3)',
-            }} />
-            <span style={{
-              position: 'absolute',
-              bottom: '-4px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '4px solid transparent',
-              borderRight: '4px solid transparent',
-              borderTop: '4px solid hsl(224 16% 10%)',
-            }} />
-            <span style={{ fontFamily: 'Cinzel, serif', fontSize: '0.6rem', fontWeight: 600, color: 'hsl(42 90% 52%)', display: 'block', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              {role}
-            </span>
-            {description}
-          </span>
-        )}
       </span>
+      {tooltipEl}
     </span>
   );
 }
