@@ -20,13 +20,13 @@ export const STAT_GROUPS: StatGroup[] = [
     icon: 'Shield',
     color: 'text-blue-400',
     stats: [
-      { key: 'health',        label: 'Здоровье',          max: 100 },
-      { key: 'troops',        label: 'Численность',        max: 300 },
-      { key: 'leadership',    label: 'Лидерство',          max: 100 },
-      { key: 'moveSpeed',     label: 'Скорость движения',  max: 100 },
-      { key: 'rangeDistance', label: 'Дальность стрельбы', max: 12 },
-      { key: 'ammo',          label: 'Боезапас',           max: 40 },
-      { key: 'morale',        label: 'Работоспособность',  max: 100 },
+      { key: 'health',        label: 'Здоровье',          max: 30000 },
+      { key: 'troops',        label: 'Численность',        max: 3000 },
+      { key: 'leadership',    label: 'Лидерство',          max: 3000 },
+      { key: 'moveSpeed',     label: 'Скорость движения',  max: 3000 },
+      { key: 'rangeDistance', label: 'Дальность стрельбы', max: 3000 },
+      { key: 'ammo',          label: 'Боезапас',           max: 3000 },
+      { key: 'morale',        label: 'Работоспособность',  max: 3000 },
     ],
   },
   {
@@ -34,12 +34,12 @@ export const STAT_GROUPS: StatGroup[] = [
     icon: 'Swords',
     color: 'text-red-400',
     stats: [
-      { key: 'piercingPenetration', label: 'Пробивание (проникающ.)', max: 100 },
-      { key: 'slashingPenetration', label: 'Пробивание (рубящ.)',      max: 100 },
-      { key: 'bluntPenetration',    label: 'Пробивание (дробящ.)',     max: 100 },
-      { key: 'piercingDamage',      label: 'Проникающий урон',         max: 100 },
-      { key: 'slashingDamage',      label: 'Рубящий урон',             max: 100 },
-      { key: 'bluntDamage',         label: 'Дробящий урон',            max: 100 },
+      { key: 'piercingPenetration', label: 'Пробивание (проникающ.)', max: 3000 },
+      { key: 'slashingPenetration', label: 'Пробивание (рубящ.)',      max: 3000 },
+      { key: 'bluntPenetration',    label: 'Пробивание (дробящ.)',     max: 3000 },
+      { key: 'piercingDamage',      label: 'Проникающий урон',         max: 3000 },
+      { key: 'slashingDamage',      label: 'Рубящий урон',             max: 3000 },
+      { key: 'bluntDamage',         label: 'Дробящий урон',            max: 3000 },
     ],
   },
   {
@@ -47,11 +47,11 @@ export const STAT_GROUPS: StatGroup[] = [
     icon: 'ShieldCheck',
     color: 'text-green-400',
     stats: [
-      { key: 'piercingDefense', label: 'Защита (проникающ.)', max: 100 },
-      { key: 'slashingDefense', label: 'Защита (рубящ.)',      max: 100 },
-      { key: 'bluntDefense',    label: 'Защита (дробящ.)',     max: 100 },
-      { key: 'block',           label: 'Блок',                 max: 100 },
-      { key: 'blockRecovery',   label: 'Восстановление блока', max: 100 },
+      { key: 'piercingDefense', label: 'Защита (проникающ.)', max: 3000 },
+      { key: 'slashingDefense', label: 'Защита (рубящ.)',      max: 3000 },
+      { key: 'bluntDefense',    label: 'Защита (дробящ.)',     max: 3000 },
+      { key: 'block',           label: 'Блок',                 max: 3000 },
+      { key: 'blockRecovery',   label: 'Восстановление блока', max: 3000 },
     ],
   },
 ];
@@ -61,10 +61,10 @@ export const ALL_STATS: StatDef[] = STAT_GROUPS.flatMap(g => g.stats);
 
 // Short labels for cards
 export const CARD_STATS: StatDef[] = [
-  { key: 'health',        label: 'Здоровье',   max: 100 },
-  { key: 'slashingDamage',label: 'Руб. урон',  max: 100 },
-  { key: 'piercingDamage',label: 'Прон. урон', max: 100 },
-  { key: 'slashingDefense',label: 'Руб. защ.', max: 100 },
-  { key: 'block',         label: 'Блок',       max: 100 },
-  { key: 'moveSpeed',     label: 'Скорость',   max: 100 },
+  { key: 'health',         label: 'Здоровье',   max: 30000 },
+  { key: 'slashingDamage', label: 'Руб. урон',  max: 3000 },
+  { key: 'piercingDamage', label: 'Прон. урон', max: 3000 },
+  { key: 'slashingDefense',label: 'Руб. защ.',  max: 3000 },
+  { key: 'block',          label: 'Блок',        max: 3000 },
+  { key: 'moveSpeed',      label: 'Скорость',    max: 3000 },
 ];
