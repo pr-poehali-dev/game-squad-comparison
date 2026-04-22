@@ -1,0 +1,12 @@
+{
+  "tests": [
+    {
+      "name": "Generate OG image",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {"url": "string"},
+      "bodyMatcher": "partial"
+    }
+  ]
+}
