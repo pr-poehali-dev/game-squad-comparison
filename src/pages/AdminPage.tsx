@@ -114,9 +114,9 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
       .filter((id): id is number => id !== null);
   };
 
-  // Матчим существующие abilities отряда с глобальным справочником по имени
+  // Матчим существующие abilities отряда с глобальным справочником по имени (только при редактировании)
   const initSelectedAbilityIds = (): number[] => {
-    if (!rawAbilities.length) return [];
+    if (!editing || !rawAbilities.length) return [];
     return rawAbilities
       .map(ra => {
         const name = typeof ra === 'string' ? ra : (ra as Ability).name;
