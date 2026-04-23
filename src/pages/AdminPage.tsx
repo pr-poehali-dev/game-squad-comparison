@@ -89,22 +89,6 @@ function rawToAbilityDraft(raw: unknown): AbilityDraft {
 const statOptions = ALL_STATS.map(s => s.key);
 const STAT_LABELS: Partial<Record<string, string>> = Object.fromEntries(ALL_STATS.map(s => [s.key, s.label]));
 
-interface TraitDraft {
-  name: string;
-  description: string;
-  color: TraitColor;
-}
-
-function emptyTrait(): TraitDraft {
-  return { name: '', description: '', color: 'gray' };
-}
-
-function rawToTraitDraft(raw: unknown): TraitDraft {
-  if (typeof raw === 'string') return { ...emptyTrait(), name: raw };
-  const t = raw as Trait;
-  return { name: t.name || '', description: t.description || '', color: (t.color as TraitColor) || 'gray' };
-}
-
 interface UnitFormData {
   name: string;
   class: UnitClass;
@@ -117,7 +101,6 @@ interface UnitFormData {
   guide_upgrade: GuideBlock[];
   guide_gameplay: GuideBlock[];
   abilities: AbilityDraft[];
-  traits: TraitDraft[];
   stats: typeof DEFAULT_UNIT_STATS;
   formations: number[];
 }
@@ -128,18 +111,33 @@ function getRawRoles(raw: unknown): UnitRole[] {
   return ['Танк'];
 }
 
-function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations }: {
+function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations, availableTraits }: {
   unit?: Record<string, unknown> | null;
   onSave: (data: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
   availableRoles: UnitRoleDef[];
   availableFormations: Formation[];
+  availableTraits: TraitDef[];
 }) {
   const editing = !!unit;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const rawAbilities = (unit?.abilities as unknown[]) || [];
   const rawTraits = (unit?.traits as unknown[]) || [];
+
+  // Матчим существующие traits отряда с глобальным справочником по имени
+  const initSelectedTraitIds = (): number[] => {
+    if (!rawTraits.length) return [];
+    return rawTraits
+      .map(rt => {
+        const name = typeof rt === 'string' ? rt : (rt as Trait).name;
+        const found = availableTraits.find(at => at.name === name);
+        return found ? found.id : null;
+      })
+      .filter((id): id is number => id !== null);
+  };
+
+  const [selectedTraitIds, setSelectedTraitIds] = useState<number[]>(initSelectedTraitIds);
   const [form, setForm] = useState<UnitFormData>({
     name: (unit?.name as string) || '',
     class: (unit?.class as UnitClass) || 'Пехота',
@@ -152,7 +150,6 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
     guide_upgrade: Array.isArray(unit?.guide_upgrade) ? unit.guide_upgrade as GuideBlock[] : [],
     guide_gameplay: Array.isArray(unit?.guide_gameplay) ? unit.guide_gameplay as GuideBlock[] : [],
     abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
-    traits: rawTraits.length ? rawTraits.map(rawToTraitDraft) : [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
     formations: Array.isArray(unit?.formations) ? (unit.formations as number[]) : [],
   });
@@ -187,12 +184,6 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
     updateAbility(i, { modifiers: m });
   };
 
-  // Особенности
-  const addTrait = () => setForm(f => ({ ...f, traits: [...f.traits, emptyTrait()] }));
-  const removeTrait = (i: number) => setForm(f => ({ ...f, traits: f.traits.filter((_, idx) => idx !== i) }));
-  const updateTrait = (i: number, patch: Partial<TraitDraft>) =>
-    setForm(f => ({ ...f, traits: f.traits.map((t, idx) => idx === i ? { ...t, ...patch } : t) }));
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Поле "название" обязательно'); return; }
@@ -212,9 +203,10 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
           if (!hasInfo) return a.name.trim();
           return { name: a.name.trim(), description: a.description.trim() || undefined, statModifiers: Object.keys(mods).length > 0 ? mods : undefined };
         });
-      const traits = form.traits.filter(t => t.name.trim()).map(t => ({
-        name: t.name.trim(), description: t.description.trim() || undefined, color: t.color,
-      }));
+      const traits = selectedTraitIds
+        .map(id => availableTraits.find(t => t.id === id))
+        .filter(Boolean)
+        .map(t => ({ name: t!.name, description: t!.description || undefined, color: t!.color }));
       await onSave({
         name: form.name.trim(),
         class: form.class,
@@ -333,36 +325,34 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
 
           {/* Особенности */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Особенности</h4>
-              <button type="button" onClick={addTrait} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
-                <Icon name="Plus" size={12} /> Добавить
-              </button>
-            </div>
-            {form.traits.length === 0 && <p className="text-xs text-muted-foreground italic">Нет особенностей.</p>}
-            <div className="space-y-2">
-              {form.traits.map((tr, i) => (
-                <div key={i} className="border border-border rounded-sm p-3 space-y-2 bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <input type="text" value={tr.name} onChange={e => updateTrait(i, { name: e.target.value })}
-                      className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                      placeholder="Название особенности" />
-                    <select value={tr.color} onChange={e => updateTrait(i, { color: e.target.value as TraitColor })}
-                      className="bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                      {(Object.keys(TRAIT_COLOR_LABELS) as TraitColor[]).map(c => (
-                        <option key={c} value={c}>{TRAIT_COLOR_LABELS[c]}</option>
-                      ))}
-                    </select>
-                    <button type="button" onClick={() => removeTrait(i)} className="text-muted-foreground hover:text-destructive transition-colors">
-                      <Icon name="Trash2" size={13} />
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">Особенности</h4>
+            {availableTraits.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Сначала создайте особенности в разделе «Особенности».</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableTraits.map(t => {
+                  const selected = selectedTraitIds.includes(t.id);
+                  const colorCls = t.color === 'green'
+                    ? selected ? 'bg-green-900/40 border-green-500 text-green-400' : 'border-green-500/30 text-green-400/60 hover:border-green-500 hover:text-green-400'
+                    : t.color === 'red'
+                    ? selected ? 'bg-red-900/40 border-red-500 text-red-400' : 'border-red-500/30 text-red-400/60 hover:border-red-500 hover:text-red-400'
+                    : selected ? 'bg-muted border-foreground/40 text-foreground' : 'border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground';
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setSelectedTraitIds(prev =>
+                        prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id]
+                      )}
+                      title={t.description || undefined}
+                      className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${colorCls}`}
+                    >
+                      {selected && <span className="mr-1">✓</span>}{t.name}
                     </button>
-                  </div>
-                  <input type="text" value={tr.description} onChange={e => updateTrait(i, { description: e.target.value })}
-                    className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                    placeholder="Описание особенности (появится в тултипе)" />
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Умения */}
@@ -1334,7 +1324,7 @@ export default function AdminPage() {
 
       {/* Modals */}
       {unitModal.open && (
-        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} availableFormations={formations} />
+        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} availableFormations={formations} availableTraits={traits} />
       )}
       {treatyModal.open && (
         <TreatyModal treaty={treatyModal.treaty} onSave={handleSaveTreaty} onClose={() => setTreatyModal({ open: false })} />
