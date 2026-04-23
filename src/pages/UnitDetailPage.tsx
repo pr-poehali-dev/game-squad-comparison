@@ -276,7 +276,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
 
   const activeAbilities = unit.abilities.filter(ab => {
     const obj = getAbilityObj(ab);
-    return (obj?.statModifiers && Object.keys(obj.statModifiers).length > 0) ||
+    return (obj?.statModifiers != null && Object.keys(obj.statModifiers).length > 0) ||
            (obj?.statModifiersEx != null && Object.keys(obj.statModifiersEx).length > 0);
   });
 
@@ -483,7 +483,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {Object.entries(t.statModifiers).map(([stat, val]) => (
+                      {Object.entries(t.statModifiers || {}).map(([stat, val]) => (
                         <span key={stat} className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                           {STAT_LABEL_MAP[stat as keyof UnitStats] ?? stat}: {(val || 0) > 0 ? '+' : ''}{val}
                         </span>
@@ -520,7 +520,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
                       )}
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {Object.entries(t.statModifiers).map(([stat, val]) => (
+                      {Object.entries(t.statModifiers || {}).map(([stat, val]) => (
                         <span key={stat} className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
                           {STAT_LABEL_MAP[stat as keyof UnitStats] ?? stat}: {(val || 0) > 0 ? '+' : ''}{val}
                         </span>
@@ -545,7 +545,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
                     <div key={i} className="border border-blue-500/20 rounded-sm p-3">
                       <div className="text-xs font-medium text-foreground mb-1.5">{obj.name}</div>
                       <div className="flex flex-wrap gap-1">
-                        {Object.entries(obj.statModifiers!).map(([stat, val]) => (
+                        {Object.entries(obj.statModifiers || {}).map(([stat, val]) => (
                           <span key={stat} className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
                             {STAT_LABEL_MAP[stat as keyof UnitStats] ?? stat}: {(val || 0) > 0 ? '+' : ''}{val}
                           </span>
