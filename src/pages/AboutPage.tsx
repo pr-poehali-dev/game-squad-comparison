@@ -339,7 +339,6 @@ export default function AboutPage() {
               { stat: 'Численность', desc: 'Сколько бойцов в строю — основа устойчивости роты.' },
               { stat: 'Лидерство',   desc: 'Стоимость найма и содержания отряда в войске.' },
               { stat: 'Скорость',    desc: 'Как быстро отряд перемещается по полю боя.' },
-              { stat: 'Мораль',      desc: 'Стойкость духа при потерях и натиске противника.' },
               { stat: 'Атака',       desc: 'Урон в ближней сече — рубящий, колющий, дробящий.' },
               { stat: 'Защита',      desc: 'Сопротивление трём видам урона и прочность доспеха.' },
               { stat: 'Пробитие',    desc: 'Способность обойти броню противника.' },
@@ -379,53 +378,6 @@ export default function AboutPage() {
                 >
                   {item.desc}
                 </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Контакты */}
-        <Card>
-          <SectionHeader
-            icon="Mail"
-            title="Связь с писцом"
-            subtitle="Нашли ошибку, хотите предложить правку или отряд?"
-          />
-          <div className="grid sm:grid-cols-3 gap-3">
-            {[
-              { icon: 'Globe',         label: 'Сайт',     value: 'poehali.dev',                      hue: '42 76% 58%'  },
-              { icon: 'MessageCircle', label: 'Telegram', value: '@developer',                        hue: '210 78% 58%' },
-              { icon: 'MessageSquare', label: 'Форум',    value: 'раздел внутри каталога',            hue: '282 58% 60%' },
-            ].map(c => (
-              <div
-                key={c.label}
-                className="p-4 rounded-xl flex flex-col gap-2"
-                style={{
-                  background: `linear-gradient(180deg, hsl(${c.hue} / 0.1), hsl(222 18% 8%))`,
-                  border: `1px solid hsl(${c.hue} / 0.3)`,
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <Icon name={c.icon} size={16} style={{ color: `hsl(${c.hue})` }} />
-                  <span
-                    className="uppercase"
-                    style={{
-                      fontFamily: 'Manrope, sans-serif',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.18em',
-                      color: `hsl(${c.hue})`,
-                    }}
-                  >
-                    {c.label}
-                  </span>
-                </div>
-                <div
-                  className="font-mono-data"
-                  style={{ color: 'hsl(38 20% 88%)', fontSize: '0.92rem', fontWeight: 500 }}
-                >
-                  {c.value}
-                </div>
               </div>
             ))}
           </div>
