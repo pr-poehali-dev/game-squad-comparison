@@ -62,28 +62,35 @@ function ConfirmModal({ name, type, onConfirm, onCancel }: { name: string; type:
 }
 
 // ───── Unit Form ─────
+interface AbilityModEntry {
+  value: string;
+  type: 'flat' | 'percent';
+}
+
 interface AbilityDraft {
   name: string;
   description: string;
-  modifiers: Record<string, string>;
+  modifiers: Record<string, AbilityModEntry>;
   newModKey: string;
   newModVal: string;
+  newModType: 'flat' | 'percent';
 }
 
 function emptyAbility(): AbilityDraft {
-  return { name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '' };
+  return { name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' };
 }
 
 function rawToAbilityDraft(raw: unknown): AbilityDraft {
   if (typeof raw === 'string') return { ...emptyAbility(), name: raw };
   const a = raw as Ability;
-  return {
-    name: a.name || '',
-    description: a.description || '',
-    modifiers: Object.fromEntries(Object.entries(a.statModifiers || {}).map(([k, v]) => [k, String(v)])),
-    newModKey: 'health',
-    newModVal: '',
-  };
+  const modifiers: Record<string, AbilityModEntry> = {};
+  for (const [k, v] of Object.entries(a.statModifiers || {})) {
+    modifiers[k] = { value: String(v), type: 'flat' };
+  }
+  for (const [k, v] of Object.entries(a.statModifiersEx || {})) {
+    modifiers[k] = { value: String(v.value), type: v.type };
+  }
+  return { name: a.name || '', description: a.description || '', modifiers, newModKey: 'health', newModVal: '', newModType: 'flat' };
 }
 
 const statOptions = ALL_STATS.map(s => s.key);
@@ -175,7 +182,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
   const addAbilityMod = (i: number) => {
     const a = form.abilities[i];
     if (!a.newModVal) return;
-    updateAbility(i, { modifiers: { ...a.modifiers, [a.newModKey]: a.newModVal }, newModVal: '' });
+    updateAbility(i, { modifiers: { ...a.modifiers, [a.newModKey]: { value: a.newModVal, type: a.newModType } }, newModVal: '' });
   };
   const removeAbilityMod = (i: number, key: string) => {
     const a = form.abilities[i];
@@ -195,13 +202,22 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
         .filter(a => a.name.trim())
         .map(a => {
           const mods: Record<string, number> = {};
-          for (const [k, v] of Object.entries(a.modifiers)) {
-            const n = parseFloat(v);
-            if (!isNaN(n)) mods[k] = n;
+          const modsEx: Record<string, { value: number; type: string }> = {};
+          for (const [k, entry] of Object.entries(a.modifiers)) {
+            const n = parseFloat(entry.value);
+            if (!isNaN(n)) {
+              if (entry.type === 'percent') modsEx[k] = { value: n, type: 'percent' };
+              else mods[k] = n;
+            }
           }
-          const hasInfo = a.description.trim() || Object.keys(mods).length > 0;
+          const hasInfo = a.description.trim() || Object.keys(mods).length > 0 || Object.keys(modsEx).length > 0;
           if (!hasInfo) return a.name.trim();
-          return { name: a.name.trim(), description: a.description.trim() || undefined, statModifiers: Object.keys(mods).length > 0 ? mods : undefined };
+          return {
+            name: a.name.trim(),
+            description: a.description.trim() || undefined,
+            statModifiers: Object.keys(mods).length > 0 ? mods : undefined,
+            statModifiersEx: Object.keys(modsEx).length > 0 ? modsEx : undefined,
+          };
         });
       const traits = selectedTraitIds
         .map(id => availableTraits.find(t => t.id === id))
@@ -395,12 +411,16 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
                     <label className="text-[10px] text-muted-foreground block mb-1.5">Модификаторы характеристик <span className="opacity-50">(необязательно)</span></label>
                     {Object.entries(ab.modifiers).length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {Object.entries(ab.modifiers).map(([key, val]) => (
-                          <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${parseFloat(val) >= 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
-                            {STAT_LABELS[key] ?? key}: {parseFloat(val) >= 0 ? '+' : ''}{val}
-                            <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
-                          </span>
-                        ))}
+                        {Object.entries(ab.modifiers).map(([key, entry]) => {
+                          const isPos = parseFloat(entry.value) >= 0;
+                          const label = `${isPos ? '+' : ''}${entry.value}${entry.type === 'percent' ? '%' : ''}`;
+                          return (
+                            <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${isPos ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                              {STAT_LABELS[key] ?? key}: {label}
+                              <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                     <div className="flex gap-1.5">
@@ -408,8 +428,15 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
                         {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
                       </select>
                       <input type="number" value={ab.newModVal} onChange={e => updateAbility(i, { newModVal: e.target.value })}
-                        className="w-20 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="w-16 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                         placeholder="±знач." />
+                      <button
+                        type="button"
+                        onClick={() => updateAbility(i, { newModType: ab.newModType === 'flat' ? 'percent' : 'flat' })}
+                        className={`px-2 py-1 text-[11px] rounded-sm border transition-colors ${ab.newModType === 'percent' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-foreground/40'}`}
+                      >
+                        {ab.newModType === 'percent' ? '%' : '#'}
+                      </button>
                       <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Добавить</button>
                     </div>
                   </div>

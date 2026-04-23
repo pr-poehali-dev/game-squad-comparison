@@ -58,6 +58,7 @@ export interface Ability {
   name: string;
   description?: string;
   statModifiers?: Partial<UnitStats>;
+  statModifiersEx?: Partial<Record<keyof UnitStats, StatModifierEntry>>;
 }
 
 export type GuideBlockType = 'text' | 'image';

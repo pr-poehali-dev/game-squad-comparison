@@ -13,10 +13,13 @@ interface ComparePageProps {
 }
 
 function getAbilityBonus(unit: Unit, key: keyof UnitStats): number {
+  const base = unit.stats[key];
   return unit.abilities.reduce((acc, ab) => {
     if (typeof ab === 'string') return acc;
-    const mod = (ab as Ability).statModifiers?.[key] || 0;
-    return acc + mod;
+    const a = ab as Ability;
+    const ex = a.statModifiersEx?.[key];
+    if (ex) return acc + (ex.type === 'percent' ? Math.round(base * ex.value / 100) : ex.value);
+    return acc + (a.statModifiers?.[key] || 0);
   }, 0);
 }
 
