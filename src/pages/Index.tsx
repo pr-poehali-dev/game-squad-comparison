@@ -391,7 +391,7 @@ export default function Index() {
               className="font-mono-data uppercase"
               style={{ color: 'hsl(222 8% 34%)', fontSize: '0.6rem', letterSpacing: '0.22em' }}
             >
-              v·0.12
+              v·1.1.0
             </div>
             <div className="flex items-center gap-1.5">
               <span
