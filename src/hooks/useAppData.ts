@@ -1,11 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, rolesApi, formationsApi } from '@/lib/api';
-import { Unit, Treaty, UnitStats, Ability, Trait, Formation } from '@/data/types';
+import { unitsApi, treatiesApi, rolesApi, formationsApi, traitsApi } from '@/lib/api';
+import { Unit, Treaty, UnitStats, Ability, Trait, Formation, StatModifierEntry, TraitColor } from '@/data/types';
 
 export interface UnitRoleDef {
   id: number;
   name: string;
   description: string;
+}
+
+export interface TraitDef {
+  id: number;
+  name: string;
+  description: string;
+  color: TraitColor;
 }
 
 // Конвертирует abilities — поддерживает и строки, и объекты Ability
@@ -64,6 +71,7 @@ function apiToTreaty(t: Record<string, unknown>): Treaty {
     compatibleClasses: (t.compatibleClasses as Treaty['compatibleClasses']) || [],
     rarity: t.rarity as Treaty['rarity'],
     statModifiers: (t.statModifiers as Partial<UnitStats>) || {},
+    statModifiersEx: (t.statModifiersEx as Partial<Record<keyof UnitStats, StatModifierEntry>>) || undefined,
     avatar_url: (t.avatar_url as string) || '',
   };
 }
@@ -217,4 +225,41 @@ export function useFormations() {
   };
 
   return { formations, loading, invalidate };
+}
+
+let cachedTraits: TraitDef[] | null = null;
+let traitsPromise: Promise<TraitDef[]> | null = null;
+
+export function useTraits() {
+  const [traits, setTraits] = useState<TraitDef[]>(cachedTraits || []);
+  const [loading, setLoading] = useState(!cachedTraits);
+
+  const load = useCallback(async () => {
+    if (cachedTraits) { setTraits(cachedTraits); setLoading(false); return; }
+    if (!traitsPromise) {
+      traitsPromise = traitsApi.list().then((data: TraitDef[]) => {
+        cachedTraits = data;
+        return data;
+      });
+    }
+    try {
+      const result = await traitsPromise;
+      setTraits(result);
+    } catch {
+      setTraits([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const invalidate = () => {
+    cachedTraits = null;
+    traitsPromise = null;
+    setLoading(true);
+    load();
+  };
+
+  return { traits, loading, invalidate };
 }

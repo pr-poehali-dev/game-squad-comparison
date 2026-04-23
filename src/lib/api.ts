@@ -9,6 +9,7 @@ const URLS = {
   rolesApi: 'https://functions.poehali.dev/36953fca-cdb1-4ebc-8482-8ba8556d1389',
   formationsApi: 'https://functions.poehali.dev/d8bb45c5-f402-46c5-ac74-722186fd2a5d',
   gameApi: 'https://functions.poehali.dev/23edd385-7e13-41cb-a5d2-0a5cc4b4b5f7',
+  traitsApi: 'https://functions.poehali.dev/3cd2139d-ca43-4a19-8181-a5a301c48a6a',
 };
 
 function getSessionId(): string {
@@ -118,6 +119,17 @@ export const gameApi = {
   leaderboard: () => request(URLS.gameApi),
   saveScore: (score: number, misses: number) =>
     request(URLS.gameApi, { method: 'POST', body: JSON.stringify({ action: 'save', score, misses }) }),
+};
+
+// Traits
+export const traitsApi = {
+  list: () => request(URLS.traitsApi),
+  create: (data: { name: string; description: string; color: string }) =>
+    request(URLS.traitsApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
+  update: (id: number, data: { name: string; description: string; color: string }) =>
+    request(URLS.traitsApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
+  delete: (id: number) =>
+    request(URLS.traitsApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
 
 // Treaties

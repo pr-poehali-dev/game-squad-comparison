@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi, traitsApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { useUnits, useTreaties, useRoles, useFormations, UnitRoleDef } from '@/hooks/useAppData';
+import { useUnits, useTreaties, useRoles, useFormations, useTraits, UnitRoleDef, TraitDef } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor, Formation } from '@/data/types';
@@ -11,7 +11,7 @@ import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
 import { GuideBlock } from '@/data/types';
 
-type AdminTab = 'units' | 'treaties' | 'roles' | 'formations';
+type AdminTab = 'units' | 'treaties' | 'roles' | 'formations' | 'traits';
 
 const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
@@ -483,6 +483,24 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations 
 }
 
 // ───── Treaty Form ─────
+interface ModifierEntry {
+  value: string;
+  type: 'flat' | 'percent';
+}
+
+function initModifiers(treaty?: Record<string, unknown> | null): Record<string, ModifierEntry> {
+  const ex = (treaty?.statModifiersEx as Record<string, { value: number; type: 'flat' | 'percent' }>) || {};
+  const flat = (treaty?.statModifiers as Record<string, number>) || {};
+  const result: Record<string, ModifierEntry> = {};
+  for (const [k, v] of Object.entries(flat)) {
+    result[k] = { value: String(v), type: 'flat' };
+  }
+  for (const [k, v] of Object.entries(ex)) {
+    result[k] = { value: String(v.value), type: v.type };
+  }
+  return result;
+}
+
 function TreatyModal({ treaty, onSave, onClose }: {
   treaty?: Record<string, unknown> | null;
   onSave: (data: Record<string, unknown>) => Promise<void>;
@@ -496,11 +514,10 @@ function TreatyModal({ treaty, onSave, onClose }: {
   const [rarity, setRarity] = useState<Rarity>((treaty?.rarity as Rarity) || 'common');
   const [classes, setClasses] = useState<UnitClass[]>((treaty?.compatibleClasses as UnitClass[]) || []);
   const [avatarUrl, setAvatarUrl] = useState((treaty?.avatar_url as string) || '');
-  const [modifiers, setModifiers] = useState<Record<string, string>>(
-    Object.fromEntries(Object.entries((treaty?.statModifiers as Record<string, number>) || {}).map(([k, v]) => [k, String(v)]))
-  );
+  const [modifiers, setModifiers] = useState<Record<string, ModifierEntry>>(initModifiers(treaty));
   const [newModKey, setNewModKey] = useState('health');
   const [newModVal, setNewModVal] = useState('');
+  const [newModType, setNewModType] = useState<'flat' | 'percent'>('flat');
 
   const inputCls = "w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary";
 
@@ -510,12 +527,19 @@ function TreatyModal({ treaty, onSave, onClose }: {
 
   const addModifier = () => {
     if (!newModVal) return;
-    setModifiers(prev => ({ ...prev, [newModKey]: newModVal }));
+    setModifiers(prev => ({ ...prev, [newModKey]: { value: newModVal, type: newModType } }));
     setNewModVal('');
   };
 
   const removeModifier = (key: string) => {
     setModifiers(prev => { const n = { ...prev }; delete n[key]; return n; });
+  };
+
+  const toggleModType = (key: string) => {
+    setModifiers(prev => ({
+      ...prev,
+      [key]: { ...prev[key], type: prev[key].type === 'flat' ? 'percent' : 'flat' }
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -525,11 +549,18 @@ function TreatyModal({ treaty, onSave, onClose }: {
     setError('');
     try {
       const statModifiers: Record<string, number> = {};
-      for (const [k, v] of Object.entries(modifiers)) {
-        const n = parseFloat(v);
-        if (!isNaN(n)) statModifiers[k] = n;
+      const statModifiersEx: Record<string, { value: number; type: string }> = {};
+      for (const [k, entry] of Object.entries(modifiers)) {
+        const n = parseFloat(entry.value);
+        if (!isNaN(n)) {
+          if (entry.type === 'percent') {
+            statModifiersEx[k] = { value: n, type: 'percent' };
+          } else {
+            statModifiers[k] = n;
+          }
+        }
       }
-      await onSave({ name: name.trim(), description, rarity, compatibleClasses: classes, statModifiers, avatar_url: avatarUrl });
+      await onSave({ name: name.trim(), description, rarity, compatibleClasses: classes, statModifiers, statModifiersEx, avatar_url: avatarUrl });
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Ошибка сохранения');
@@ -595,13 +626,20 @@ function TreatyModal({ treaty, onSave, onClose }: {
             <label className="text-xs text-muted-foreground block mb-2">Модификаторы характеристик</label>
             {Object.entries(modifiers).length > 0 && (
               <div className="space-y-1.5 mb-3">
-                {Object.entries(modifiers).map(([key, val]) => (
+                {Object.entries(modifiers).map(([key, entry]) => (
                   <div key={key} className="flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground font-mono-data w-40">{key}</span>
-                    <span className={`font-mono-data font-semibold ${parseFloat(val) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {parseFloat(val) >= 0 ? '+' : ''}{val}
+                    <span className="text-muted-foreground font-mono-data flex-1 truncate">{STAT_LABELS[key] || key}</span>
+                    <span className={`font-mono-data font-semibold ${parseFloat(entry.value) >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {parseFloat(entry.value) >= 0 ? '+' : ''}{entry.value}{entry.type === 'percent' ? '%' : ''}
                     </span>
-                    <button type="button" onClick={() => removeModifier(key)} className="ml-auto text-muted-foreground hover:text-destructive transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => toggleModType(key)}
+                      className={`px-1.5 py-0.5 rounded-sm border text-[10px] transition-colors ${entry.type === 'percent' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-foreground/40'}`}
+                    >
+                      {entry.type === 'percent' ? '%' : '#'}
+                    </button>
+                    <button type="button" onClick={() => removeModifier(key)} className="text-muted-foreground hover:text-destructive transition-colors">
                       <Icon name="X" size={12} />
                     </button>
                   </div>
@@ -610,15 +648,22 @@ function TreatyModal({ treaty, onSave, onClose }: {
             )}
             <div className="flex gap-2">
               <select value={newModKey} onChange={e => setNewModKey(e.target.value)} className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                {statOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] || s}</option>)}
               </select>
               <input
                 type="number"
                 value={newModVal}
                 onChange={e => setNewModVal(e.target.value)}
-                className="w-24 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                placeholder="±значение"
+                className="w-20 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="±знач."
               />
+              <button
+                type="button"
+                onClick={() => setNewModType(t => t === 'flat' ? 'percent' : 'flat')}
+                className={`px-2 py-1.5 text-xs rounded-sm border transition-colors ${newModType === 'percent' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-foreground/40'}`}
+              >
+                {newModType === 'percent' ? '%' : '#'}
+              </button>
               <button type="button" onClick={addModifier} className="px-3 py-1.5 text-xs bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors">
                 + Добавить
               </button>
@@ -643,6 +688,7 @@ export default function AdminPage() {
   const { invalidate: invalidateTreaties } = useTreaties();
   const { roles, invalidate: invalidateRoles } = useRoles();
   const { formations, invalidate: invalidateFormations } = useFormations();
+  const { traits, invalidate: invalidateTraits } = useTraits();
   const [tab, setTab] = useState<AdminTab>('units');
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
@@ -662,6 +708,11 @@ export default function AdminPage() {
   const [formationForm, setFormationForm] = useState({ name: '', description: '', avatar_url: '' });
   const [formationEditing, setFormationEditing] = useState<Formation | null>(null);
   const [formationLoading, setFormationLoading] = useState(false);
+
+  // Управление особенностями
+  const [traitForm, setTraitForm] = useState({ name: '', description: '', color: 'gray' as TraitColor });
+  const [traitEditing, setTraitEditing] = useState<TraitDef | null>(null);
+  const [traitLoading, setTraitLoading] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
 
@@ -827,6 +878,45 @@ export default function AdminPage() {
     setFormationForm({ name: f.name, description: f.description, avatar_url: f.avatar_url });
   };
 
+  const handleSaveTrait = async () => {
+    if (!traitForm.name.trim()) return;
+    setTraitLoading(true);
+    try {
+      if (traitEditing) {
+        await traitsApi.update(traitEditing.id, { name: traitForm.name.trim(), description: traitForm.description.trim(), color: traitForm.color });
+        showToast('Особенность обновлена');
+      } else {
+        await traitsApi.create({ name: traitForm.name.trim(), description: traitForm.description.trim(), color: traitForm.color });
+        showToast('Особенность добавлена');
+      }
+      setTraitForm({ name: '', description: '', color: 'gray' });
+      setTraitEditing(null);
+      invalidateTraits();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка сохранения', 'error');
+    } finally {
+      setTraitLoading(false);
+    }
+  };
+
+  const handleDeleteTrait = async (t: TraitDef) => {
+    setTraitLoading(true);
+    try {
+      await traitsApi.delete(t.id);
+      showToast('Особенность удалена');
+      invalidateTraits();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка удаления', 'error');
+    } finally {
+      setTraitLoading(false);
+    }
+  };
+
+  const startEditTrait = (t: TraitDef) => {
+    setTraitEditing(t);
+    setTraitForm({ name: t.name, description: t.description, color: t.color });
+  };
+
   if (!user?.is_admin) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -859,7 +949,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {(['units', 'treaties', 'roles', 'formations'] as AdminTab[]).map(t => (
+        {(['units', 'treaties', 'roles', 'formations', 'traits'] as AdminTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -867,7 +957,7 @@ export default function AdminPage() {
               tab === t ? 'border-primary text-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : 'Построения'}
+            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : t === 'formations' ? 'Построения' : 'Особенности'}
           </button>
         ))}
       </div>
@@ -1126,6 +1216,117 @@ export default function AdminPage() {
             ))}
             {formations.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-8">Построений пока нет</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Traits Tab */}
+      {tab === 'traits' && (
+        <div className="max-w-xl">
+          <div className="bg-card border border-border rounded-sm p-4 mb-4">
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
+              {traitEditing ? 'Редактировать особенность' : 'Новая особенность'}
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Название *</label>
+                <input
+                  type="text"
+                  value={traitForm.name}
+                  onChange={e => setTraitForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Например: Бронированный"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Описание</label>
+                <textarea
+                  value={traitForm.description}
+                  onChange={e => setTraitForm(f => ({ ...f, description: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Что означает эта особенность..."
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Тип</label>
+                <div className="flex gap-2">
+                  {(['green', 'gray', 'red'] as TraitColor[]).map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setTraitForm(f => ({ ...f, color: c }))}
+                      className={`px-3 py-1.5 text-xs rounded-sm border transition-colors ${
+                        traitForm.color === c
+                          ? c === 'green' ? 'bg-green-900/30 border-green-500 text-green-400'
+                            : c === 'red' ? 'bg-red-900/30 border-red-500 text-red-400'
+                            : 'bg-muted border-foreground/40 text-foreground'
+                          : 'border-border text-muted-foreground hover:border-foreground/40'
+                      }`}
+                    >
+                      {c === 'green' ? 'Положительная' : c === 'red' ? 'Негативная' : 'Нейтральная'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveTrait}
+                  disabled={traitLoading || !traitForm.name.trim()}
+                  className="flex items-center gap-2 px-4 py-2 text-xs bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  <Icon name={traitLoading ? 'Loader' : (traitEditing ? 'Save' : 'Plus')} size={12} className={traitLoading ? 'animate-spin' : ''} />
+                  {traitEditing ? 'Сохранить' : 'Добавить'}
+                </button>
+                {traitEditing && (
+                  <button
+                    onClick={() => { setTraitEditing(null); setTraitForm({ name: '', description: '', color: 'gray' }); }}
+                    className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                  >
+                    Отмена
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {traits.map(t => (
+              <div key={t.id} className="bg-card border border-border rounded-sm p-3 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium ${t.color === 'green' ? 'text-green-400' : t.color === 'red' ? 'text-red-400' : 'text-foreground'}`}>
+                      {t.name}
+                    </span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-sm ${
+                      t.color === 'green' ? 'bg-green-900/30 text-green-400' : t.color === 'red' ? 'bg-red-900/30 text-red-400' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {t.color === 'green' ? 'Положительная' : t.color === 'red' ? 'Негативная' : 'Нейтральная'}
+                    </span>
+                  </div>
+                  {t.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => startEditTrait(t)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                  >
+                    <Icon name="Pencil" size={11} /> Изменить
+                  </button>
+                  <button
+                    onClick={() => handleDeleteTrait(t)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-destructive/40 text-destructive rounded-sm hover:bg-destructive/10 transition-colors"
+                  >
+                    <Icon name="Trash2" size={11} /> Удалить
+                  </button>
+                </div>
+              </div>
+            ))}
+            {traits.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">Особенностей пока нет</p>
             )}
           </div>
         </div>

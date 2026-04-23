@@ -1,0 +1,10 @@
+{
+  "tests": [
+    {
+      "name": "GET список особенностей",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200
+    }
+  ]
+}

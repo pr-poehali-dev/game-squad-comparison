@@ -32,8 +32,15 @@ export default function ComparePage({ appliedTreaties, onApply, onRemove }: Comp
 
   const getTreatyBonus = (unit: Unit, key: keyof UnitStats) => {
     const ids = appliedTreaties[unit.id] || [];
+    const base = unit.stats[key];
     return TREATIES.filter(t => ids.includes(t.id))
-      .reduce((acc, t) => acc + (t.statModifiers[key] || 0), 0);
+      .reduce((acc, t) => {
+        const ex = t.statModifiersEx?.[key];
+        if (ex) {
+          return acc + (ex.type === 'percent' ? Math.round(base * ex.value / 100) : ex.value);
+        }
+        return acc + (t.statModifiers[key] || 0);
+      }, 0);
   };
 
   // Итоговое значение с трактатами И умениями

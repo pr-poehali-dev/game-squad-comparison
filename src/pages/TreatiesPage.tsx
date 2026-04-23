@@ -5,6 +5,24 @@ import { Treaty, Unit, UnitStats } from '@/data/types';
 import RarityBadge from '@/components/RarityBadge';
 import Icon from '@/components/ui/icon';
 
+function calcModifierValue(treaty: Treaty, key: string, baseStats?: UnitStats): number {
+  const ex = treaty.statModifiersEx?.[key as keyof UnitStats];
+  if (ex) {
+    if (ex.type === 'percent' && baseStats) {
+      return Math.round((baseStats[key as keyof UnitStats] as number) * ex.value / 100);
+    }
+    return ex.value;
+  }
+  return (treaty.statModifiers[key as keyof UnitStats] as number) || 0;
+}
+
+function formatModifierLabel(treaty: Treaty, key: string): string {
+  const ex = treaty.statModifiersEx?.[key as keyof UnitStats];
+  if (ex?.type === 'percent') return `${ex.value > 0 ? '+' : ''}${ex.value}%`;
+  const val = (treaty.statModifiers[key as keyof UnitStats] as number) || 0;
+  return `${val > 0 ? '+' : ''}${val}`;
+}
+
 const getStatLabel = (key: string) => {
   const found = ALL_STATS.find(s => s.key === key);
   if (!found) return key;
@@ -113,8 +131,12 @@ export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: Tre
                       {(() => {
                         const totals: Record<string, number> = {};
                         TREATIES.filter(t => unitTreatyIds.includes(t.id)).forEach(t => {
-                          Object.entries(t.statModifiers).forEach(([k, v]) => {
-                            totals[k] = (totals[k] || 0) + (v || 0);
+                          const allKeys = new Set([
+                            ...Object.keys(t.statModifiers),
+                            ...Object.keys(t.statModifiersEx || {}),
+                          ]);
+                          allKeys.forEach(k => {
+                            totals[k] = (totals[k] || 0) + calcModifierValue(t, k, unit?.stats);
                           });
                         });
                         return Object.entries(totals).map(([stat, val]) => (
@@ -156,14 +178,24 @@ export default function TreatiesPage({ appliedTreaties, onApply, onRemove }: Tre
                           </div>
                           <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{t.description}</p>
                           <div className="flex flex-wrap gap-1">
-                            {Object.entries(t.statModifiers).map(([stat, val]) => (
-                              <span
-                                key={stat}
-                                className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
-                              >
-                                {getStatLabel(stat)}: {(val || 0) > 0 ? '+' : ''}{val}
-                              </span>
-                            ))}
+                            {(() => {
+                              const allKeys = new Set([
+                                ...Object.keys(t.statModifiers),
+                                ...Object.keys(t.statModifiersEx || {}),
+                              ]);
+                              return Array.from(allKeys).map(stat => {
+                                const label = formatModifierLabel(t, stat);
+                                const isPositive = label.startsWith('+');
+                                return (
+                                  <span
+                                    key={stat}
+                                    className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${isPositive ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}
+                                  >
+                                    {getStatLabel(stat)}: {label}
+                                  </span>
+                                );
+                              });
+                            })()}
                           </div>
                         </div>
                         <button

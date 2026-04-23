@@ -36,11 +36,19 @@ export interface UnitStats {
   blockRecovery: number;        // Восстановление показателя блока
 }
 
+export type StatModifierType = 'flat' | 'percent';
+
+export interface StatModifierEntry {
+  value: number;
+  type: StatModifierType;
+}
+
 export interface Treaty {
   id: string;
   name: string;
   description: string;
   statModifiers: Partial<UnitStats>;
+  statModifiersEx?: Partial<Record<keyof UnitStats, StatModifierEntry>>;
   compatibleClasses: UnitClass[];
   rarity: Rarity;
   avatar_url?: string;
