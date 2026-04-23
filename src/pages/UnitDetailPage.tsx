@@ -37,7 +37,9 @@ function getAbilityName(ab: string | Ability): string {
 
 // ── Тултип умения ──
 function AbilityTooltip({ ability }: { ability: Ability }) {
-  const hasModifiers = ability.statModifiers && Object.keys(ability.statModifiers).length > 0;
+  const hasModifiers =
+    (ability.statModifiers != null && Object.keys(ability.statModifiers).length > 0) ||
+    (ability.statModifiersEx != null && Object.keys(ability.statModifiersEx).length > 0);
   return (
     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-56 bg-card border border-border rounded-sm p-3 shadow-xl pointer-events-none">
       <div className="text-xs font-semibold text-foreground mb-1">{ability.name}</div>
@@ -68,8 +70,8 @@ function AbilityTag({ ab }: { ab: string | Ability }) {
   const obj = getAbilityObj(ab);
   const name = getAbilityName(ab);
   const hasModifiers = obj && (
-    (obj.statModifiers && Object.keys(obj.statModifiers).length > 0) ||
-    (obj.statModifiersEx && Object.keys(obj.statModifiersEx).length > 0)
+    (obj.statModifiers != null && Object.keys(obj.statModifiers).length > 0) ||
+    (obj.statModifiersEx != null && Object.keys(obj.statModifiersEx).length > 0)
   );
   const hasInfo = obj && (obj.description || hasModifiers);
 
@@ -275,7 +277,7 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
   const activeAbilities = unit.abilities.filter(ab => {
     const obj = getAbilityObj(ab);
     return (obj?.statModifiers && Object.keys(obj.statModifiers).length > 0) ||
-           (obj?.statModifiersEx && Object.keys(obj.statModifiersEx).length > 0);
+           (obj?.statModifiersEx != null && Object.keys(obj.statModifiersEx).length > 0);
   });
 
   const traits = unit.traits || [];
