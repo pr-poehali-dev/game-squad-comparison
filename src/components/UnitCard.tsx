@@ -164,6 +164,24 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                 }}
               />
 
+              {/* Оверлей со статами при ховере */}
+              <div
+                className="absolute inset-0 pointer-events-none flex flex-col justify-center px-4"
+                style={{
+                  background: hovered && !flipped
+                    ? `linear-gradient(180deg, hsl(222 22% 5% / 0.85) 0%, hsl(222 22% 5% / 0.92) 100%)`
+                    : 'transparent',
+                  opacity: hovered && !flipped ? 1 : 0,
+                  transition: 'opacity 0.3s cubic-bezier(0.16,1,0.3,1)',
+                }}
+              >
+                <div className="space-y-2">
+                  {CARD_STATS.map(({ key, label, max }) => (
+                    <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
+                  ))}
+                </div>
+              </div>
+
               <div
                 className="absolute inset-x-0 bottom-0 px-4 pt-12 pb-4"
                 style={{
@@ -204,32 +222,10 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                 borderTop: `1px solid hsl(${rarityHue} / 0.3)`,
               }}
             >
-              {/* Всегда видимые 4 числа */}
-              <div className="grid grid-cols-4 px-3 py-3">
+              {/* Всегда видимые 2 числа */}
+              <div className="grid grid-cols-2 px-3 py-3">
                 <Pill icon="Users"  value={unit.stats.troops}          tint="42 76% 58%" />
                 <Pill icon="Crown"  value={unit.stats.leadership}      tint="282 58% 65%" />
-                <Pill icon="Sword"  value={unit.stats.slashingDamage}  tint="18 84% 58%" />
-                <Pill icon="Shield" value={unit.stats.slashingDefense} tint="210 78% 60%" />
-              </div>
-
-              {/* Статы — плавно раскрываются при ховере */}
-              <div
-                style={{
-                  overflow: 'hidden',
-                  maxHeight: hovered && !flipped ? '220px' : '0px',
-                  transition: 'max-height 0.3s cubic-bezier(0.16,1,0.3,1)',
-                }}
-              >
-                <div
-                  className="px-4 pb-4 pt-1 space-y-2"
-                  style={{
-                    borderTop: `1px solid hsl(${rarityHue} / 0.2)`,
-                  }}
-                >
-                  {CARD_STATS.map(({ key, label, max }) => (
-                    <StatBar key={key} label={label} value={unit.stats[key]} max={max} />
-                  ))}
-                </div>
               </div>
             </div>
           </div>
