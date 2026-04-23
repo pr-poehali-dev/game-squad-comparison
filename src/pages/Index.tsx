@@ -545,6 +545,8 @@ export default function Index() {
               unitId={detailUnitId}
               appliedTreaties={appliedTreaties}
               onBack={() => setDetailUnitId(null)}
+              onApplyTreaty={handleApplyTreaty}
+              onRemoveTreaty={handleRemoveTreaty}
             />
           ) : page === 'catalog' ? (
             <CatalogPage onSelectUnit={setDetailUnitId} />
