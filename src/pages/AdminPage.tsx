@@ -346,7 +346,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
                       onClick={() => setSelectedAbilityIds(prev =>
                         prev.includes(a.id) ? prev.filter(id => id !== a.id) : [...prev, a.id]
                       )}
-                      title={a.description || undefined}
+                      title={[a.description, a.adminComment ? `📝 ${a.adminComment}` : ''].filter(Boolean).join('\n\n') || undefined}
                       className={`px-3 py-1.5 text-xs rounded-sm border transition-colors flex items-center gap-1.5 ${
                         selected ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'
                       }`}
@@ -354,6 +354,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
                       {selected && <span>✓</span>}
                       {a.name}
                       {hasMods && <Icon name="Zap" size={9} className="opacity-60" />}
+                      {a.adminComment && <Icon name="Lock" size={9} className="text-amber-500/60" />}
                     </button>
                   );
                 })}
