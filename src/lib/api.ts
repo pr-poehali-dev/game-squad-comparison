@@ -10,6 +10,7 @@ const URLS = {
   formationsApi: 'https://functions.poehali.dev/d8bb45c5-f402-46c5-ac74-722186fd2a5d',
   gameApi: 'https://functions.poehali.dev/23edd385-7e13-41cb-a5d2-0a5cc4b4b5f7',
   traitsApi: 'https://functions.poehali.dev/3cd2139d-ca43-4a19-8181-a5a301c48a6a',
+  abilitiesApi: 'https://functions.poehali.dev/d04cc806-fd7b-4125-8c81-68d4997e5bae',
 };
 
 function getSessionId(): string {
@@ -130,6 +131,17 @@ export const traitsApi = {
     request(URLS.traitsApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: number) =>
     request(URLS.traitsApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
+};
+
+// Abilities
+export const abilitiesApi = {
+  list: () => request(URLS.abilitiesApi),
+  create: (data: { name: string; description: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
+    request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
+  update: (id: number, data: { name: string; description: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
+    request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
+  delete: (id: number) =>
+    request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
 };
 
 // Treaties

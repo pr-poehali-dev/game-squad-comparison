@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi, traitsApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi, traitsApi, abilitiesApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { useUnits, useTreaties, useRoles, useFormations, useTraits, UnitRoleDef, TraitDef } from '@/hooks/useAppData';
+import { useUnits, useTreaties, useRoles, useFormations, useTraits, useAbilities, UnitRoleDef, TraitDef, AbilityDef } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
 import RarityBadge from '@/components/RarityBadge';
 import { Rarity, UnitClass, UnitRole, Ability, UnitStats, Trait, TraitColor, Formation } from '@/data/types';
@@ -11,7 +11,7 @@ import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
 import { GuideBlock } from '@/data/types';
 
-type AdminTab = 'units' | 'treaties' | 'roles' | 'formations' | 'traits';
+type AdminTab = 'units' | 'treaties' | 'roles' | 'formations' | 'traits' | 'abilities';
 
 const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
@@ -62,37 +62,6 @@ function ConfirmModal({ name, type, onConfirm, onCancel }: { name: string; type:
 }
 
 // ───── Unit Form ─────
-interface AbilityModEntry {
-  value: string;
-  type: 'flat' | 'percent';
-}
-
-interface AbilityDraft {
-  name: string;
-  description: string;
-  modifiers: Record<string, AbilityModEntry>;
-  newModKey: string;
-  newModVal: string;
-  newModType: 'flat' | 'percent';
-}
-
-function emptyAbility(): AbilityDraft {
-  return { name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' };
-}
-
-function rawToAbilityDraft(raw: unknown): AbilityDraft {
-  if (typeof raw === 'string') return { ...emptyAbility(), name: raw };
-  const a = raw as Ability;
-  const modifiers: Record<string, AbilityModEntry> = {};
-  for (const [k, v] of Object.entries(a.statModifiers || {})) {
-    modifiers[k] = { value: String(v), type: 'flat' };
-  }
-  for (const [k, v] of Object.entries(a.statModifiersEx || {})) {
-    modifiers[k] = { value: String(v.value), type: v.type };
-  }
-  return { name: a.name || '', description: a.description || '', modifiers, newModKey: 'health', newModVal: '', newModType: 'flat' };
-}
-
 const statOptions = ALL_STATS.map(s => s.key);
 const STAT_LABELS: Partial<Record<string, string>> = Object.fromEntries(ALL_STATS.map(s => [s.key, s.label]));
 
@@ -107,7 +76,7 @@ interface UnitFormData {
   stars: number;
   guide_upgrade: GuideBlock[];
   guide_gameplay: GuideBlock[];
-  abilities: AbilityDraft[];
+  abilities: never[];
   stats: typeof DEFAULT_UNIT_STATS;
   formations: number[];
 }
@@ -118,13 +87,14 @@ function getRawRoles(raw: unknown): UnitRole[] {
   return ['Танк'];
 }
 
-function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations, availableTraits }: {
+function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations, availableTraits, availableAbilities }: {
   unit?: Record<string, unknown> | null;
   onSave: (data: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
   availableRoles: UnitRoleDef[];
   availableFormations: Formation[];
   availableTraits: TraitDef[];
+  availableAbilities: AbilityDef[];
 }) {
   const editing = !!unit;
   const [loading, setLoading] = useState(false);
@@ -144,7 +114,20 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
       .filter((id): id is number => id !== null);
   };
 
+  // Матчим существующие abilities отряда с глобальным справочником по имени
+  const initSelectedAbilityIds = (): number[] => {
+    if (!rawAbilities.length) return [];
+    return rawAbilities
+      .map(ra => {
+        const name = typeof ra === 'string' ? ra : (ra as Ability).name;
+        const found = availableAbilities.find(a => a.name === name);
+        return found ? found.id : null;
+      })
+      .filter((id): id is number => id !== null);
+  };
+
   const [selectedTraitIds, setSelectedTraitIds] = useState<number[]>(initSelectedTraitIds);
+  const [selectedAbilityIds, setSelectedAbilityIds] = useState<number[]>(initSelectedAbilityIds);
   const [form, setForm] = useState<UnitFormData>({
     name: (unit?.name as string) || '',
     class: (unit?.class as UnitClass) || 'Пехота',
@@ -156,7 +139,7 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
     stars: typeof unit?.stars === 'number' ? unit.stars as number : 0,
     guide_upgrade: Array.isArray(unit?.guide_upgrade) ? unit.guide_upgrade as GuideBlock[] : [],
     guide_gameplay: Array.isArray(unit?.guide_gameplay) ? unit.guide_gameplay as GuideBlock[] : [],
-    abilities: rawAbilities.length ? rawAbilities.map(rawToAbilityDraft) : [],
+    abilities: [],
     stats: { ...DEFAULT_UNIT_STATS, ...((unit?.stats as Record<string, number>) || {}) },
     formations: Array.isArray(unit?.formations) ? (unit.formations as number[]) : [],
   });
@@ -174,23 +157,6 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
     formations: f.formations.includes(id) ? f.formations.filter(x => x !== id) : [...f.formations, id],
   }));
 
-  // Умения
-  const addAbility = () => setForm(f => ({ ...f, abilities: [...f.abilities, emptyAbility()] }));
-  const removeAbility = (i: number) => setForm(f => ({ ...f, abilities: f.abilities.filter((_, idx) => idx !== i) }));
-  const updateAbility = (i: number, patch: Partial<AbilityDraft>) =>
-    setForm(f => ({ ...f, abilities: f.abilities.map((a, idx) => idx === i ? { ...a, ...patch } : a) }));
-  const addAbilityMod = (i: number) => {
-    const a = form.abilities[i];
-    if (!a.newModVal) return;
-    updateAbility(i, { modifiers: { ...a.modifiers, [a.newModKey]: { value: a.newModVal, type: a.newModType } }, newModVal: '' });
-  };
-  const removeAbilityMod = (i: number, key: string) => {
-    const a = form.abilities[i];
-    const m = { ...a.modifiers };
-    delete m[key];
-    updateAbility(i, { modifiers: m });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) { setError('Поле "название" обязательно'); return; }
@@ -198,25 +164,17 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
     setLoading(true);
     setError('');
     try {
-      const abilities = form.abilities
-        .filter(a => a.name.trim())
+      const abilities = selectedAbilityIds
+        .map(id => availableAbilities.find(a => a.id === id))
+        .filter(Boolean)
         .map(a => {
-          const mods: Record<string, number> = {};
-          const modsEx: Record<string, { value: number; type: string }> = {};
-          for (const [k, entry] of Object.entries(a.modifiers)) {
-            const n = parseFloat(entry.value);
-            if (!isNaN(n)) {
-              if (entry.type === 'percent') modsEx[k] = { value: n, type: 'percent' };
-              else mods[k] = n;
-            }
-          }
-          const hasInfo = a.description.trim() || Object.keys(mods).length > 0 || Object.keys(modsEx).length > 0;
-          if (!hasInfo) return a.name.trim();
+          const hasInfo = a!.description || Object.keys(a!.statModifiers || {}).length > 0 || Object.keys(a!.statModifiersEx || {}).length > 0;
+          if (!hasInfo) return a!.name;
           return {
-            name: a.name.trim(),
-            description: a.description.trim() || undefined,
-            statModifiers: Object.keys(mods).length > 0 ? mods : undefined,
-            statModifiersEx: Object.keys(modsEx).length > 0 ? modsEx : undefined,
+            name: a!.name,
+            description: a!.description || undefined,
+            statModifiers: Object.keys(a!.statModifiers || {}).length > 0 ? a!.statModifiers : undefined,
+            statModifiersEx: Object.keys(a!.statModifiersEx || {}).length > 0 ? a!.statModifiersEx : undefined,
           };
         });
       const traits = selectedTraitIds
@@ -373,76 +331,34 @@ function UnitModal({ unit, onSave, onClose, availableRoles, availableFormations,
 
           {/* Умения */}
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs text-muted-foreground uppercase tracking-widest">Умения</h4>
-              <button type="button" onClick={addAbility} className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
-                <Icon name="Plus" size={12} /> Добавить
-              </button>
-            </div>
-            {form.abilities.length === 0 && <p className="text-xs text-muted-foreground italic">Нет умений. Нажмите «Добавить».</p>}
-            <div className="space-y-3">
-              {form.abilities.map((ab, i) => (
-                <div key={i} className="border border-border rounded-sm p-3 space-y-2.5 bg-muted/30">
-                  {/* Название */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <label className="text-[10px] text-muted-foreground block mb-1">Название умения</label>
-                      <input type="text" value={ab.name} onChange={e => updateAbility(i, { name: e.target.value })}
-                        className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                        placeholder="Например: Лес копий" />
-                    </div>
-                    <button type="button" onClick={() => removeAbility(i)} className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0 mt-4">
-                      <Icon name="Trash2" size={13} />
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">Умения</h4>
+            {availableAbilities.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Сначала создайте умения в разделе «Умения».</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {availableAbilities.map(a => {
+                  const selected = selectedAbilityIds.includes(a.id);
+                  const hasMods = Object.keys(a.statModifiers || {}).length > 0 || Object.keys(a.statModifiersEx || {}).length > 0;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => setSelectedAbilityIds(prev =>
+                        prev.includes(a.id) ? prev.filter(id => id !== a.id) : [...prev, a.id]
+                      )}
+                      title={a.description || undefined}
+                      className={`px-3 py-1.5 text-xs rounded-sm border transition-colors flex items-center gap-1.5 ${
+                        selected ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-foreground/40'
+                      }`}
+                    >
+                      {selected && <span>✓</span>}
+                      {a.name}
+                      {hasMods && <Icon name="Zap" size={9} className="opacity-60" />}
                     </button>
-                  </div>
-                  {/* Описание — textarea для длинных текстов */}
-                  <div>
-                    <label className="text-[10px] text-muted-foreground block mb-1">Описание</label>
-                    <textarea
-                      value={ab.description}
-                      onChange={e => updateAbility(i, { description: e.target.value })}
-                      rows={3}
-                      className="w-full bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-y leading-relaxed"
-                      placeholder="Опишите механику умения подробно — эффекты, условия, числовые значения..."
-                    />
-                  </div>
-                  {/* Бафы/дебафы к характеристикам (опционально) */}
-                  <div>
-                    <label className="text-[10px] text-muted-foreground block mb-1.5">Модификаторы характеристик <span className="opacity-50">(необязательно)</span></label>
-                    {Object.entries(ab.modifiers).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {Object.entries(ab.modifiers).map(([key, entry]) => {
-                          const isPos = parseFloat(entry.value) >= 0;
-                          const label = `${isPos ? '+' : ''}${entry.value}${entry.type === 'percent' ? '%' : ''}`;
-                          return (
-                            <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${isPos ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
-                              {STAT_LABELS[key] ?? key}: {label}
-                              <button type="button" onClick={() => removeAbilityMod(i, key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div className="flex gap-1.5">
-                      <select value={ab.newModKey} onChange={e => updateAbility(i, { newModKey: e.target.value })} className="flex-1 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
-                        {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
-                      </select>
-                      <input type="number" value={ab.newModVal} onChange={e => updateAbility(i, { newModVal: e.target.value })}
-                        className="w-16 bg-background border border-border rounded-sm px-2 py-1 text-[11px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                        placeholder="±знач." />
-                      <button
-                        type="button"
-                        onClick={() => updateAbility(i, { newModType: ab.newModType === 'flat' ? 'percent' : 'flat' })}
-                        className={`px-2 py-1 text-[11px] rounded-sm border transition-colors ${ab.newModType === 'percent' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-foreground/40'}`}
-                      >
-                        {ab.newModType === 'percent' ? '%' : '#'}
-                      </button>
-                      <button type="button" onClick={() => addAbilityMod(i)} className="px-2 py-1 text-[11px] bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">+ Добавить</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div>
@@ -706,6 +622,7 @@ export default function AdminPage() {
   const { roles, invalidate: invalidateRoles } = useRoles();
   const { formations, invalidate: invalidateFormations } = useFormations();
   const { traits, invalidate: invalidateTraits } = useTraits();
+  const { abilities, invalidate: invalidateAbilities } = useAbilities();
   const [tab, setTab] = useState<AdminTab>('units');
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
@@ -725,6 +642,11 @@ export default function AdminPage() {
   const [formationForm, setFormationForm] = useState({ name: '', description: '', avatar_url: '' });
   const [formationEditing, setFormationEditing] = useState<Formation | null>(null);
   const [formationLoading, setFormationLoading] = useState(false);
+
+  // Управление умениями
+  const [abilityForm, setAbilityForm] = useState({ name: '', description: '', modifiers: {} as Record<string, { value: string; type: 'flat' | 'percent' }>, newModKey: 'health', newModVal: '', newModType: 'flat' as 'flat' | 'percent' });
+  const [abilityEditing, setAbilityEditing] = useState<AbilityDef | null>(null);
+  const [abilityLoading, setAbilityLoading] = useState(false);
 
   // Управление особенностями
   const [traitForm, setTraitForm] = useState({ name: '', description: '', color: 'gray' as TraitColor });
@@ -934,6 +856,70 @@ export default function AdminPage() {
     setTraitForm({ name: t.name, description: t.description, color: t.color });
   };
 
+  const handleSaveAbility = async () => {
+    if (!abilityForm.name.trim()) return;
+    setAbilityLoading(true);
+    try {
+      const statModifiers: Record<string, number> = {};
+      const statModifiersEx: Record<string, { value: number; type: string }> = {};
+      for (const [k, entry] of Object.entries(abilityForm.modifiers)) {
+        const n = parseFloat(entry.value);
+        if (!isNaN(n)) {
+          if (entry.type === 'percent') statModifiersEx[k] = { value: n, type: 'percent' };
+          else statModifiers[k] = n;
+        }
+      }
+      if (abilityEditing) {
+        await abilitiesApi.update(abilityEditing.id, { name: abilityForm.name.trim(), description: abilityForm.description.trim(), statModifiers, statModifiersEx });
+        showToast('Умение обновлено');
+      } else {
+        await abilitiesApi.create({ name: abilityForm.name.trim(), description: abilityForm.description.trim(), statModifiers, statModifiersEx });
+        showToast('Умение добавлено');
+      }
+      setAbilityForm({ name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' });
+      setAbilityEditing(null);
+      invalidateAbilities();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка сохранения', 'error');
+    } finally {
+      setAbilityLoading(false);
+    }
+  };
+
+  const handleDeleteAbility = async (a: AbilityDef) => {
+    setAbilityLoading(true);
+    try {
+      await abilitiesApi.delete(a.id);
+      showToast('Умение удалено');
+      invalidateAbilities();
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Ошибка удаления', 'error');
+    } finally {
+      setAbilityLoading(false);
+    }
+  };
+
+  const startEditAbility = (a: AbilityDef) => {
+    setAbilityEditing(a);
+    const modifiers: Record<string, { value: string; type: 'flat' | 'percent' }> = {};
+    for (const [k, v] of Object.entries(a.statModifiers || {})) {
+      modifiers[k] = { value: String(v), type: 'flat' };
+    }
+    for (const [k, v] of Object.entries(a.statModifiersEx || {})) {
+      modifiers[k] = { value: String(v.value), type: v.type as 'flat' | 'percent' };
+    }
+    setAbilityForm({ name: a.name, description: a.description, modifiers, newModKey: 'health', newModVal: '', newModType: 'flat' });
+  };
+
+  const addAbilityFormMod = () => {
+    if (!abilityForm.newModVal) return;
+    setAbilityForm(f => ({ ...f, modifiers: { ...f.modifiers, [f.newModKey]: { value: f.newModVal, type: f.newModType } }, newModVal: '' }));
+  };
+
+  const removeAbilityFormMod = (key: string) => {
+    setAbilityForm(f => { const m = { ...f.modifiers }; delete m[key]; return { ...f, modifiers: m }; });
+  };
+
   if (!user?.is_admin) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
@@ -966,7 +952,7 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">
-        {(['units', 'treaties', 'roles', 'formations', 'traits'] as AdminTab[]).map(t => (
+        {(['units', 'treaties', 'roles', 'formations', 'traits', 'abilities'] as AdminTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -974,7 +960,7 @@ export default function AdminPage() {
               tab === t ? 'border-primary text-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : t === 'formations' ? 'Построения' : 'Особенности'}
+            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : t === 'formations' ? 'Построения' : t === 'traits' ? 'Особенности' : 'Умения'}
           </button>
         ))}
       </div>
@@ -1349,9 +1335,155 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Abilities Tab */}
+      {tab === 'abilities' && (
+        <div className="max-w-xl">
+          <div className="bg-card border border-border rounded-sm p-4 mb-4">
+            <h4 className="text-xs text-muted-foreground uppercase tracking-widest mb-3">
+              {abilityEditing ? 'Редактировать умение' : 'Новое умение'}
+            </h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Название *</label>
+                <input
+                  type="text"
+                  value={abilityForm.name}
+                  onChange={e => setAbilityForm(f => ({ ...f, name: e.target.value }))}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Например: Лес копий"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5">Описание</label>
+                <textarea
+                  value={abilityForm.description}
+                  onChange={e => setAbilityForm(f => ({ ...f, description: e.target.value }))}
+                  rows={3}
+                  className="w-full bg-background border border-border rounded-sm px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                  placeholder="Опишите механику умения..."
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-2">Модификаторы характеристик <span className="opacity-50 text-xs">(необязательно)</span></label>
+                {Object.entries(abilityForm.modifiers).length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {Object.entries(abilityForm.modifiers).map(([key, entry]) => {
+                      const isPos = parseFloat(entry.value) >= 0;
+                      return (
+                        <span key={key} className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-sm font-mono-data ${isPos ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                          {STAT_LABELS[key] ?? key}: {isPos ? '+' : ''}{entry.value}{entry.type === 'percent' ? '%' : ''}
+                          <button type="button" onClick={() => removeAbilityFormMod(key)} className="opacity-60 hover:opacity-100 ml-0.5"><Icon name="X" size={9} /></button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <select value={abilityForm.newModKey} onChange={e => setAbilityForm(f => ({ ...f, newModKey: e.target.value }))} className="flex-1 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary">
+                    {statOptions.map(s => <option key={s} value={s}>{STAT_LABELS[s] ?? s}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    value={abilityForm.newModVal}
+                    onChange={e => setAbilityForm(f => ({ ...f, newModVal: e.target.value }))}
+                    className="w-20 bg-background border border-border rounded-sm px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    placeholder="±знач."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAbilityForm(f => ({ ...f, newModType: f.newModType === 'flat' ? 'percent' : 'flat' }))}
+                    className={`px-2 py-1.5 text-xs rounded-sm border transition-colors ${abilityForm.newModType === 'percent' ? 'border-primary text-primary bg-primary/10' : 'border-border text-muted-foreground hover:border-foreground/40'}`}
+                  >
+                    {abilityForm.newModType === 'percent' ? '%' : '#'}
+                  </button>
+                  <button type="button" onClick={addAbilityFormMod} className="px-3 py-1.5 text-xs bg-muted border border-border rounded-sm hover:bg-muted/80 transition-colors whitespace-nowrap">
+                    + Добавить
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveAbility}
+                  disabled={abilityLoading || !abilityForm.name.trim()}
+                  className="flex items-center gap-2 px-4 py-2 text-xs bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  <Icon name={abilityLoading ? 'Loader' : (abilityEditing ? 'Save' : 'Plus')} size={12} className={abilityLoading ? 'animate-spin' : ''} />
+                  {abilityEditing ? 'Сохранить' : 'Добавить'}
+                </button>
+                {abilityEditing && (
+                  <button
+                    onClick={() => { setAbilityEditing(null); setAbilityForm({ name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' }); }}
+                    className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                  >
+                    Отмена
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {abilities.map(a => {
+              const modCount = Object.keys(a.statModifiers || {}).length + Object.keys(a.statModifiersEx || {}).length;
+              return (
+                <div key={a.id} className="bg-card border border-border rounded-sm p-3 flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-medium text-foreground">{a.name}</span>
+                      {modCount > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-blue-900/30 text-blue-400 font-mono-data">
+                          {modCount} мод.
+                        </span>
+                      )}
+                    </div>
+                    {a.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.description}</p>
+                    )}
+                    {modCount > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {Object.entries(a.statModifiers || {}).map(([k, v]) => (
+                          <span key={k} className={`text-[10px] px-1 py-0.5 rounded-sm font-mono-data ${(v as number) >= 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
+                            {STAT_LABELS[k] ?? k}: {(v as number) >= 0 ? '+' : ''}{v as number}
+                          </span>
+                        ))}
+                        {Object.entries(a.statModifiersEx || {}).map(([k, ex]) => {
+                          const entry = ex as { value: number; type: string };
+                          return (
+                            <span key={k} className={`text-[10px] px-1 py-0.5 rounded-sm font-mono-data ${entry.value >= 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400'}`}>
+                              {STAT_LABELS[k] ?? k}: {entry.value >= 0 ? '+' : ''}{entry.value}{entry.type === 'percent' ? '%' : ''}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      onClick={() => startEditAbility(a)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
+                    >
+                      <Icon name="Pencil" size={11} /> Изменить
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAbility(a)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-destructive/40 text-destructive rounded-sm hover:bg-destructive/10 transition-colors"
+                    >
+                      <Icon name="Trash2" size={11} /> Удалить
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {abilities.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">Умений пока нет</p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       {unitModal.open && (
-        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} availableFormations={formations} availableTraits={traits} />
+        <UnitModal unit={unitModal.unit} onSave={handleSaveUnit} onClose={() => setUnitModal({ open: false })} availableRoles={roles} availableFormations={formations} availableTraits={traits} availableAbilities={abilities} />
       )}
       {treatyModal.open && (
         <TreatyModal treaty={treatyModal.treaty} onSave={handleSaveTreaty} onClose={() => setTreatyModal({ open: false })} />

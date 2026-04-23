@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, rolesApi, formationsApi, traitsApi } from '@/lib/api';
+import { unitsApi, treatiesApi, rolesApi, formationsApi, traitsApi, abilitiesApi } from '@/lib/api';
 import { Unit, Treaty, UnitStats, Ability, Trait, Formation, StatModifierEntry, TraitColor } from '@/data/types';
 
 export interface UnitRoleDef {
@@ -13,6 +13,14 @@ export interface TraitDef {
   name: string;
   description: string;
   color: TraitColor;
+}
+
+export interface AbilityDef {
+  id: number;
+  name: string;
+  description: string;
+  statModifiers: Partial<UnitStats>;
+  statModifiersEx: Partial<Record<keyof UnitStats, StatModifierEntry>>;
 }
 
 // Конвертирует abilities — поддерживает и строки, и объекты Ability
@@ -262,4 +270,41 @@ export function useTraits() {
   };
 
   return { traits, loading, invalidate };
+}
+
+let cachedAbilities: AbilityDef[] | null = null;
+let abilitiesPromise: Promise<AbilityDef[]> | null = null;
+
+export function useAbilities() {
+  const [abilities, setAbilities] = useState<AbilityDef[]>(cachedAbilities || []);
+  const [loading, setLoading] = useState(!cachedAbilities);
+
+  const load = useCallback(async () => {
+    if (cachedAbilities) { setAbilities(cachedAbilities); setLoading(false); return; }
+    if (!abilitiesPromise) {
+      abilitiesPromise = abilitiesApi.list().then((data: AbilityDef[]) => {
+        cachedAbilities = data;
+        return data;
+      });
+    }
+    try {
+      const result = await abilitiesPromise;
+      setAbilities(result);
+    } catch {
+      setAbilities([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const invalidate = () => {
+    cachedAbilities = null;
+    abilitiesPromise = null;
+    setLoading(true);
+    load();
+  };
+
+  return { abilities, loading, invalidate };
 }
