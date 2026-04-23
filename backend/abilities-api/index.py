@@ -57,16 +57,17 @@ def get_admin_user(event):
 
 
 def row_to_ability(row):
+    # row = (id, name, stat_modifiers, stat_modifiers_ex, description, admin_comment)
     stat_modifiers = row[2] if row[2] else {}
     stat_modifiers_ex = row[3] if row[3] else {}
-    result = {
+    return {
         'id': row[0],
         'name': row[1],
         'description': row[4] or '',
         'statModifiers': stat_modifiers,
         'statModifiersEx': stat_modifiers_ex,
+        'adminComment': row[5] or '',
     }
-    return result
 
 
 def handler(event: dict, context) -> dict:
@@ -76,17 +77,22 @@ def handler(event: dict, context) -> dict:
     method = event.get('httpMethod', 'GET')
 
     if method == 'GET':
+        user = get_admin_user(event)
         conn = get_conn()
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"SELECT id, name, stat_modifiers, stat_modifiers_ex, description "
+                    f"SELECT id, name, stat_modifiers, stat_modifiers_ex, description, admin_comment "
                     f"FROM {SCHEMA}.abilities ORDER BY name"
                 )
                 rows = cur.fetchall()
         finally:
             conn.close()
-        return resp([row_to_ability(r) for r in rows])
+        abilities = [row_to_ability(r) for r in rows]
+        if not user:
+            for a in abilities:
+                a.pop('adminComment', None)
+        return resp(abilities)
 
     if method != 'POST':
         return resp({'error': 'Метод не поддерживается'}, 405)
@@ -100,6 +106,7 @@ def handler(event: dict, context) -> dict:
 
     name = (body.get('name') or '').strip()
     description = (body.get('description') or '').strip()
+    admin_comment = (body.get('adminComment') or '').strip()
     stat_modifiers = body.get('statModifiers') or {}
     stat_modifiers_ex = body.get('statModifiersEx') or {}
 
@@ -110,9 +117,9 @@ def handler(event: dict, context) -> dict:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.abilities (name, description, stat_modifiers, stat_modifiers_ex) "
-                    f"VALUES (%s, %s, %s, %s) RETURNING id, name, stat_modifiers, stat_modifiers_ex, description",
-                    (name, description, json.dumps(stat_modifiers), json.dumps(stat_modifiers_ex))
+                    f"INSERT INTO {SCHEMA}.abilities (name, description, stat_modifiers, stat_modifiers_ex, admin_comment) "
+                    f"VALUES (%s, %s, %s, %s, %s) RETURNING id, name, stat_modifiers, stat_modifiers_ex, description, admin_comment",
+                    (name, description, json.dumps(stat_modifiers), json.dumps(stat_modifiers_ex), admin_comment)
                 )
                 row = cur.fetchone()
             conn.commit()
@@ -128,9 +135,9 @@ def handler(event: dict, context) -> dict:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"UPDATE {SCHEMA}.abilities SET name=%s, description=%s, stat_modifiers=%s, stat_modifiers_ex=%s "
-                    f"WHERE id=%s RETURNING id, name, stat_modifiers, stat_modifiers_ex, description",
-                    (name, description, json.dumps(stat_modifiers), json.dumps(stat_modifiers_ex), ability_id)
+                    f"UPDATE {SCHEMA}.abilities SET name=%s, description=%s, stat_modifiers=%s, stat_modifiers_ex=%s, admin_comment=%s "
+                    f"WHERE id=%s RETURNING id, name, stat_modifiers, stat_modifiers_ex, description, admin_comment",
+                    (name, description, json.dumps(stat_modifiers), json.dumps(stat_modifiers_ex), admin_comment, ability_id)
                 )
                 row = cur.fetchone()
             conn.commit()

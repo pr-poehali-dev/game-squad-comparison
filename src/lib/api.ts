@@ -136,9 +136,9 @@ export const traitsApi = {
 // Abilities
 export const abilitiesApi = {
   list: () => request(URLS.abilitiesApi),
-  create: (data: { name: string; description: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
+  create: (data: { name: string; description: string; adminComment: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
     request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'create', ...data }) }),
-  update: (id: number, data: { name: string; description: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
+  update: (id: number, data: { name: string; description: string; adminComment: string; statModifiers: Record<string, number>; statModifiersEx: Record<string, { value: number; type: string }> }) =>
     request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: number) =>
     request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),

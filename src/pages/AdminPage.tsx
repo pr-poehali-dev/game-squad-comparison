@@ -644,7 +644,7 @@ export default function AdminPage() {
   const [formationLoading, setFormationLoading] = useState(false);
 
   // Управление умениями
-  const [abilityForm, setAbilityForm] = useState({ name: '', description: '', modifiers: {} as Record<string, { value: string; type: 'flat' | 'percent' }>, newModKey: 'health', newModVal: '', newModType: 'flat' as 'flat' | 'percent' });
+  const [abilityForm, setAbilityForm] = useState({ name: '', description: '', adminComment: '', modifiers: {} as Record<string, { value: string; type: 'flat' | 'percent' }>, newModKey: 'health', newModVal: '', newModType: 'flat' as 'flat' | 'percent' });
   const [abilityEditing, setAbilityEditing] = useState<AbilityDef | null>(null);
   const [abilityLoading, setAbilityLoading] = useState(false);
 
@@ -870,13 +870,13 @@ export default function AdminPage() {
         }
       }
       if (abilityEditing) {
-        await abilitiesApi.update(abilityEditing.id, { name: abilityForm.name.trim(), description: abilityForm.description.trim(), statModifiers, statModifiersEx });
+        await abilitiesApi.update(abilityEditing.id, { name: abilityForm.name.trim(), description: abilityForm.description.trim(), adminComment: abilityForm.adminComment.trim(), statModifiers, statModifiersEx });
         showToast('Умение обновлено');
       } else {
-        await abilitiesApi.create({ name: abilityForm.name.trim(), description: abilityForm.description.trim(), statModifiers, statModifiersEx });
+        await abilitiesApi.create({ name: abilityForm.name.trim(), description: abilityForm.description.trim(), adminComment: abilityForm.adminComment.trim(), statModifiers, statModifiersEx });
         showToast('Умение добавлено');
       }
-      setAbilityForm({ name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' });
+      setAbilityForm({ name: '', description: '', adminComment: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' });
       setAbilityEditing(null);
       invalidateAbilities();
     } catch (err: unknown) {
@@ -908,7 +908,7 @@ export default function AdminPage() {
     for (const [k, v] of Object.entries(a.statModifiersEx || {})) {
       modifiers[k] = { value: String(v.value), type: v.type as 'flat' | 'percent' };
     }
-    setAbilityForm({ name: a.name, description: a.description, modifiers, newModKey: 'health', newModVal: '', newModType: 'flat' });
+    setAbilityForm({ name: a.name, description: a.description, adminComment: a.adminComment || '', modifiers, newModKey: 'health', newModVal: '', newModType: 'flat' });
   };
 
   const addAbilityFormMod = () => {
@@ -1364,6 +1364,19 @@ export default function AdminPage() {
                 />
               </div>
               <div>
+                <label className="text-xs text-muted-foreground block mb-1.5 flex items-center gap-1.5">
+                  <Icon name="Lock" size={10} className="text-amber-500/70" />
+                  <span>Заметка <span className="opacity-50">(только для вас)</span></span>
+                </label>
+                <textarea
+                  value={abilityForm.adminComment}
+                  onChange={e => setAbilityForm(f => ({ ...f, adminComment: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-amber-950/20 border border-amber-500/20 rounded-sm px-3 py-2 text-sm text-amber-200/80 focus:outline-none focus:ring-1 focus:ring-amber-500/40 resize-none placeholder:text-amber-500/30"
+                  placeholder="Пометки для себя: откуда взято, версия игры, источник..."
+                />
+              </div>
+              <div>
                 <label className="text-xs text-muted-foreground block mb-2">Модификаторы характеристик <span className="opacity-50 text-xs">(необязательно)</span></label>
                 {Object.entries(abilityForm.modifiers).length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
@@ -1412,7 +1425,7 @@ export default function AdminPage() {
                 </button>
                 {abilityEditing && (
                   <button
-                    onClick={() => { setAbilityEditing(null); setAbilityForm({ name: '', description: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' }); }}
+                    onClick={() => { setAbilityEditing(null); setAbilityForm({ name: '', description: '', adminComment: '', modifiers: {}, newModKey: 'health', newModVal: '', newModType: 'flat' }); }}
                     className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
                   >
                     Отмена
@@ -1438,6 +1451,12 @@ export default function AdminPage() {
                     </div>
                     {a.description && (
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.description}</p>
+                    )}
+                    {a.adminComment && (
+                      <p className="text-xs mt-1 flex items-start gap-1">
+                        <Icon name="Lock" size={9} className="text-amber-500/60 mt-0.5 flex-shrink-0" />
+                        <span className="text-amber-300/60 italic line-clamp-2">{a.adminComment}</span>
+                      </p>
                     )}
                     {modCount > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1.5">

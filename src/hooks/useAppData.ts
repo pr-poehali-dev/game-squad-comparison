@@ -21,6 +21,7 @@ export interface AbilityDef {
   description: string;
   statModifiers: Partial<UnitStats>;
   statModifiersEx: Partial<Record<keyof UnitStats, StatModifierEntry>>;
+  adminComment?: string;
 }
 
 // Конвертирует abilities — поддерживает и строки, и объекты Ability
