@@ -61,10 +61,10 @@ export const ALL_STATS: StatDef[] = STAT_GROUPS.flatMap(g => g.stats);
 
 // Short labels for cards
 export const CARD_STATS: StatDef[] = [
-  { key: 'health',         label: 'Здоровье',   max: 30000 },
-  { key: 'slashingDamage', label: 'Руб. урон',  max: 3000 },
-  { key: 'piercingDamage', label: 'Прон. урон', max: 3000 },
-  { key: 'slashingDefense',label: 'Руб. защ.',  max: 3000 },
-  { key: 'block',          label: 'Блок',        max: 3000 },
-  { key: 'moveSpeed',      label: 'Скорость',    max: 3000 },
+  { key: 'health',         label: 'Здоровье',        max: 30000 },
+  { key: 'piercingDamage', label: 'Прон. урон',      max: 3000 },
+  { key: 'slashingDamage', label: 'Руб. урон',       max: 3000 },
+  { key: 'bluntDamage',    label: 'Дроб. урон',      max: 3000 },
+  { key: 'rangeDistance',  label: 'Дальность',       max: 3000 },
+  { key: 'ammo',           label: 'Боезапас',        max: 3000 },
 ];
