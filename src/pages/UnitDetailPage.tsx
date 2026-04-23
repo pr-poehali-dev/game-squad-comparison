@@ -46,9 +46,14 @@ function AbilityTooltip({ ability }: { ability: Ability }) {
       )}
       {hasModifiers && (
         <div className="flex flex-wrap gap-1 border-t border-border pt-2">
-          {Object.entries(ability.statModifiers!).map(([stat, val]) => (
+          {Object.entries(ability.statModifiers || {}).map(([stat, val]) => (
             <span key={stat} className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${(val || 0) > 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
               {STAT_LABEL_MAP[stat as keyof UnitStats] ?? stat}: {(val || 0) > 0 ? '+' : ''}{val}
+            </span>
+          ))}
+          {Object.entries(ability.statModifiersEx || {}).map(([stat, entry]) => (
+            <span key={`ex-${stat}`} className={`font-mono-data text-[10px] px-1.5 py-0.5 rounded-sm ${entry.value > 0 ? 'bg-blue-900/30 text-blue-400' : 'bg-orange-900/30 text-orange-400'}`}>
+              {STAT_LABEL_MAP[stat as keyof UnitStats] ?? stat}: {entry.value > 0 ? '+' : ''}{entry.value}%
             </span>
           ))}
         </div>
@@ -62,8 +67,11 @@ function AbilityTag({ ab }: { ab: string | Ability }) {
   const [show, setShow] = useState(false);
   const obj = getAbilityObj(ab);
   const name = getAbilityName(ab);
-  const hasInfo = obj && (obj.description || (obj.statModifiers && Object.keys(obj.statModifiers).length > 0));
-  const hasModifiers = obj?.statModifiers && Object.keys(obj.statModifiers).length > 0;
+  const hasModifiers = obj && (
+    (obj.statModifiers && Object.keys(obj.statModifiers).length > 0) ||
+    (obj.statModifiersEx && Object.keys(obj.statModifiersEx).length > 0)
+  );
+  const hasInfo = obj && (obj.description || hasModifiers);
 
   return (
     <div className="relative inline-block">
@@ -247,19 +255,27 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
   );
 
   const getTreatyBonus = (stat: keyof UnitStats) =>
-    myTreaties.reduce((acc, t) => acc + (t.statModifiers[stat] || 0), 0);
+    myTreaties.reduce((acc, t) => {
+      const ex = t.statModifiersEx?.[stat];
+      if (ex) return acc + (ex.type === 'percent' ? Math.round(unit.stats[stat] * ex.value / 100) : ex.value);
+      return acc + (t.statModifiers[stat] || 0);
+    }, 0);
 
   const getAbilityBonus = (stat: keyof UnitStats) =>
     unit.abilities.reduce((acc, ab) => {
       const obj = getAbilityObj(ab);
-      return acc + (obj?.statModifiers?.[stat] || 0);
+      if (!obj) return acc;
+      const ex = obj.statModifiersEx?.[stat];
+      if (ex) return acc + (ex.type === 'percent' ? Math.round(unit.stats[stat] * ex.value / 100) : ex.value);
+      return acc + (obj.statModifiers?.[stat] || 0);
     }, 0);
 
   const statGroup = STAT_GROUPS[activeGroup];
 
   const activeAbilities = unit.abilities.filter(ab => {
     const obj = getAbilityObj(ab);
-    return obj?.statModifiers && Object.keys(obj.statModifiers).length > 0;
+    return (obj?.statModifiers && Object.keys(obj.statModifiers).length > 0) ||
+           (obj?.statModifiersEx && Object.keys(obj.statModifiersEx).length > 0);
   });
 
   const traits = unit.traits || [];
