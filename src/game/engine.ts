@@ -221,70 +221,64 @@ function tickResources(s: GameState, dt: number) {
 
 function tickUnits(s: GameState, dt: number) {
   const dtSec = dt / 1000;
+  const humanId = s.humanPlayerId;
 
   for (const unit of Object.values(s.units)) {
     if (unit.state === 'dead') continue;
 
     if (unit.attackCooldown > 0) unit.attackCooldown -= dt;
 
-    // Найти ближайшего врага
-    const enemy = findNearestEnemy(unit, s);
+    const isHumanUnit = unit.ownerId === humanId;
 
-    if (enemy && dist(unit.pos, enemy.pos) <= unit.range) {
-      // Атакуем
-      unit.state = 'attacking';
-      unit.targetUnitId = enemy.id;
-      unit.targetPos = null;
-
-      if (unit.attackCooldown <= 0) {
-        let dmg = unit.atk;
-        // Бонус противостояния
-        const counters = COUNTER_BONUS[unit.class];
-        if (counters && counters.includes(enemy.class)) dmg *= 1.5;
-        enemy.hp -= dmg;
-
-        unit.attackCooldown = 800;
-
-        if (enemy.hp <= 0) {
-          enemy.hp = 0;
-          enemy.state = 'dead';
-          // Удаляем из unitIds владельца
-          const enemyOwner = s.players[enemy.ownerId];
-          if (enemyOwner) {
-            enemyOwner.unitIds = enemyOwner.unitIds.filter(id => id !== enemy.id);
-          }
-          // Очки и квесты атакующему
-          const attOwner = s.players[unit.ownerId];
-          if (attOwner) {
-            attOwner.kills++;
-            attOwner.score += 10;
-            // Квест убийства
-            if (attOwner.isHuman) {
-              const kq = s.quests.find(q => q.id === 'q1');
-              if (kq && !kq.completed) kq.progress++;
-            }
-          }
-          const log = `${s.players[unit.ownerId]?.name} уничтожил юнита ${enemy.label}`;
-          if (s.log.length < 50) s.log.unshift(log);
-          else { s.log.unshift(log); s.log.pop(); }
+    // Для юнитов игрока — атаковать только если враг В зоне досягаемости И юнит уже стоит (нет targetPos)
+    // Т.е. никакого авто-преследования — только стой и бей если враг сам подошёл
+    if (isHumanUnit) {
+      const enemy = findNearestEnemy(unit, s);
+      if (enemy && dist(unit.pos, enemy.pos) <= unit.range) {
+        // Враг в зоне удара — атакуем стоя
+        unit.state = 'attacking';
+        unit.targetUnitId = enemy.id;
+        if (unit.attackCooldown <= 0) {
+          dealDamage(unit, enemy, s);
+          unit.attackCooldown = 800;
         }
-      }
-    } else if (enemy && dist(unit.pos, enemy.pos) <= unit.range * 3) {
-      // Двигаемся к ближайшему врагу
-      unit.state = 'moving';
-      moveToward(unit, enemy.pos, dtSec);
-    } else if (unit.targetPos) {
-      // Идём к цели
-      unit.state = 'moving';
-      const d = dist(unit.pos, unit.targetPos);
-      if (d < 8) {
-        unit.targetPos = null;
-        unit.state = 'idle';
+      } else if (unit.targetPos) {
+        // Есть приказ двигаться — идём
+        unit.state = 'moving';
+        const d = dist(unit.pos, unit.targetPos);
+        if (d < 8) {
+          unit.targetPos = null;
+          unit.state = 'idle';
+        } else {
+          moveToward(unit, unit.targetPos, dtSec);
+        }
       } else {
-        moveToward(unit, unit.targetPos, dtSec);
+        // Стоим, ждём команды
+        unit.state = 'idle';
+        unit.targetUnitId = null;
       }
     } else {
-      unit.state = 'idle';
+      // Боты — старое поведение: авто-атака + преследование
+      const enemy = findNearestEnemy(unit, s);
+      if (enemy && dist(unit.pos, enemy.pos) <= unit.range) {
+        unit.state = 'attacking';
+        unit.targetUnitId = enemy.id;
+        unit.targetPos = null;
+        if (unit.attackCooldown <= 0) {
+          dealDamage(unit, enemy, s);
+          unit.attackCooldown = 800;
+        }
+      } else if (enemy && dist(unit.pos, enemy.pos) <= unit.range * 3.5) {
+        unit.state = 'moving';
+        moveToward(unit, enemy.pos, dtSec);
+      } else if (unit.targetPos) {
+        unit.state = 'moving';
+        const d = dist(unit.pos, unit.targetPos);
+        if (d < 8) { unit.targetPos = null; unit.state = 'idle'; }
+        else moveToward(unit, unit.targetPos, dtSec);
+      } else {
+        unit.state = 'idle';
+      }
     }
 
     // Обновляем ранг игрока
@@ -295,6 +289,32 @@ function tickUnits(s: GameState, dt: number) {
   // Удаляем мёртвых из карты
   for (const [id, unit] of Object.entries(s.units)) {
     if (unit.state === 'dead') delete s.units[id];
+  }
+}
+
+function dealDamage(attacker: Unit, enemy: Unit, s: GameState) {
+  let dmg = attacker.atk;
+  const counters = COUNTER_BONUS[attacker.class];
+  if (counters && counters.includes(enemy.class)) dmg *= 1.5;
+  enemy.hp -= dmg;
+
+  if (enemy.hp <= 0) {
+    enemy.hp = 0;
+    enemy.state = 'dead';
+    const enemyOwner = s.players[enemy.ownerId];
+    if (enemyOwner) enemyOwner.unitIds = enemyOwner.unitIds.filter(id => id !== enemy.id);
+    const attOwner = s.players[attacker.ownerId];
+    if (attOwner) {
+      attOwner.kills++;
+      attOwner.score += 10;
+      if (attOwner.isHuman) {
+        const kq = s.quests.find(q => q.id === 'q1');
+        if (kq && !kq.completed) kq.progress++;
+      }
+    }
+    const log = `${s.players[attacker.ownerId]?.name} уничтожил ${enemy.label}`;
+    s.log.unshift(log);
+    if (s.log.length > 50) s.log.pop();
   }
 }
 
