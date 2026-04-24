@@ -11,15 +11,17 @@ import AdminPage from './AdminPage';
 import ForumPage from './ForumPage';
 import TopicPage from './TopicPage';
 import WhamPage from './WhamPage';
+import MedievalClashPage from './MedievalClashPage';
 import NotificationBell from '@/components/NotificationBell';
 
-type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'game' | 'about' | 'auth' | 'admin';
+type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'clash' | 'game' | 'about' | 'auth' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: boolean }> = [
   { id: 'catalog',  label: 'Каталог',    icon: 'LayoutGrid' },
   { id: 'compare',  label: 'Сравнение',  icon: 'Swords' },
   { id: 'treaties', label: 'Трактаты',   icon: 'ScrollText' },
   { id: 'forum',    label: 'Форум',      icon: 'MessageSquare' },
+  { id: 'clash',    label: 'Medieval Clash.io', icon: 'Sword' },
   { id: 'game',     label: 'Неадекватная игра', icon: 'Gamepad2' },
   { id: 'about',    label: 'О проекте',  icon: 'Info' },
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
@@ -571,6 +573,8 @@ export default function Index() {
             ) : (
               <ForumPage onOpenTopic={setForumTopicId} />
             )
+          ) : page === 'clash' ? (
+            <MedievalClashPage />
           ) : page === 'game' ? (
             <WhamPage />
           ) : page === 'about' ? (
