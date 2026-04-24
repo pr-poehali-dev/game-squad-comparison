@@ -1,0 +1,1 @@
+SELECT setval('t_p63666683_game_squad_compariso.formations_id_seq', (SELECT MAX(id) FROM t_p63666683_game_squad_compariso.formations));
