@@ -137,7 +137,7 @@ function drawInfantry(ctx: CanvasRenderingContext2D, color: string, anim: number
 }
 
 function drawArcher(ctx: CanvasRenderingContext2D, color: string, anim: number) {
-  ctx.fillStyle = color + 'cc';
+  ctx.fillStyle = hex2rgba(color, 0.8);
   ctx.beginPath(); ctx.ellipse(0, 3, 6, 10, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#8b6040';
   ctx.beginPath(); ctx.ellipse(0, 1, 5, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -165,7 +165,7 @@ function drawCavalry(ctx: CanvasRenderingContext2D, color: string, anim: number)
   // Тело лошади
   ctx.fillStyle = '#7a5030';
   ctx.beginPath(); ctx.ellipse(0, 5, 14, 8, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = color + 'bb';
+  ctx.fillStyle = hex2rgba(color, 0.73);
   ctx.beginPath(); ctx.ellipse(0, 4, 11, 6, 0, 0, Math.PI * 2); ctx.fill();
   // Голова лошади
   ctx.fillStyle = '#6a4020';
@@ -240,14 +240,14 @@ function drawKnight(ctx: CanvasRenderingContext2D, color: string, anim: number) 
   ctx.moveTo(-10,-12); ctx.lineTo(-17,-5); ctx.lineTo(-17,6); ctx.lineTo(-10,14); ctx.lineTo(-6,6); ctx.lineTo(-6,-5);
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
-  ctx.strokeStyle = color+'cc'; ctx.lineWidth = 1;
+  ctx.strokeStyle = hex2rgba(color, 0.8); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(-11.5,1,3.5,0,Math.PI*2); ctx.stroke();
 }
 
 function drawEngineer(ctx: CanvasRenderingContext2D, color: string, anim: number) {
   ctx.fillStyle = '#6b4020';
   ctx.beginPath(); ctx.ellipse(0,4,7,10,0,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = color+'cc';
+  ctx.fillStyle = hex2rgba(color, 0.8);
   ctx.beginPath(); ctx.ellipse(0,0,5.5,7,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = '#4a2810'; ctx.fillRect(-5,2,3.5,4); ctx.fillRect(1.5,2,3.5,4);
   ctx.fillStyle = '#f5d5a0';
@@ -274,7 +274,7 @@ function drawEngineer(ctx: CanvasRenderingContext2D, color: string, anim: number
 function drawMiniCastle(ctx: CanvasRenderingContext2D, color: string, owned: boolean) {
   const c = owned ? color : '#667788';
   ctx.fillStyle = '#3a3830'; ctx.fillRect(-8,-20,16,22);
-  ctx.fillStyle = c+'aa'; ctx.fillRect(-7,-19,14,20);
+  ctx.fillStyle = hex2rgba(c, 0.67); ctx.fillRect(-7,-19,14,20);
   ctx.fillStyle = '#3a3830';
   for (let i = -7; i <= 5; i += 4) ctx.fillRect(i,-22,3,4);
   ctx.fillStyle = '#1a1612';
@@ -299,7 +299,7 @@ function drawMiniMine(ctx: CanvasRenderingContext2D, color: string, owned: boole
   ctx.beginPath(); ctx.arc(0,0,8,Math.PI,0); ctx.fillRect(-8,0,16,8); ctx.fill();
   ctx.fillStyle = '#4a3820';
   ctx.beginPath(); ctx.moveTo(-16,0); ctx.lineTo(0,-16); ctx.lineTo(16,0); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = c+'88';
+  ctx.fillStyle = hex2rgba(c, 0.53);
   ctx.beginPath(); ctx.moveTo(-14,0); ctx.lineTo(0,-14); ctx.lineTo(14,0); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = c; ctx.lineWidth = 2; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(-8,8); ctx.lineTo(8,8); ctx.stroke();
@@ -333,7 +333,7 @@ function drawMiniTower(ctx: CanvasRenderingContext2D, color: string, owned: bool
   ctx.fillStyle = '#2a2820';
   ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = '#3a3830'; ctx.fillRect(-9,-18,18,20);
-  ctx.fillStyle = c+'55'; ctx.fillRect(-8,-17,16,18);
+  ctx.fillStyle = hex2rgba(c, 0.33); ctx.fillRect(-8,-17,16,18);
   ctx.fillStyle = '#2a2820';
   for (let i = -8; i <= 6; i += 4) ctx.fillRect(i,-19,3,3.5);
   ctx.fillStyle = '#1a1612'; ctx.fillRect(-4,-10,3,5); ctx.fillRect(2,-10,3,5);
@@ -341,6 +341,17 @@ function drawMiniTower(ctx: CanvasRenderingContext2D, color: string, owned: bool
   ctx.beginPath(); ctx.moveTo(0,-19); ctx.lineTo(0,-26); ctx.stroke();
   ctx.fillStyle = c;
   ctx.beginPath(); ctx.moveTo(0,-26); ctx.lineTo(6,-23); ctx.lineTo(0,-20); ctx.closePath(); ctx.fill();
+}
+
+// Безопасно добавляет прозрачность к hex-цвету любой длины (#rgb → #rrggbb + alpha)
+function hex2rgba(hex: string, alpha: number): string {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if (h.length === 6) {
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  return `rgba(128,128,128,${alpha})`;
 }
 
 // ── Основной компонент ────────────────────────────────────────────────────────
@@ -473,9 +484,9 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
 
       // Ореол
       const pg = ctx.createRadialGradient(cp.pos.x, cp.pos.y, 0, cp.pos.x, cp.pos.y, cp.radius);
-      pg.addColorStop(0, (cp.ownerId?ownerColor:'#666')+'28');
-      pg.addColorStop(0.7,(cp.ownerId?ownerColor:'#444')+'12');
-      pg.addColorStop(1,'transparent');
+      pg.addColorStop(0, hex2rgba(cp.ownerId ? ownerColor : '#666666', 0.16));
+      pg.addColorStop(0.7, hex2rgba(cp.ownerId ? ownerColor : '#444444', 0.07));
+      pg.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = pg;
       ctx.beginPath(); ctx.arc(cp.pos.x, cp.pos.y, cp.radius, 0, Math.PI*2); ctx.fill();
 
@@ -497,7 +508,7 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
       if (cp.captureProgress > 0 && cp.captureProgress < 100) {
         const cc = cp.ownerId ? ownerColor : (cp.capturingPlayerId ? s.players[cp.capturingPlayerId]?.color||'#fff' : '#fff');
         ctx.save();
-        ctx.strokeStyle = cc+'44'; ctx.lineWidth = 12; ctx.lineCap = 'round';
+        ctx.strokeStyle = hex2rgba(cc, 0.27); ctx.lineWidth = 12; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.arc(cp.pos.x, cp.pos.y, cp.radius-5, -Math.PI/2, -Math.PI/2+(cp.captureProgress/100)*Math.PI*2); ctx.stroke();
         ctx.strokeStyle = cc; ctx.lineWidth = 4;
         ctx.stroke(); ctx.restore();
@@ -564,7 +575,7 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
       // HP-бар
       const hp = unit.hp / unit.maxHp;
       const bw = 28, bh = 4, bx = unit.pos.x-bw/2, by = unit.pos.y-26;
-      ctx.fillStyle = '#111c'; ctx.fillRect(bx-1, by-1, bw+2, bh+2);
+      ctx.fillStyle = 'rgba(17,17,17,0.75)'; ctx.fillRect(bx-1, by-1, bw+2, bh+2);
       ctx.fillStyle = hp>0.6?'#4caf50':hp>0.3?'#ff9800':'#f44336';
       ctx.fillRect(bx, by, bw*hp, bh);
     }
@@ -580,7 +591,7 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
 
       // Ореол базы
       const bg = ctx.createRadialGradient(cmd.pos.x, cmd.pos.y, 0, cmd.pos.x, cmd.pos.y, 26);
-      bg.addColorStop(0, color+'2a'); bg.addColorStop(1, color+'00');
+      bg.addColorStop(0, hex2rgba(color, 0.16)); bg.addColorStop(1, hex2rgba(color, 0.0));
       ctx.fillStyle = bg;
       ctx.beginPath(); ctx.arc(cmd.pos.x, cmd.pos.y, 26, 0, Math.PI*2); ctx.fill();
 
@@ -610,14 +621,14 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
       cg.addColorStop(0,'#fff'); cg.addColorStop(1, color);
       ctx.fillStyle = cg;
       ctx.beginPath(); ctx.arc(cmd.pos.x, cmd.pos.y, isHuman?14:11, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = isHuman?'#fff':color+'aa'; ctx.lineWidth = isHuman?2.5:1.5; ctx.stroke();
+      ctx.strokeStyle = isHuman ? '#fff' : hex2rgba(color, 0.67); ctx.lineWidth = isHuman?2.5:1.5; ctx.stroke();
       ctx.font = `${isHuman?14:11}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText(isHuman?'👑':'⚔️', cmd.pos.x, cmd.pos.y);
 
       // HP-бар
       const hp = cmd.hp/cmd.maxHp;
       const bw = isHuman?36:28;
-      ctx.fillStyle='#111c'; ctx.fillRect(cmd.pos.x-bw/2-1, cmd.pos.y+15, bw+2, 6);
+      ctx.fillStyle='rgba(17,17,17,0.75)'; ctx.fillRect(cmd.pos.x-bw/2-1, cmd.pos.y+15, bw+2, 6);
       ctx.fillStyle=hp>0.6?'#4caf50':hp>0.3?'#ff9800':'#f44336';
       ctx.fillRect(cmd.pos.x-bw/2, cmd.pos.y+16, bw*hp, 4);
 
@@ -625,7 +636,7 @@ export default function GameCanvas({ state, onMapClick, camera, setCamera }: Pro
       const name = player.name.length>14?player.name.slice(0,14)+'…':player.name;
       ctx.font = `bold ${isHuman?11:9}px Manrope, sans-serif`;
       ctx.textAlign='center'; ctx.textBaseline='top';
-      ctx.fillStyle='#000a'; ctx.fillText(name, cmd.pos.x+1, cmd.pos.y+23);
+      ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillText(name, cmd.pos.x+1, cmd.pos.y+23);
       ctx.fillStyle=isHuman?'#f0c060':color; ctx.fillText(name, cmd.pos.x, cmd.pos.y+22);
     }
   }
