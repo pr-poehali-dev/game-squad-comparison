@@ -21,7 +21,7 @@ const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: bool
   { id: 'compare',  label: 'Сравнение',  icon: 'Swords' },
   { id: 'treaties', label: 'Трактаты',   icon: 'ScrollText' },
   { id: 'forum',    label: 'Форум',      icon: 'MessageSquare' },
-  { id: 'clash',    label: 'Medieval Clash.io', icon: 'Sword' },
+  { id: 'clash',    label: 'Medieval Clash.io', icon: 'Sword', adminOnly: true },
   { id: 'game',     label: 'Неадекватная игра', icon: 'Gamepad2' },
   { id: 'about',    label: 'О проекте',  icon: 'Info' },
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
@@ -574,7 +574,7 @@ export default function Index() {
               <ForumPage onOpenTopic={setForumTopicId} />
             )
           ) : page === 'clash' ? (
-            <MedievalClashPage />
+            user?.is_admin ? <MedievalClashPage /> : null
           ) : page === 'game' ? (
             <WhamPage />
           ) : page === 'about' ? (
