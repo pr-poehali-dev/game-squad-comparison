@@ -13,6 +13,7 @@ export interface TraitDef {
   name: string;
   description: string;
   color: TraitColor;
+  adminComment?: string;
 }
 
 export interface AbilityDef {

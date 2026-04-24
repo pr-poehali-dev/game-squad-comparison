@@ -650,7 +650,7 @@ export default function AdminPage() {
   const [abilityLoading, setAbilityLoading] = useState(false);
 
   // Управление особенностями
-  const [traitForm, setTraitForm] = useState({ name: '', description: '', color: 'gray' as TraitColor });
+  const [traitForm, setTraitForm] = useState({ name: '', description: '', adminComment: '', color: 'gray' as TraitColor });
   const [traitEditing, setTraitEditing] = useState<TraitDef | null>(null);
   const [traitLoading, setTraitLoading] = useState(false);
 
@@ -823,13 +823,13 @@ export default function AdminPage() {
     setTraitLoading(true);
     try {
       if (traitEditing) {
-        await traitsApi.update(traitEditing.id, { name: traitForm.name.trim(), description: traitForm.description.trim(), color: traitForm.color });
+        await traitsApi.update(traitEditing.id, { name: traitForm.name.trim(), description: traitForm.description.trim(), adminComment: traitForm.adminComment.trim(), color: traitForm.color });
         showToast('Особенность обновлена');
       } else {
-        await traitsApi.create({ name: traitForm.name.trim(), description: traitForm.description.trim(), color: traitForm.color });
+        await traitsApi.create({ name: traitForm.name.trim(), description: traitForm.description.trim(), adminComment: traitForm.adminComment.trim(), color: traitForm.color });
         showToast('Особенность добавлена');
       }
-      setTraitForm({ name: '', description: '', color: 'gray' });
+      setTraitForm({ name: '', description: '', adminComment: '', color: 'gray' });
       setTraitEditing(null);
       invalidateTraits();
     } catch (err: unknown) {
@@ -854,7 +854,7 @@ export default function AdminPage() {
 
   const startEditTrait = (t: TraitDef) => {
     setTraitEditing(t);
-    setTraitForm({ name: t.name, description: t.description, color: t.color });
+    setTraitForm({ name: t.name, description: t.description, adminComment: t.adminComment || '', color: t.color });
   };
 
   const handleSaveAbility = async () => {
@@ -1274,6 +1274,19 @@ export default function AdminPage() {
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1.5 flex items-center gap-1.5">
+                  <Icon name="Lock" size={10} className="text-amber-500/70" />
+                  <span>Заметка <span className="opacity-50">(только для вас)</span></span>
+                </label>
+                <textarea
+                  value={traitForm.adminComment}
+                  onChange={e => setTraitForm(f => ({ ...f, adminComment: e.target.value }))}
+                  rows={2}
+                  className="w-full bg-amber-950/20 border border-amber-500/20 rounded-sm px-3 py-2 text-sm text-amber-200/80 focus:outline-none focus:ring-1 focus:ring-amber-500/40 resize-none placeholder:text-amber-500/30"
+                  placeholder="Пометки для себя: откуда взято, версия игры, источник..."
+                />
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleSaveTrait}
@@ -1285,7 +1298,7 @@ export default function AdminPage() {
                 </button>
                 {traitEditing && (
                   <button
-                    onClick={() => { setTraitEditing(null); setTraitForm({ name: '', description: '', color: 'gray' }); }}
+                    onClick={() => { setTraitEditing(null); setTraitForm({ name: '', description: '', adminComment: '', color: 'gray' }); }}
                     className="px-4 py-2 text-xs border border-border rounded-sm hover:bg-muted transition-colors"
                   >
                     Отмена
@@ -1311,6 +1324,12 @@ export default function AdminPage() {
                   </div>
                   {t.description && (
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</p>
+                  )}
+                  {t.adminComment && (
+                    <p className="text-xs mt-1 flex items-start gap-1">
+                      <Icon name="Lock" size={9} className="text-amber-500/60 mt-0.5 flex-shrink-0" />
+                      <span className="text-amber-300/60 italic line-clamp-2">{t.adminComment}</span>
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">

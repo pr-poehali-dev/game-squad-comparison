@@ -58,7 +58,7 @@ def get_admin_user(event):
 
 
 def row_to_trait(row):
-    return {'id': row[0], 'name': row[1], 'description': row[2], 'color': row[3]}
+    return {'id': row[0], 'name': row[1], 'description': row[2], 'color': row[3], 'adminComment': row[4] or ''}
 
 
 def handler(event: dict, context) -> dict:
@@ -71,7 +71,7 @@ def handler(event: dict, context) -> dict:
         conn = get_conn()
         try:
             with conn.cursor() as cur:
-                cur.execute(f"SELECT id, name, description, color FROM {SCHEMA}.traits ORDER BY name")
+                cur.execute(f"SELECT id, name, description, color, admin_comment FROM {SCHEMA}.traits ORDER BY name")
                 rows = cur.fetchall()
         finally:
             conn.close()
@@ -89,6 +89,7 @@ def handler(event: dict, context) -> dict:
 
     name = (body.get('name') or '').strip()
     description = (body.get('description') or '').strip()
+    admin_comment = (body.get('adminComment') or '').strip()
     color = body.get('color', 'gray')
     if color not in VALID_COLORS:
         color = 'gray'
@@ -100,9 +101,9 @@ def handler(event: dict, context) -> dict:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"INSERT INTO {SCHEMA}.traits (name, description, color) "
-                    f"VALUES (%s, %s, %s) RETURNING id, name, description, color",
-                    (name, description, color)
+                    f"INSERT INTO {SCHEMA}.traits (name, description, color, admin_comment) "
+                    f"VALUES (%s, %s, %s, %s) RETURNING id, name, description, color, admin_comment",
+                    (name, description, color, admin_comment)
                 )
                 row = cur.fetchone()
             conn.commit()
@@ -118,9 +119,9 @@ def handler(event: dict, context) -> dict:
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    f"UPDATE {SCHEMA}.traits SET name=%s, description=%s, color=%s "
-                    f"WHERE id=%s RETURNING id, name, description, color",
-                    (name, description, color, trait_id)
+                    f"UPDATE {SCHEMA}.traits SET name=%s, description=%s, color=%s, admin_comment=%s "
+                    f"WHERE id=%s RETURNING id, name, description, color, admin_comment",
+                    (name, description, color, admin_comment, trait_id)
                 )
                 row = cur.fetchone()
             conn.commit()
