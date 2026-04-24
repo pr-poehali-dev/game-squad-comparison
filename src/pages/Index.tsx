@@ -541,7 +541,7 @@ export default function Index() {
         </header>
 
         {/* ── Контент страниц ─ */}
-        <main className="flex-1 p-4 lg:p-8 overflow-auto scrollbar-thin">
+        <main className={`flex-1 overflow-auto scrollbar-thin ${page === 'clash' ? '' : 'p-4 lg:p-8'}`}>
           {detailUnitId ? (
             <UnitDetailPage
               unitId={detailUnitId}
