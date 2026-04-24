@@ -104,6 +104,9 @@ def handler(event: dict, context) -> dict:
                 )
                 row = cur.fetchone()
             conn.commit()
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            return resp({'error': 'Построение с таким названием уже существует'}, 409)
         finally:
             conn.close()
         return resp({'id': row[0], 'name': row[1], 'description': row[2], 'avatar_url': row[3]}, 201)
@@ -122,6 +125,9 @@ def handler(event: dict, context) -> dict:
                 )
                 row = cur.fetchone()
             conn.commit()
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            return resp({'error': 'Построение с таким названием уже существует'}, 409)
         finally:
             conn.close()
         if not row:

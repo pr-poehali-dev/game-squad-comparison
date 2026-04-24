@@ -1,0 +1,1 @@
+ALTER TABLE t_p63666683_game_squad_compariso.formations DROP CONSTRAINT formations_name_key;
