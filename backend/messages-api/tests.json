@@ -1,0 +1,11 @@
+{
+  "tests": [
+    {
+      "name": "GET conversations (unauth)",
+      "method": "GET",
+      "path": "/?action=conversations",
+      "expectedStatus": 401,
+      "bodyMatcher": "partial"
+    }
+  ]
+}
