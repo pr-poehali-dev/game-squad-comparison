@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Icon from '@/components/ui/icon';
 import { useAuth } from '@/context/AuthContext';
 import CatalogPage from './CatalogPage';
@@ -111,10 +111,15 @@ export default function Index() {
     }
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     localStorage.setItem('companion_treaties', JSON.stringify(appliedTreaties));
   }, [appliedTreaties]);
+
+  useEffect(() => {
+    if (detailUnitId) mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  }, [detailUnitId]);
 
   const handleApplyTreaty = (unitId: string, treatyId: string) => {
     setAppliedTreaties(prev => ({
@@ -539,7 +544,7 @@ export default function Index() {
         </header>
 
         {/* ── Контент страниц ─ */}
-        <main className="flex-1 p-4 lg:p-8 overflow-auto scrollbar-thin">
+        <main ref={mainRef} className="flex-1 p-4 lg:p-8 overflow-auto scrollbar-thin">
           {detailUnitId ? (
             <UnitDetailPage
               unitId={detailUnitId}
