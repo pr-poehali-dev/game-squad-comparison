@@ -152,7 +152,7 @@ export default function Index() {
   const currentLabel = page === 'auth' ? 'Вход' : page === 'admin' ? 'Управление' : NAV_ITEMS.find(n => n.id === page)?.label;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
 
       {/* ── Сайдбар ─────────────────────────────────────────── */}
       <aside className={`
