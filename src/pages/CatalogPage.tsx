@@ -34,8 +34,12 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   const [roleFilter, setRoleFilter] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | ''>('');
   const [sortBy, setSortBy] = useState<
-    'name' | 'attack' | 'defense' | 'leadership' | 'stars'
-  >('name');
+    'name' | 'attack' | 'defense' | 'leadership' | 'stars' | 'rarity'
+  >('rarity');
+
+  const RARITY_ORDER: Record<string, number> = {
+    legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1,
+  };
 
   const filtered = useMemo(() => {
     return UNITS.filter(u => {
@@ -48,6 +52,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
       if (rarityFilter && u.rarity !== rarityFilter) return false;
       return true;
     }).sort((a, b) => {
+      if (sortBy === 'rarity') return (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0);
       if (sortBy === 'name') return a.name.localeCompare(b.name, 'ru');
       if (sortBy === 'attack') return b.stats.slashingDamage - a.stats.slashingDamage;
       if (sortBy === 'defense') return b.stats.slashingDefense - a.stats.slashingDefense;
@@ -287,6 +292,7 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
                 onChange={e => setSortBy(e.target.value as typeof sortBy)}
                 style={selectStyle}
               >
+                <option value="rarity">По редкости</option>
                 <option value="name">По названию</option>
                 <option value="stars">По рейтингу</option>
                 <option value="attack">По атаке</option>
