@@ -1,0 +1,13 @@
+{
+  "tests": [
+    {
+      "name": "POST track visit",
+      "method": "POST",
+      "path": "/",
+      "body": {"action": "track", "path": "/"},
+      "expectedStatus": 200,
+      "expectedBody": {"ok": true},
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi, traitsApi, abilitiesApi } from '@/lib/api';
+import { unitsApi, treatiesApi, seedApi, rolesApi, formationsApi, traitsApi, abilitiesApi, statsApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import { useUnits, useTreaties, useRoles, useFormations, useTraits, useAbilities, UnitRoleDef, TraitDef, AbilityDef } from '@/hooks/useAppData';
 import Icon from '@/components/ui/icon';
@@ -11,7 +11,17 @@ import { StarPicker } from '@/components/StarRating';
 import GuideEditor from '@/components/GuideEditor';
 import { GuideBlock } from '@/data/types';
 
-type AdminTab = 'units' | 'treaties' | 'roles' | 'formations' | 'traits' | 'abilities';
+type AdminTab = 'stats' | 'units' | 'treaties' | 'roles' | 'formations' | 'traits' | 'abilities';
+
+interface SiteStats {
+  total_unique: number;
+  total_views: number;
+  today_unique: number;
+  week_unique: number;
+  month_unique: number;
+  total_users: number;
+  daily: { date: string; visitors: number }[];
+}
 
 const UNIT_CLASSES: UnitClass[] = ['Пехота', 'Кавалерия', 'Стрелки', 'Осадные'];
 const RARITIES: Rarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
@@ -624,7 +634,9 @@ export default function AdminPage() {
   const { formations, invalidate: invalidateFormations } = useFormations();
   const { traits, invalidate: invalidateTraits } = useTraits();
   const { abilities, invalidate: invalidateAbilities } = useAbilities();
-  const [tab, setTab] = useState<AdminTab>('units');
+  const [tab, setTab] = useState<AdminTab>('stats');
+  const [siteStats, setSiteStats] = useState<SiteStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
   const [units, setUnits] = useState<Record<string, unknown>[]>([]);
   const [treaties, setTreaties] = useState<Record<string, unknown>[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -670,6 +682,13 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    if (tab === 'stats') {
+      setStatsLoading(true);
+      statsApi.getStats().then(data => setSiteStats(data)).catch(() => {}).finally(() => setStatsLoading(false));
+    }
+  }, [tab]);
 
   const handleSeed = async () => {
     setSeedLoading(true);
@@ -952,8 +971,8 @@ export default function AdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 border-b border-border">
-        {(['units', 'treaties', 'roles', 'formations', 'traits', 'abilities'] as AdminTab[]).map(t => (
+      <div className="flex gap-1 mb-6 border-b border-border flex-wrap">
+        {(['stats', 'units', 'treaties', 'roles', 'formations', 'traits', 'abilities'] as AdminTab[]).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -961,10 +980,68 @@ export default function AdminPage() {
               tab === t ? 'border-primary text-primary font-medium' : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            {t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : t === 'formations' ? 'Построения' : t === 'traits' ? 'Особенности' : 'Умения'}
+            {t === 'stats' ? 'Статистика' : t === 'units' ? 'Отряды' : t === 'treaties' ? 'Трактаты' : t === 'roles' ? 'Роли' : t === 'formations' ? 'Построения' : t === 'traits' ? 'Особенности' : 'Умения'}
           </button>
         ))}
       </div>
+
+      {/* Stats Tab */}
+      {tab === 'stats' && (
+        <div>
+          {statsLoading ? (
+            <div className="py-12 text-center text-muted-foreground text-sm">Загрузка статистики...</div>
+          ) : !siteStats ? (
+            <div className="py-12 text-center text-muted-foreground text-sm">Нет данных</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {[
+                  { label: 'За сегодня', value: siteStats.today_unique, icon: 'CalendarDays' },
+                  { label: 'За 7 дней', value: siteStats.week_unique, icon: 'TrendingUp' },
+                  { label: 'За 30 дней', value: siteStats.month_unique, icon: 'BarChart2' },
+                  { label: 'Всего уникальных', value: siteStats.total_unique, icon: 'Users' },
+                  { label: 'Всего просмотров', value: siteStats.total_views, icon: 'Eye' },
+                  { label: 'Зарегистрировано', value: siteStats.total_users, icon: 'UserCheck' },
+                ].map(({ label, value, icon }) => (
+                  <div key={label} className="bg-card border border-border rounded-sm p-4">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Icon name={icon as Parameters<typeof Icon>[0]['name']} size={14} />
+                      <span className="text-xs">{label}</span>
+                    </div>
+                    <div className="text-2xl font-semibold text-foreground" style={{ fontFamily: 'Oswald, sans-serif' }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {siteStats.daily.length > 0 && (
+                <div className="bg-card border border-border rounded-sm p-4">
+                  <div className="text-xs text-muted-foreground mb-4">Уникальные посетители за 30 дней</div>
+                  <div className="flex items-end gap-1 h-24">
+                    {(() => {
+                      const max = Math.max(...siteStats.daily.map(d => d.visitors), 1);
+                      return siteStats.daily.map(d => (
+                        <div key={d.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+                          <div
+                            className="w-full bg-primary/60 rounded-sm hover:bg-primary transition-colors"
+                            style={{ height: `${(d.visitors / max) * 100}%`, minHeight: d.visitors > 0 ? '2px' : '0' }}
+                          />
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-popover border border-border text-xs px-1.5 py-0.5 rounded hidden group-hover:block whitespace-nowrap z-10">
+                            {d.date.slice(5)}: {d.visitors}
+                          </div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                    <span>{siteStats.daily[0]?.date.slice(5)}</span>
+                    <span>{siteStats.daily[siteStats.daily.length - 1]?.date.slice(5)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Units Tab */}
       {tab === 'units' && (

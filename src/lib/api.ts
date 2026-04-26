@@ -11,6 +11,7 @@ const URLS = {
   gameApi: 'https://functions.poehali.dev/23edd385-7e13-41cb-a5d2-0a5cc4b4b5f7',
   traitsApi: 'https://functions.poehali.dev/3cd2139d-ca43-4a19-8181-a5a301c48a6a',
   abilitiesApi: 'https://functions.poehali.dev/d04cc806-fd7b-4125-8c81-68d4997e5bae',
+  statsApi: 'https://functions.poehali.dev/702bf411-49ba-4d48-b8ae-b79614b4a03b',
 };
 
 function getSessionId(): string {
@@ -142,6 +143,22 @@ export const abilitiesApi = {
     request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'update', id, ...data }) }),
   delete: (id: number) =>
     request(URLS.abilitiesApi, { method: 'POST', body: JSON.stringify({ action: 'delete', id }) }),
+};
+
+// Stats
+export const statsApi = {
+  track: (path: string) => {
+    const sessionId = getSessionId();
+    return fetch(URLS.statsApi, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(sessionId ? { 'X-Session-Id': sessionId } : {}),
+      },
+      body: JSON.stringify({ action: 'track', path }),
+    }).catch(() => {});
+  },
+  getStats: () => request(URLS.statsApi),
 };
 
 // Treaties
