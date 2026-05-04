@@ -103,16 +103,16 @@ export default function HousesPage({ onOpenHouse, onOpenProfile }: Props) {
   return (
     <div className="max-w-4xl">
       {/* Шапка */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: '2.2rem', fontWeight: 700, color: 'hsl(38 24% 94%)' }}>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+        <div className="min-w-0">
+          <h1 style={{ fontFamily: '"Cormorant Garamond", serif', fontSize: 'clamp(1.6rem, 4vw, 2.2rem)', fontWeight: 700, color: 'hsl(38 24% 94%)', lineHeight: 1.15 }}>
             Дома CB
           </h1>
           <p className="text-muted-foreground text-sm mt-0.5">Боевые братства и их рейтинг активности</p>
         </div>
         {canCreate && !showForm && (
           <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
             style={{ background: 'hsl(42 76% 50% / 0.15)', border: '1px solid hsl(42 76% 50% / 0.4)', color: 'hsl(42 76% 68%)', fontFamily: 'Manrope, sans-serif' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'hsl(42 76% 50% / 0.25)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'hsl(42 76% 50% / 0.15)'; }}>
@@ -242,30 +242,30 @@ export default function HousesPage({ onOpenHouse, onOpenProfile }: Props) {
                 style={{ background: 'hsl(222 18% 9%)', border: `1px solid ${idx === 0 ? 'hsl(42 76% 50% / 0.35)' : 'hsl(222 14% 16%)'}` }}
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'hsl(42 76% 50% / 0.3)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = idx === 0 ? 'hsl(42 76% 50% / 0.35)' : 'hsl(222 14% 16%)'; }}>
-                <div className="flex items-center gap-4 p-4">
+                <div className="flex items-center gap-3 p-4">
                   {/* Место */}
-                  <div className="w-8 text-center flex-shrink-0">
+                  <div className="w-7 text-center flex-shrink-0">
                     {m ? (
-                      <span className="text-xl">{m.icon}</span>
+                      <span className="text-lg">{m.icon}</span>
                     ) : (
-                      <span className="text-sm font-bold" style={{ color: 'hsl(222 8% 44%)', fontFamily: 'Manrope, sans-serif' }}>#{idx + 1}</span>
+                      <span className="text-xs font-bold" style={{ color: 'hsl(222 8% 44%)', fontFamily: 'Manrope, sans-serif' }}>#{idx + 1}</span>
                     )}
                   </div>
                   {/* Герб */}
-                  <div className="w-14 h-14 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
-                    style={{ background: 'hsl(222 20% 14%)', border: '1px solid hsl(222 14% 22%)' }}>
+                  <div className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
+                    style={{ background: 'hsl(222 20% 14%)', border: '1px solid hsl(222 14% 22%)', minWidth: '3rem' }}>
                     {h.emblem_url
                       ? <img src={h.emblem_url} alt="" className="w-full h-full object-cover" />
-                      : <Icon name="Shield" size={24} style={{ color: 'hsl(42 76% 50% / 0.4)' }} />}
+                      : <Icon name="Shield" size={20} style={{ color: 'hsl(42 76% 50% / 0.4)' }} />}
                   </div>
                   {/* Инфо */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <h3 className="font-bold text-sm group-hover:text-primary transition-colors" style={{ color: 'hsl(38 18% 92%)', fontFamily: '"Cormorant Garamond", serif', fontSize: '1.1rem' }}>
+                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                      <h3 className="font-bold group-hover:text-primary transition-colors truncate" style={{ color: 'hsl(38 18% 92%)', fontFamily: '"Cormorant Garamond", serif', fontSize: 'clamp(0.9rem, 2.5vw, 1.1rem)' }}>
                         {h.name}
                       </h3>
                       {h.server && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: 'hsl(210 78% 50% / 0.15)', color: 'hsl(210 78% 68%)', border: '1px solid hsl(210 78% 50% / 0.2)', fontFamily: 'Manrope, sans-serif' }}>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md whitespace-nowrap" style={{ background: 'hsl(210 78% 50% / 0.15)', color: 'hsl(210 78% 68%)', border: '1px solid hsl(210 78% 50% / 0.2)', fontFamily: 'Manrope, sans-serif' }}>
                           {h.server}
                         </span>
                       )}
@@ -273,18 +273,16 @@ export default function HousesPage({ onOpenHouse, onOpenProfile }: Props) {
                     {h.short_desc && (
                       <p className="text-xs leading-relaxed line-clamp-1" style={{ color: 'hsl(222 8% 58%)', fontFamily: 'Manrope, sans-serif' }}>{h.short_desc}</p>
                     )}
-                    <div className="flex items-center gap-3 text-[11px] mt-1" style={{ color: 'hsl(222 8% 46%)' }}>
-                      <span className="flex items-center gap-1">
-                        <button onClick={e => { e.stopPropagation(); onOpenProfile?.(h.owner_id); }} className="hover:text-foreground transition-colors font-medium">
-                          {h.owner}
-                        </button>
-                      </span>
-                      <span className="flex items-center gap-1"><Icon name="Users" size={10} /> {h.member_count} участников</span>
+                    <div className="flex items-center gap-2 text-[11px] mt-0.5 flex-wrap" style={{ color: 'hsl(222 8% 46%)' }}>
+                      <button onClick={e => { e.stopPropagation(); onOpenProfile?.(h.owner_id); }} className="hover:text-foreground transition-colors font-medium truncate max-w-[8rem]">
+                        {h.owner}
+                      </button>
+                      <span className="flex items-center gap-1 whitespace-nowrap"><Icon name="Users" size={10} /> {h.member_count}</span>
                     </div>
                   </div>
                   {/* Рейтинг */}
-                  <div className="flex-shrink-0 text-right">
-                    <div className="font-bold text-lg" style={{ color: 'hsl(42 76% 62%)', fontFamily: '"Cormorant Garamond", serif' }}>
+                  <div className="flex-shrink-0 text-right ml-1">
+                    <div className="font-bold" style={{ color: 'hsl(42 76% 62%)', fontFamily: '"Cormorant Garamond", serif', fontSize: 'clamp(1rem, 3vw, 1.25rem)' }}>
                       {h.rating_points.toLocaleString('ru')}
                     </div>
                     <div className="text-[10px]" style={{ color: 'hsl(222 8% 46%)', fontFamily: 'Manrope, sans-serif' }}>баллов</div>
