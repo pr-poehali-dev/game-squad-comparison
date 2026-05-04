@@ -12,6 +12,8 @@ const URLS = {
   traitsApi: 'https://functions.poehali.dev/3cd2139d-ca43-4a19-8181-a5a301c48a6a',
   abilitiesApi: 'https://functions.poehali.dev/d04cc806-fd7b-4125-8c81-68d4997e5bae',
   statsApi: 'https://functions.poehali.dev/702bf411-49ba-4d48-b8ae-b79614b4a03b',
+  profileApi: 'https://functions.poehali.dev/d236c13e-b58c-46b9-b37c-4f4fab797124',
+  messagesApi: 'https://functions.poehali.dev/9c322351-b8b6-4513-a2d3-b3658d79f8e0',
 };
 
 function getSessionId(): string {
@@ -76,8 +78,8 @@ export const uploadApi = {
 export const forumApi = {
   getTopics: () => request(URLS.forum),
   getTopic: (id: number) => request(`${URLS.forum}?action=topic&id=${id}`),
-  createTopic: (title: string, content: string) =>
-    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'create_topic', title, content }) }),
+  createTopic: (title: string, content: string, cover_file?: string, cover_content_type?: string) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'create_topic', title, content, ...(cover_file ? { cover_file, cover_content_type } : {}) }) }),
   createPost: (topic_id: number, content: string) =>
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'create_post', topic_id, content }) }),
   editTopic: (topic_id: number, title: string, content: string) =>
@@ -159,6 +161,25 @@ export const statsApi = {
     }).catch(() => {});
   },
   getStats: () => request(URLS.statsApi),
+};
+
+// Profile
+export const profileApi = {
+  getPublicProfile: (userId: number) => request(`${URLS.profileApi}?user_id=${userId}`),
+  getUser: (userId: number) => request(`${URLS.profileApi}?user_id=${userId}`),
+  updateProfile: (data: { bio?: string; avatar_file?: string; avatar_content_type?: string }) =>
+    request(URLS.profileApi, { method: 'POST', body: JSON.stringify({ action: 'update_profile', ...data }) }),
+};
+
+// Messages
+export const messagesApi = {
+  getConversations: () => request(`${URLS.messagesApi}?action=conversations`),
+  getMessages: (withUserId: number) => request(`${URLS.messagesApi}?action=messages&with=${withUserId}`),
+  getUnreadCount: () => request(`${URLS.messagesApi}?action=unread_count`),
+  send: (receiver_id: number, content: string) =>
+    request(URLS.messagesApi, { method: 'POST', body: JSON.stringify({ action: 'send', receiver_id, content }) }),
+  markRead: (with_user_id: number) =>
+    request(URLS.messagesApi, { method: 'POST', body: JSON.stringify({ action: 'mark_read', with_user_id }) }),
 };
 
 // Treaties

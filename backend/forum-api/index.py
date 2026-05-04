@@ -2,7 +2,7 @@
 Форум: темы и посты.
 GET  / — список тем
 GET  /?action=topic&id=N — тема + посты
-POST / action=create_topic — создать тему (авторизован)
+POST / action=create_topic — создать тему (авторизован), поддерживает cover_file
 POST / action=create_post  — ответить в теме (авторизован)
 POST / action=edit_topic   — редактировать тему (свою или админ)
 POST / action=edit_post    — редактировать пост (свой или админ)
@@ -11,7 +11,10 @@ POST / action=lock_topic   — закрыть тему (только админ)
 """
 import json
 import os
+import base64
+import uuid
 import psycopg2
+import boto3
 from datetime import timezone
 
 SCHEMA = os.environ.get('MAIN_DB_SCHEMA', 'public')
@@ -50,13 +53,33 @@ def get_user(session_id, conn):
         return {'id': row[0], 'username': row[1], 'is_admin': row[2]} if row else None
 
 
+ALLOWED_TYPES = {'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif'}
+
+
+def upload_cover(file_data, content_type):
+    if content_type not in ALLOWED_TYPES:
+        raise ValueError('Неподдерживаемый тип файла')
+    if ',' in file_data:
+        file_data = file_data.split(',', 1)[1]
+    file_bytes = base64.b64decode(file_data)
+    if len(file_bytes) > 5 * 1024 * 1024:
+        raise ValueError('Файл слишком большой (максимум 5 МБ)')
+    ext = ALLOWED_TYPES[content_type]
+    filename = f"forum-covers/{uuid.uuid4().hex}.{ext}"
+    s3 = boto3.client('s3', endpoint_url='https://bucket.poehali.dev',
+                      aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
+                      aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'])
+    s3.put_object(Bucket='files', Key=filename, Body=file_bytes, ContentType=content_type)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{filename}"
+
+
 def fmt_topic(row):
     return {
         'id': row[0], 'title': row[1], 'content': row[2],
         'author_id': row[3], 'author': row[4],
         'views': row[5], 'is_pinned': row[6], 'is_locked': row[7],
         'created_at': str(row[8]), 'updated_at': str(row[9]),
-        'post_count': row[10],
+        'post_count': row[10], 'cover_url': row[11] if len(row) > 11 else '',
     }
 
 
@@ -92,7 +115,7 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""SELECT t.id, t.title, t.content, t.author_id, u.username,
                        t.views, t.is_pinned, t.is_locked, t.created_at, t.updated_at,
-                       COUNT(p.id) as post_count
+                       COUNT(p.id) as post_count, t.cover_url
                     FROM {SCHEMA}.forum_topics t
                     JOIN {SCHEMA}.users u ON u.id = t.author_id
                     LEFT JOIN {SCHEMA}.forum_posts p ON p.topic_id = t.id AND p.is_hidden = false
@@ -112,7 +135,7 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""SELECT t.id, t.title, t.content, t.author_id, u.username,
                        t.views, t.is_pinned, t.is_locked, t.created_at, t.updated_at,
-                       0 as post_count
+                       0 as post_count, t.cover_url
                     FROM {SCHEMA}.forum_topics t
                     JOIN {SCHEMA}.users u ON u.id = t.author_id
                     WHERE t.id = %s""", (topic_id,)
@@ -149,10 +172,17 @@ def handler(event: dict, context) -> dict:
         if not content:
             conn.close()
             return resp({'error': 'Напишите содержимое темы'}, 400)
+        cover_url = ''
+        if body.get('cover_file'):
+            try:
+                cover_url = upload_cover(body['cover_file'], body.get('cover_content_type', 'image/jpeg'))
+            except ValueError as e:
+                conn.close()
+                return resp({'error': str(e)}, 400)
         with conn.cursor() as cur:
             cur.execute(
-                f"INSERT INTO {SCHEMA}.forum_topics (title, content, author_id) VALUES (%s, %s, %s) RETURNING id",
-                (title, content, user['id'])
+                f"INSERT INTO {SCHEMA}.forum_topics (title, content, author_id, cover_url) VALUES (%s, %s, %s, %s) RETURNING id",
+                (title, content, user['id'], cover_url)
             )
             topic_id = cur.fetchone()[0]
             conn.commit()

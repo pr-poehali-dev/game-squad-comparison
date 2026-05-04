@@ -6,6 +6,8 @@ interface User {
   username: string;
   email: string;
   is_admin: boolean;
+  avatar_url?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -15,6 +17,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   makeAdmin: (secret: string) => Promise<void>;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -59,8 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return data;
   };
 
+  const updateUser = (data: Partial<User>) => {
+    if (user) setUser({ ...user, ...data });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, makeAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, makeAdmin, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

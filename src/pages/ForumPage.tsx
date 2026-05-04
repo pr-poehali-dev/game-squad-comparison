@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { forumApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import RichEditor from '@/components/RichEditor';
@@ -9,6 +9,16 @@ interface Topic {
   author_id: number; author: string;
   views: number; is_pinned: boolean; is_locked: boolean;
   created_at: string; updated_at: string; post_count: number;
+  cover_url: string;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function timeAgo(iso: string) {
@@ -21,9 +31,10 @@ function timeAgo(iso: string) {
 
 interface ForumPageProps {
   onOpenTopic: (id: number) => void;
+  onOpenProfile?: (userId: number) => void;
 }
 
-export default function ForumPage({ onOpenTopic }: ForumPageProps) {
+export default function ForumPage({ onOpenTopic, onOpenProfile }: ForumPageProps) {
   const { user } = useAuth();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +43,17 @@ export default function ForumPage({ onOpenTopic }: ForumPageProps) {
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [coverFile, setCoverFile] = useState<{ data: string; type: string } | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const base64 = await fileToBase64(file);
+    setCoverPreview(base64);
+    setCoverFile({ data: base64, type: file.type });
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,8 +74,8 @@ export default function ForumPage({ onOpenTopic }: ForumPageProps) {
     if (!stripped) { setError('Напишите содержимое темы'); return; }
     setSubmitting(true); setError('');
     try {
-      const res = await forumApi.createTopic(title.trim(), content);
-      setShowForm(false); setTitle(''); setContent('');
+      const res = await forumApi.createTopic(title.trim(), content, coverFile?.data, coverFile?.type);
+      setShowForm(false); setTitle(''); setContent(''); setCoverFile(null); setCoverPreview(null);
       await load();
       onOpenTopic(res.topic_id);
     } catch (err: unknown) {
@@ -102,8 +124,25 @@ export default function ForumPage({ onOpenTopic }: ForumPageProps) {
               <label className="text-xs text-muted-foreground block mb-1.5">Содержимое *</label>
               <RichEditor value={content} onChange={setContent} placeholder="Опишите тему подробно..." minHeight={160} />
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1.5">Обложка темы (необязательно)</label>
+              <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => coverRef.current?.click()}
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs border border-border rounded-sm hover:bg-muted transition-colors">
+                  <Icon name="Image" size={12} /> {coverPreview ? 'Заменить' : 'Загрузить обложку'}
+                </button>
+                {coverPreview && (
+                  <>
+                    <img src={coverPreview} alt="" className="h-8 w-14 object-cover rounded-sm" />
+                    <button type="button" onClick={() => { setCoverPreview(null); setCoverFile(null); }}
+                      className="text-xs text-muted-foreground hover:text-destructive">удалить</button>
+                  </>
+                )}
+              </div>
+            </div>
             <div className="flex gap-2 justify-end">
-              <button type="button" onClick={() => { setShowForm(false); setTitle(''); setContent(''); setError(''); }}
+              <button type="button" onClick={() => { setShowForm(false); setTitle(''); setContent(''); setError(''); setCoverFile(null); setCoverPreview(null); }}
                 className="px-4 py-2 text-sm border border-border rounded-sm hover:bg-muted transition-colors">
                 Отмена
               </button>
@@ -139,10 +178,15 @@ export default function ForumPage({ onOpenTopic }: ForumPageProps) {
             <div
               key={t.id}
               onClick={() => onOpenTopic(t.id)}
-              className={`bg-card border rounded-sm p-4 cursor-pointer hover:border-primary/40 transition-all group
+              className={`bg-card border rounded-sm cursor-pointer hover:border-primary/40 transition-all group overflow-hidden
                 ${t.is_pinned ? 'border-primary/30' : 'border-border'}`}
             >
-              <div className="flex items-start gap-3">
+              {t.cover_url && (
+                <div className="h-24 w-full overflow-hidden">
+                  <img src={t.cover_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                </div>
+              )}
+              <div className="flex items-start gap-3 p-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
                     {t.is_pinned && (
@@ -160,7 +204,12 @@ export default function ForumPage({ onOpenTopic }: ForumPageProps) {
                     </h3>
                   </div>
                   <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><Icon name="User" size={10} /> {t.author}</span>
+                    <button
+                      className="flex items-center gap-1 hover:text-foreground transition-colors"
+                      onClick={e => { e.stopPropagation(); onOpenProfile?.(t.author_id); }}
+                    >
+                      <Icon name="User" size={10} /> {t.author}
+                    </button>
                     <span className="flex items-center gap-1"><Icon name="Clock" size={10} /> {timeAgo(t.created_at)}</span>
                   </div>
                 </div>

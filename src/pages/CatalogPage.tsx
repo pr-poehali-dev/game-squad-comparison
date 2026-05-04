@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useUnits, useRoles } from '@/hooks/useAppData';
+import { useUnits } from '@/hooks/useAppData';
 import { UnitClass, Rarity } from '@/data/types';
 import UnitCard from '@/components/UnitCard';
 import Icon from '@/components/ui/icon';
@@ -27,14 +27,12 @@ interface CatalogPageProps {
 
 export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
   const { units: UNITS, loading } = useUnits();
-  const { roles } = useRoles();
 
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState<UnitClass | ''>('');
-  const [roleFilter, setRoleFilter] = useState('');
   const [rarityFilter, setRarityFilter] = useState<Rarity | ''>('');
   const [sortBy, setSortBy] = useState<
-    'name' | 'attack' | 'defense' | 'leadership' | 'stars' | 'rarity'
+    'name' | 'leadership' | 'stars' | 'rarity'
   >('rarity');
 
   const RARITY_ORDER: Record<string, number> = {
@@ -45,31 +43,24 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
     return UNITS.filter(u => {
       if (search && !u.name.toLowerCase().includes(search.toLowerCase())) return false;
       if (classFilter && u.class !== classFilter) return false;
-      if (roleFilter) {
-        const unitRoles = Array.isArray(u.role) ? u.role : [u.role];
-        if (!unitRoles.includes(roleFilter as import('@/data/types').UnitRole)) return false;
-      }
       if (rarityFilter && u.rarity !== rarityFilter) return false;
       return true;
     }).sort((a, b) => {
       if (sortBy === 'rarity') return (RARITY_ORDER[b.rarity] ?? 0) - (RARITY_ORDER[a.rarity] ?? 0);
       if (sortBy === 'name') return a.name.localeCompare(b.name, 'ru');
-      if (sortBy === 'attack') return b.stats.slashingDamage - a.stats.slashingDamage;
-      if (sortBy === 'defense') return b.stats.slashingDefense - a.stats.slashingDefense;
       if (sortBy === 'leadership') return b.stats.leadership - a.stats.leadership;
       if (sortBy === 'stars') return (b.stars ?? 0) - (a.stars ?? 0);
       return 0;
     });
-  }, [search, classFilter, roleFilter, rarityFilter, sortBy, UNITS]);
+  }, [search, classFilter, rarityFilter, sortBy, UNITS]);
 
   const clearFilters = () => {
     setSearch('');
     setClassFilter('');
-    setRoleFilter('');
     setRarityFilter('');
   };
 
-  const hasFilters = search || classFilter || roleFilter || rarityFilter;
+  const hasFilters = search || classFilter || rarityFilter;
 
   /* статистика */
   const classCounts = useMemo(() => {
@@ -261,18 +252,6 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
               ))}
             </select>
 
-            <FilterLabel>Роль</FilterLabel>
-            <select
-              value={roleFilter}
-              onChange={e => setRoleFilter(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="">Любая</option>
-              {roles.map(r => (
-                <option key={r.id} value={r.name}>{r.name}</option>
-              ))}
-            </select>
-
             <FilterLabel>Ранг</FilterLabel>
             <select
               value={rarityFilter}
@@ -295,8 +274,6 @@ export default function CatalogPage({ onSelectUnit }: CatalogPageProps) {
                 <option value="rarity">По редкости</option>
                 <option value="name">По названию</option>
                 <option value="stars">По рейтингу</option>
-                <option value="attack">По атаке</option>
-                <option value="defense">По защите</option>
                 <option value="leadership">По лидерству</option>
               </select>
 

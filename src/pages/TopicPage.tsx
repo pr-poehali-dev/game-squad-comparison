@@ -9,6 +9,7 @@ interface Topic {
   author_id: number; author: string;
   views: number; is_pinned: boolean; is_locked: boolean;
   created_at: string; updated_at: string; post_count: number;
+  cover_url?: string;
 }
 interface Post {
   id: number; topic_id: number; content: string;
@@ -27,9 +28,11 @@ function timeAgo(iso: string) {
 interface TopicPageProps {
   topicId: number;
   onBack: () => void;
+  onOpenProfile?: (userId: number) => void;
+  onOpenMessages?: (userId: number, username: string) => void;
 }
 
-export default function TopicPage({ topicId, onBack }: TopicPageProps) {
+export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessages }: TopicPageProps) {
   const { user } = useAuth();
   const [topic, setTopic] = useState<Topic | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -138,7 +141,13 @@ export default function TopicPage({ topicId, onBack }: TopicPageProps) {
           </div>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-sm p-5 mb-4">
+        <div className="bg-card border border-border rounded-sm mb-4 overflow-hidden">
+          {topic.cover_url && (
+            <div className="h-40 w-full overflow-hidden">
+              <img src={topic.cover_url} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -155,7 +164,10 @@ export default function TopicPage({ topicId, onBack }: TopicPageProps) {
               </div>
               <h1 className="text-xl font-semibold text-foreground leading-snug">{topic.title}</h1>
               <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1">
-                <span className="flex items-center gap-1"><Icon name="User" size={10} /> {topic.author}</span>
+                <button className="flex items-center gap-1 hover:text-foreground transition-colors"
+                  onClick={() => onOpenProfile?.(topic.author_id)}>
+                  <Icon name="User" size={10} /> {topic.author}
+                </button>
                 <span className="flex items-center gap-1"><Icon name="Clock" size={10} /> {timeAgo(topic.created_at)}</span>
                 <span className="flex items-center gap-1"><Icon name="Eye" size={10} /> {topic.views} просмотров</span>
               </div>
@@ -188,6 +200,7 @@ export default function TopicPage({ topicId, onBack }: TopicPageProps) {
             className="forum-content text-sm text-foreground leading-relaxed"
             dangerouslySetInnerHTML={{ __html: topic.content }}
           />
+          </div>
         </div>
       )}
 
@@ -215,7 +228,10 @@ export default function TopicPage({ topicId, onBack }: TopicPageProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground">{post.author}</span>
+                      <button className="text-xs font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => onOpenProfile?.(post.author_id)}>
+                        {post.author}
+                      </button>
                       <span className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</span>
                       {post.updated_at !== post.created_at && (
                         <span className="text-[10px] text-muted-foreground italic">(изменено)</span>

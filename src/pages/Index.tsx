@@ -11,15 +11,19 @@ import AdminPage from './AdminPage';
 import ForumPage from './ForumPage';
 import TopicPage from './TopicPage';
 import WhamPage from './WhamPage';
+import ProfilePage from './ProfilePage';
+import PublicProfilePage from './PublicProfilePage';
+import MessagesPage from './MessagesPage';
 import NotificationBell from '@/components/NotificationBell';
 
-type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'game' | 'about' | 'auth' | 'admin';
+type Page = 'catalog' | 'compare' | 'treaties' | 'forum' | 'game' | 'about' | 'auth' | 'admin' | 'profile' | 'messages';
 
-const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: boolean }> = [
+const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: boolean; authOnly?: boolean }> = [
   { id: 'catalog',  label: 'Каталог',    icon: 'LayoutGrid' },
   { id: 'compare',  label: 'Сравнение',  icon: 'Swords' },
   { id: 'treaties', label: 'Трактаты',   icon: 'ScrollText' },
   { id: 'forum',    label: 'Форум',      icon: 'MessageSquare' },
+  { id: 'messages', label: 'Сообщения',  icon: 'Mail', authOnly: true },
   { id: 'game',     label: 'Неадекватная игра', icon: 'Gamepad2' },
   { id: 'about',    label: 'О проекте',  icon: 'Info' },
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
@@ -102,6 +106,8 @@ export default function Index() {
   const [page, setPage] = useState<Page>('catalog');
   const [detailUnitId, setDetailUnitId] = useState<string | null>(null);
   const [forumTopicId, setForumTopicId] = useState<number | null>(null);
+  const [publicProfileUserId, setPublicProfileUserId] = useState<number | null>(null);
+  const [messagesWithUser, setMessagesWithUser] = useState<{ id: number; username: string } | null>(null);
   const [appliedTreaties, setAppliedTreaties] = useState<Record<string, string[]>>(() => {
     try {
       const saved = localStorage.getItem('companion_treaties');
@@ -135,10 +141,27 @@ export default function Index() {
     }));
   };
 
+  const openPublicProfile = (userId: number) => {
+    setPublicProfileUserId(userId);
+    setDetailUnitId(null);
+    setForumTopicId(null);
+    mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const openMessages = (userId: number, username: string) => {
+    setMessagesWithUser({ id: userId, username });
+    setPage('messages');
+    setDetailUnitId(null);
+    setForumTopicId(null);
+    setPublicProfileUserId(null);
+    setMobileMenuOpen(false);
+  };
+
   const navigateTo = (p: Page) => {
     setPage(p);
     setDetailUnitId(null);
     setForumTopicId(null);
+    setPublicProfileUserId(null);
     setMobileMenuOpen(false);
   };
 
@@ -148,7 +171,9 @@ export default function Index() {
     setMobileMenuOpen(false);
   };
 
-  const visibleNav = NAV_ITEMS.filter(item => !item.adminOnly || user?.is_admin);
+  const visibleNav = NAV_ITEMS.filter(item =>
+    (!item.adminOnly || user?.is_admin) && (!item.authOnly || !!user)
+  );
   const currentLabel = page === 'auth' ? 'Вход' : page === 'admin' ? 'Управление' : NAV_ITEMS.find(n => n.id === page)?.label;
 
   return (
@@ -285,111 +310,8 @@ export default function Index() {
 
         <OrnateDivider />
 
-        {/* ── Пользователь — карточка с градиентом ─ */}
+        {/* Клеймо + статус */}
         <div className="px-3 py-3 space-y-2">
-          {!authLoading && (
-            user ? (
-              <>
-                <div
-                  className="p-3 rounded-xl relative overflow-hidden"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, hsl(222 16% 12%) 0%, hsl(222 18% 9%) 100%)',
-                    border: '1px solid hsl(42 76% 50% / 0.25)',
-                    boxShadow:
-                      'inset 0 1px 0 hsl(42 76% 60% / 0.08), 0 4px 12px hsl(222 40% 2% / 0.4)',
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-9 h-9 flex items-center justify-center flex-shrink-0 rounded-lg"
-                      style={{
-                        background:
-                          'linear-gradient(135deg, hsl(48 80% 68%) 0%, hsl(32 64% 40%) 100%)',
-                        boxShadow:
-                          'inset 0 1px 0 hsl(52 90% 80% / 0.5), 0 2px 6px hsl(42 76% 30% / 0.4)',
-                      }}
-                    >
-                      <Icon name="User" size={16} style={{ color: 'hsl(222 30% 10%)' }} />
-                    </div>
-                    <div className="min-w-0">
-                      <div
-                        className="truncate"
-                        style={{
-                          fontFamily: '"Manrope", sans-serif',
-                          fontSize: '0.92rem',
-                          fontWeight: 700,
-                          color: 'hsl(38 24% 92%)',
-                        }}
-                      >
-                        {user.username}
-                      </div>
-                      {user.is_admin ? (
-                        <div
-                          className="uppercase mt-0.5"
-                          style={{
-                            fontFamily: '"Manrope", sans-serif',
-                            fontSize: '0.58rem',
-                            fontWeight: 700,
-                            color: 'hsl(355 72% 68%)',
-                            letterSpacing: '0.2em',
-                          }}
-                        >
-                          ✦ Смотритель
-                        </div>
-                      ) : (
-                        <div
-                          className="mt-0.5"
-                          style={{
-                            fontFamily: '"Manrope", sans-serif',
-                            fontSize: '0.68rem',
-                            color: 'hsl(222 8% 50%)',
-                          }}
-                        >
-                          Воевода
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all"
-                  style={{
-                    fontFamily: '"Manrope", sans-serif',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
-                    color: 'hsl(222 10% 58%)',
-                    background: 'transparent',
-                    border: '1px solid hsl(222 14% 18%)',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.color = 'hsl(355 72% 68%)';
-                    e.currentTarget.style.borderColor = 'hsl(355 62% 40%)';
-                    e.currentTarget.style.background = 'hsl(355 62% 30% / 0.1)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.color = 'hsl(222 10% 58%)';
-                    e.currentTarget.style.borderColor = 'hsl(222 14% 18%)';
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <Icon name="LogOut" size={14} />
-                  Выйти
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => navigateTo('auth')}
-                className="btn-primary w-full justify-center"
-                style={{ borderRadius: '10px' }}
-              >
-                <Icon name="LogIn" size={14} />
-                Войти
-              </button>
-            )
-          )}
-
           {/* Клеймо */}
           <div className="pt-3 flex items-center justify-between">
             <div
@@ -532,20 +454,76 @@ export default function Index() {
             )}
           </div>
 
-          {/* Правая часть — уведомления */}
-          {user && (
-            <div className="ml-auto">
+          {/* Правая часть — аккаунт + уведомления */}
+          <div className="ml-auto flex items-center gap-2">
+            {user && (
               <NotificationBell
                 onGoForum={() => navigateTo('forum')}
                 onOpenTopic={id => { navigateTo('forum'); setForumTopicId(id); }}
               />
-            </div>
-          )}
+            )}
+            {!authLoading && (
+              user ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigateTo('profile')}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all"
+                    style={{
+                      background: 'hsl(222 16% 12%)',
+                      border: '1px solid hsl(42 76% 50% / 0.2)',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'hsl(42 76% 50% / 0.5)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'hsl(42 76% 50% / 0.2)'; }}
+                  >
+                    {user.avatar_url ? (
+                      <img src={user.avatar_url} alt="" className="w-6 h-6 rounded-md object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, hsl(48 80% 68%) 0%, hsl(32 64% 40%) 100%)' }}>
+                        <Icon name="User" size={12} style={{ color: 'hsl(222 30% 10%)' }} />
+                      </div>
+                    )}
+                    <span style={{ fontFamily: '"Manrope", sans-serif', fontSize: '0.82rem', fontWeight: 600, color: 'hsl(38 24% 92%)' }}>
+                      {user.username}
+                    </span>
+                    {user.is_admin && (
+                      <span style={{ fontSize: '0.58rem', color: 'hsl(355 72% 68%)', fontWeight: 700 }}>✦</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="p-1.5 rounded-lg transition-all"
+                    title="Выйти"
+                    style={{ color: 'hsl(222 10% 58%)', border: '1px solid hsl(222 14% 18%)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'hsl(355 72% 68%)'; e.currentTarget.style.borderColor = 'hsl(355 62% 40%)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'hsl(222 10% 58%)'; e.currentTarget.style.borderColor = 'hsl(222 14% 18%)'; }}
+                  >
+                    <Icon name="LogOut" size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigateTo('auth')}
+                  className="btn-primary"
+                  style={{ padding: '0.4rem 1rem', fontSize: '0.82rem' }}
+                >
+                  <Icon name="LogIn" size={14} />
+                  Войти
+                </button>
+              )
+            )}
+          </div>
         </header>
 
         {/* ── Контент страниц ─ */}
         <main ref={mainRef} className="flex-1 p-4 lg:p-8 overflow-auto scrollbar-thin">
-          {detailUnitId ? (
+          {publicProfileUserId ? (
+            <PublicProfilePage
+              userId={publicProfileUserId}
+              onBack={() => setPublicProfileUserId(null)}
+              onOpenMessages={openMessages}
+            />
+          ) : detailUnitId ? (
             <UnitDetailPage
               unitId={detailUnitId}
               appliedTreaties={appliedTreaties}
@@ -572,9 +550,14 @@ export default function Index() {
               <TopicPage
                 topicId={forumTopicId}
                 onBack={() => setForumTopicId(null)}
+                onOpenProfile={openPublicProfile}
+                onOpenMessages={openMessages}
               />
             ) : (
-              <ForumPage onOpenTopic={setForumTopicId} />
+              <ForumPage
+                onOpenTopic={setForumTopicId}
+                onOpenProfile={openPublicProfile}
+              />
             )
           ) : page === 'game' ? (
             <WhamPage />
@@ -584,6 +567,14 @@ export default function Index() {
             <AuthPage onSuccess={() => setPage('catalog')} />
           ) : page === 'admin' ? (
             <AdminPage />
+          ) : page === 'profile' ? (
+            <ProfilePage onOpenMessages={openMessages} />
+          ) : page === 'messages' ? (
+            <MessagesPage
+              initialUserId={messagesWithUser?.id}
+              initialUsername={messagesWithUser?.username}
+              onOpenProfile={openPublicProfile}
+            />
           ) : null}
         </main>
       </div>
