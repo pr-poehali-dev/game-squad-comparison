@@ -51,6 +51,21 @@ def award_and_refresh(conn, user_id, action_type, points, ref_id=None):
         )
 
 
+def revoke_and_refresh(conn, ref_id, ref_type):
+    """Списать все баллы связанные с ref_id и пересчитать рейтинг."""
+    with conn.cursor() as cur:
+        cur.execute(
+            f"DELETE FROM {SCHEMA}.activity_points WHERE ref_id = %s AND action_type LIKE %s",
+            (ref_id, ref_type + '%')
+        )
+        cur.execute(
+            f"""UPDATE {SCHEMA}.houses SET rating_points = (
+                SELECT COALESCE(SUM(ap.points), 0) FROM {SCHEMA}.activity_points ap
+                JOIN {SCHEMA}.users u ON u.id = ap.user_id WHERE u.house_id = houses.id
+            )"""
+        )
+
+
 def get_user(session_id, conn):
     if not session_id:
         return None
@@ -453,6 +468,8 @@ def handler(event: dict, context) -> dict:
                         )
                 cur.execute(f"DELETE FROM {SCHEMA}.guide_votes WHERE guide_id = %s", (guide_id,))
                 cur.execute(f"DELETE FROM {SCHEMA}.guides WHERE id = %s", (guide_id,))
+                revoke_and_refresh(conn, guide_id, 'create_guide')
+                revoke_and_refresh(conn, guide_id, 'received_like_guide')
             conn.commit()
         conn.close()
         return resp({'message': 'ok'})

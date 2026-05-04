@@ -38,7 +38,21 @@ def award_and_refresh(conn, user_id, action_type, points, ref_id=None):
             f"INSERT INTO {SCHEMA}.activity_points (user_id, action_type, points, ref_id) VALUES (%s, %s, %s, %s)",
             (user_id, action_type, points, ref_id)
         )
-        # Пересчёт рейтинга для дома этого пользователя
+        cur.execute(
+            f"""UPDATE {SCHEMA}.houses SET rating_points = (
+                SELECT COALESCE(SUM(ap.points), 0) FROM {SCHEMA}.activity_points ap
+                JOIN {SCHEMA}.users u ON u.id = ap.user_id WHERE u.house_id = houses.id
+            )"""
+        )
+
+
+def revoke_and_refresh(conn, ref_id, ref_type):
+    """Списать все баллы связанные с ref_id (тема/пост/гайд) и пересчитать рейтинг."""
+    with conn.cursor() as cur:
+        cur.execute(
+            f"DELETE FROM {SCHEMA}.activity_points WHERE ref_id = %s AND action_type LIKE %s",
+            (ref_id, ref_type + '%')
+        )
         cur.execute(
             f"""UPDATE {SCHEMA}.houses SET rating_points = (
                 SELECT COALESCE(SUM(ap.points), 0) FROM {SCHEMA}.activity_points ap
@@ -444,7 +458,9 @@ def handler(event: dict, context) -> dict:
             cur.execute(f"DELETE FROM {SCHEMA}.forum_topic_votes WHERE topic_id = %s", (topic_id,))
             cur.execute(f"DELETE FROM {SCHEMA}.forum_posts WHERE topic_id = %s", (topic_id,))
             cur.execute(f"DELETE FROM {SCHEMA}.forum_topics WHERE id = %s", (topic_id,))
-            conn.commit()
+        revoke_and_refresh(conn, topic_id, 'create_topic')
+        revoke_and_refresh(conn, topic_id, 'received_like_topic')
+        conn.commit()
         conn.close()
         return resp({'message': 'Тема удалена'})
 
@@ -498,6 +514,8 @@ def handler(event: dict, context) -> dict:
                 cur.execute(f"DELETE FROM {SCHEMA}.forum_topic_votes WHERE topic_id = %s", (topic_id,))
                 cur.execute(f"DELETE FROM {SCHEMA}.forum_posts WHERE topic_id = %s", (topic_id,))
                 cur.execute(f"DELETE FROM {SCHEMA}.forum_topics WHERE id = %s", (topic_id,))
+                revoke_and_refresh(conn, topic_id, 'create_topic')
+                revoke_and_refresh(conn, topic_id, 'received_like_topic')
             conn.commit()
         conn.close()
         return resp({'message': 'ok'})
