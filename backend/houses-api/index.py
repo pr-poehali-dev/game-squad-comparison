@@ -429,14 +429,19 @@ def handle_join_house(body, user, conn):
 
 
 def handle_leave_house(user, conn):
-    """POST action=leave_house — покинуть дом."""
+    """POST action=leave_house — покинуть дом, списать баллы за вступление."""
     with conn.cursor() as cur:
+        # Обнуляем баллы за join_house для этого пользователя
+        cur.execute(
+            f"UPDATE {SCHEMA}.activity_points SET points = 0 WHERE user_id = %s AND action_type = 'join_house'",
+            (user['id'],)
+        )
         cur.execute(
             f"UPDATE {SCHEMA}.users SET house_id = NULL, house_name = '' WHERE id = %s",
             (user['id'],)
         )
-        conn.commit()
-
+    refresh_rating_points(conn)
+    conn.commit()
     conn.close()
     return ok({'ok': True})
 
