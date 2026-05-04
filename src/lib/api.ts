@@ -206,6 +206,8 @@ export const guidesApi = {
   getPendingGuides: () => request(`${URLS.guidesApi}?action=pending_guides`),
   publishGuide: (guide_id: number, approve: boolean) =>
     request(URLS.guidesApi, { method: 'POST', body: JSON.stringify({ action: 'publish_guide', guide_id, approve }) }),
+  deleteGuide: (guide_id: number) =>
+    request(URLS.guidesApi, { method: 'POST', body: JSON.stringify({ action: 'delete_guide', guide_id }) }),
 };
 
 // Houses

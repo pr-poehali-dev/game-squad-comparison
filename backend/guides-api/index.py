@@ -474,5 +474,20 @@ def handler(event: dict, context) -> dict:
         conn.close()
         return resp({'message': 'ok'})
 
+    # ── POST: удалить гайд (админ) ────────────────────────────────────
+    if action == 'delete_guide':
+        if not user or not user['is_admin']:
+            conn.close()
+            return resp({'error': 'Нет прав'}, 403)
+        guide_id = int(body.get('guide_id', 0))
+        with conn.cursor() as cur:
+            cur.execute(f"DELETE FROM {SCHEMA}.guide_votes WHERE guide_id = %s", (guide_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.guides WHERE id = %s", (guide_id,))
+        revoke_and_refresh(conn, guide_id, 'create_guide')
+        revoke_and_refresh(conn, guide_id, 'received_like_guide')
+        conn.commit()
+        conn.close()
+        return resp({'message': 'Гайд удалён'})
+
     conn.close()
     return resp({'error': 'Неизвестное действие'}, 400)

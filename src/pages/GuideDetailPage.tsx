@@ -120,6 +120,12 @@ export default function GuideDetailPage({ guideId, onBack, onOpenProfile }: Prop
 
   const canEdit = user && (user.id === guide.author_id || user.is_admin);
 
+  const handleDelete = async () => {
+    if (!confirm('Удалить гайд? Это действие нельзя отменить.')) return;
+    await guidesApi.deleteGuide(guideId);
+    onBack();
+  };
+
   return (
     <div className="max-w-4xl">
       <button onClick={onBack}
@@ -178,13 +184,22 @@ export default function GuideDetailPage({ guideId, onBack, onOpenProfile }: Prop
                 <span className="flex items-center gap-1"><Icon name="Eye" size={10} /> {guide.views} просмотров</span>
               </div>
             </div>
-            {canEdit && (
-              <button onClick={() => { setEditTitle(guide.title); setEditContent(guide.content); setEditing(true); }}
-                className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
-                title="Редактировать">
-                <Icon name="Pencil" size={13} />
-              </button>
-            )}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {canEdit && (
+                <button onClick={() => { setEditTitle(guide.title); setEditContent(guide.content); setEditing(true); }}
+                  className="p-1.5 rounded-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Редактировать">
+                  <Icon name="Pencil" size={13} />
+                </button>
+              )}
+              {user?.is_admin && (
+                <button onClick={handleDelete}
+                  className="p-1.5 rounded-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title="Удалить гайд">
+                  <Icon name="Trash2" size={13} />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Контент */}
