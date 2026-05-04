@@ -79,7 +79,7 @@ def fmt_topic(row):
         'author_id': row[3], 'author': row[4],
         'views': row[5], 'is_pinned': row[6], 'is_locked': row[7],
         'created_at': str(row[8]), 'updated_at': str(row[9]),
-        'post_count': row[10], 'cover_url': row[11] if len(row) > 11 else '',
+        'post_count': row[10], 'author_avatar': row[11] if len(row) > 11 else '',
     }
 
 
@@ -115,11 +115,11 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""SELECT t.id, t.title, t.content, t.author_id, u.username,
                        t.views, t.is_pinned, t.is_locked, t.created_at, t.updated_at,
-                       COUNT(p.id) as post_count, t.cover_url
+                       COUNT(p.id) as post_count, u.avatar_url
                     FROM {SCHEMA}.forum_topics t
                     JOIN {SCHEMA}.users u ON u.id = t.author_id
                     LEFT JOIN {SCHEMA}.forum_posts p ON p.topic_id = t.id AND p.is_hidden = false
-                    GROUP BY t.id, u.username
+                    GROUP BY t.id, u.username, u.avatar_url
                     ORDER BY t.is_pinned DESC, t.updated_at DESC"""
             )
             rows = cur.fetchall()
@@ -135,7 +135,7 @@ def handler(event: dict, context) -> dict:
             cur.execute(
                 f"""SELECT t.id, t.title, t.content, t.author_id, u.username,
                        t.views, t.is_pinned, t.is_locked, t.created_at, t.updated_at,
-                       0 as post_count, t.cover_url
+                       0 as post_count, u.avatar_url
                     FROM {SCHEMA}.forum_topics t
                     JOIN {SCHEMA}.users u ON u.id = t.author_id
                     WHERE t.id = %s""", (topic_id,)
@@ -342,6 +342,19 @@ def handler(event: dict, context) -> dict:
             conn.commit()
         conn.close()
         return resp({'message': 'Готово', 'is_hidden': row[0] if row else False})
+
+    # ── POST: удалить тему (админ) ────────────────────────────────────
+    if action == 'delete_topic':
+        if not user['is_admin']:
+            conn.close()
+            return resp({'error': 'Нет прав'}, 403)
+        topic_id = int(body.get('topic_id', 0))
+        with conn.cursor() as cur:
+            cur.execute(f"DELETE FROM {SCHEMA}.forum_posts WHERE topic_id = %s", (topic_id,))
+            cur.execute(f"DELETE FROM {SCHEMA}.forum_topics WHERE id = %s", (topic_id,))
+            conn.commit()
+        conn.close()
+        return resp({'message': 'Тема удалена'})
 
     conn.close()
     return resp({'error': 'Неизвестное действие'}, 400)

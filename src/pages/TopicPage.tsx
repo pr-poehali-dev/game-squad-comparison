@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { forumApi } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import RichEditor from '@/components/RichEditor';
+import UserAvatar from '@/components/UserAvatar';
 import Icon from '@/components/ui/icon';
 
 interface Topic {
   id: number; title: string; content: string;
-  author_id: number; author: string;
+  author_id: number; author: string; author_avatar?: string;
   views: number; is_pinned: boolean; is_locked: boolean;
   created_at: string; updated_at: string; post_count: number;
-  cover_url?: string;
 }
 interface Post {
   id: number; topic_id: number; content: string;
@@ -104,6 +104,12 @@ export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessag
     await load();
   };
 
+  const handleDeleteTopic = async () => {
+    if (!confirm('Удалить тему? Это действие нельзя отменить.')) return;
+    await forumApi.deleteTopic(topicId);
+    onBack();
+  };
+
   const canEditTopic = user && topic && (user.id === topic.author_id || user.is_admin);
   const canReply = user && topic && !topic.is_locked;
 
@@ -141,15 +147,12 @@ export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessag
           </div>
         </div>
       ) : (
-        <div className="bg-card border border-border rounded-sm mb-4 overflow-hidden">
-          {topic.cover_url && (
-            <div className="h-40 w-full overflow-hidden">
-              <img src={topic.cover_url} alt="" className="w-full h-full object-cover" />
+        <div className="bg-card border border-border rounded-sm p-5 mb-4">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="flex-shrink-0 cursor-pointer" onClick={() => onOpenProfile?.(topic.author_id)}>
+              <UserAvatar username={topic.author} avatarUrl={topic.author_avatar} size={44} />
             </div>
-          )}
-          <div className="p-5">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
                 {topic.is_pinned && (
                   <span className="flex items-center gap-1 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm">
@@ -164,9 +167,9 @@ export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessag
               </div>
               <h1 className="text-xl font-semibold text-foreground leading-snug">{topic.title}</h1>
               <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1">
-                <button className="flex items-center gap-1 hover:text-foreground transition-colors"
+                <button className="font-medium hover:text-foreground transition-colors"
                   onClick={() => onOpenProfile?.(topic.author_id)}>
-                  <Icon name="User" size={10} /> {topic.author}
+                  {topic.author}
                 </button>
                 <span className="flex items-center gap-1"><Icon name="Clock" size={10} /> {timeAgo(topic.created_at)}</span>
                 <span className="flex items-center gap-1"><Icon name="Eye" size={10} /> {topic.views} просмотров</span>
@@ -191,6 +194,11 @@ export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessag
                     title={topic.is_locked ? 'Открыть тему' : 'Закрыть тему'}>
                     <Icon name={topic.is_locked ? 'Unlock' : 'Lock'} size={13} />
                   </button>
+                  <button onClick={handleDeleteTopic}
+                    className="p-1.5 rounded-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    title="Удалить тему">
+                    <Icon name="Trash2" size={13} />
+                  </button>
                 </>
               )}
             </div>
@@ -200,7 +208,6 @@ export default function TopicPage({ topicId, onBack, onOpenProfile, onOpenMessag
             className="forum-content text-sm text-foreground leading-relaxed"
             dangerouslySetInnerHTML={{ __html: topic.content }}
           />
-          </div>
         </div>
       )}
 

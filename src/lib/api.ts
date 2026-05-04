@@ -92,6 +92,8 @@ export const forumApi = {
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'lock_topic', topic_id }) }),
   hidePost: (post_id: number) =>
     request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'hide_post', post_id }) }),
+  deleteTopic: (topic_id: number) =>
+    request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'delete_topic', topic_id }) }),
   getNotifications: () => request(`${URLS.forum}?action=notifications`),
   readNotifications: () => request(URLS.forum, { method: 'POST', body: JSON.stringify({ action: 'read_notifications' }) }),
 };
