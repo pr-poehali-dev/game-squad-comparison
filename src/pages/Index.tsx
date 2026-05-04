@@ -23,7 +23,6 @@ const NAV_ITEMS: Array<{ id: Page; label: string; icon: string; adminOnly?: bool
   { id: 'compare',  label: 'Сравнение',  icon: 'Swords' },
   { id: 'treaties', label: 'Трактаты',   icon: 'ScrollText' },
   { id: 'forum',    label: 'Форум',      icon: 'MessageSquare' },
-  { id: 'messages', label: 'Сообщения',  icon: 'Mail', authOnly: true },
   { id: 'game',     label: 'Неадекватная игра', icon: 'Gamepad2' },
   { id: 'about',    label: 'О проекте',  icon: 'Info' },
   { id: 'admin',    label: 'Управление', icon: 'Settings', adminOnly: true },
@@ -457,10 +456,25 @@ export default function Index() {
           {/* Правая часть — аккаунт + уведомления */}
           <div className="ml-auto flex items-center gap-2">
             {user && (
-              <NotificationBell
-                onGoForum={() => navigateTo('forum')}
-                onOpenTopic={id => { navigateTo('forum'); setForumTopicId(id); }}
-              />
+              <>
+                <button
+                  onClick={() => navigateTo('messages')}
+                  className="p-1.5 rounded-lg transition-all relative"
+                  title="Сообщения"
+                  style={{
+                    color: page === 'messages' ? 'hsl(42 76% 68%)' : 'hsl(222 10% 58%)',
+                    border: `1px solid ${page === 'messages' ? 'hsl(42 76% 50% / 0.4)' : 'hsl(222 14% 18%)'}`,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'hsl(42 76% 68%)'; e.currentTarget.style.borderColor = 'hsl(42 76% 50% / 0.4)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = page === 'messages' ? 'hsl(42 76% 68%)' : 'hsl(222 10% 58%)'; e.currentTarget.style.borderColor = page === 'messages' ? 'hsl(42 76% 50% / 0.4)' : 'hsl(222 14% 18%)'; }}
+                >
+                  <Icon name="Mail" size={16} />
+                </button>
+                <NotificationBell
+                  onGoForum={() => navigateTo('forum')}
+                  onOpenTopic={id => { navigateTo('forum'); setForumTopicId(id); }}
+                />
+              </>
             )}
             {!authLoading && (
               user ? (
