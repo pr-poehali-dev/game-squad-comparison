@@ -4,6 +4,7 @@ import { messagesApi } from '@/lib/api';
 import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import PageContent from '@/components/layout/PageContent';
+import PWAInstallBanner from '@/components/PWAInstallBanner';
 
 type Page = 'catalog' | 'compare' | 'treaties' | 'houses' | 'forum' | 'guides' | 'game' | 'about' | 'auth' | 'admin' | 'profile' | 'messages';
 
@@ -113,6 +114,7 @@ export default function Index() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
+        <PWAInstallBanner />
         <TopBar
           page={page}
           detailUnitId={detailUnitId}
