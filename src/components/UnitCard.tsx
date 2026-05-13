@@ -79,7 +79,8 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
       >
         <div className="card-flip-inner">
           {/* ═════ ЛИЦО ═════ */}
-          <div
+          <a
+            href={`/unit/${unit.id}`}
             className="card-flip-front"
             style={{
               ...shellStyle,
@@ -88,8 +89,9 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
               flexDirection: 'column',
               overflow: 'hidden',
               position: 'relative',
+              textDecoration: 'none',
             }}
-            onClick={onClick}
+            onClick={(e) => { e.preventDefault(); onClick(); }}
           >
             <div
               className="absolute top-0 left-0 right-0 h-[3px] z-10"
@@ -228,7 +230,7 @@ export default function UnitCard({ unit, onClick, selected }: UnitCardProps) {
                 <Pill icon="Crown"  value={unit.stats.leadership}      tint="282 58% 65%" />
               </div>
             </div>
-          </div>
+          </a>
 
           {/* ═════ ОБОРОТ ═════ */}
           <div

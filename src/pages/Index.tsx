@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { messagesApi } from '@/lib/api';
 import Sidebar from '@/components/layout/Sidebar';
@@ -9,9 +10,11 @@ import PWAInstallBanner from '@/components/PWAInstallBanner';
 type Page = 'catalog' | 'compare' | 'treaties' | 'houses' | 'forum' | 'guides' | 'game' | 'about' | 'auth' | 'admin' | 'profile' | 'messages';
 
 export default function Index() {
+  const { unitId: unitIdParam } = useParams<{ unitId?: string }>();
+  const navigate = useNavigate();
   const { user, loading: authLoading, logout } = useAuth();
-  const [page, setPage] = useState<Page>('catalog');
-  const [detailUnitId, setDetailUnitId] = useState<string | null>(null);
+  const [page, setPage] = useState<Page>(unitIdParam ? 'catalog' : 'catalog');
+  const [detailUnitId, setDetailUnitId] = useState<string | null>(unitIdParam ?? null);
   const [forumTopicId, setForumTopicId] = useState<number | null>(null);
   const [publicProfileUserId, setPublicProfileUserId] = useState<number | null>(null);
   const [messagesWithUser, setMessagesWithUser] = useState<{ id: number; username: string } | null>(null);
@@ -34,8 +37,13 @@ export default function Index() {
   }, [appliedTreaties]);
 
   useEffect(() => {
-    if (detailUnitId) mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
-  }, [detailUnitId]);
+    if (detailUnitId) {
+      mainRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+      navigate(`/unit/${detailUnitId}`, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [detailUnitId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUnread = useCallback(async () => {
     if (!user) return;
@@ -88,12 +96,14 @@ export default function Index() {
 
   const navigateTo = (p: Page) => {
     setPage(p);
-    setDetailUnitId(null);
     setForumTopicId(null);
     setPublicProfileUserId(null);
     setGuideDetailId(null);
     setHouseDetailId(null);
     setMobileMenuOpen(false);
+    if (detailUnitId) {
+      setDetailUnitId(null);
+    }
   };
 
   const handleLogout = async () => {
@@ -126,7 +136,7 @@ export default function Index() {
           onNavigate={navigateTo}
           onToggleMobile={() => setMobileMenuOpen(!mobileMenuOpen)}
           onLogout={handleLogout}
-          onResetDetail={() => { setPage('catalog'); setDetailUnitId(null); setForumTopicId(null); }}
+          onResetDetail={() => { setPage('catalog'); setForumTopicId(null); if (detailUnitId) setDetailUnitId(null); else navigate('/'); }}
           onOpenTopic={setForumTopicId}
         />
 
