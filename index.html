@@ -19,6 +19,20 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://cdn.poehali.dev/projects/455c24fb-ce5d-4076-9543-1ca6ad6daa72/files/a757706d-9fb5-4b1e-98c4-a78a305f8679.jpg">
 
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d0d0f">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Хоругвь">
+    <link rel="apple-touch-icon" href="https://cdn.poehali.dev/projects/455c24fb-ce5d-4076-9543-1ca6ad6daa72/files/4ed60288-0670-4178-8cc5-c3d2124513b6.jpg">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+      }
+    </script>
+
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS COMMENT! -->
 
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS COMMENT! -->

@@ -1,0 +1,25 @@
+{
+  "name": "Хоругвь — Каталог отрядов",
+  "short_name": "Хоругвь",
+  "description": "Современный справочник отрядов с историческим духом: характеристики, трактаты, сравнения.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "https://cdn.poehali.dev/projects/455c24fb-ce5d-4076-9543-1ca6ad6daa72/files/4ed60288-0670-4178-8cc5-c3d2124513b6.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn.poehali.dev/projects/455c24fb-ce5d-4076-9543-1ca6ad6daa72/files/3821a8a6-d31b-40ad-9560-1d9b192581a3.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
