@@ -5,6 +5,7 @@ import { getAbilityObj } from '@/components/unit/UnitTags';
 import UnitHeader from '@/components/unit/UnitHeader';
 import UnitStatsPanel from '@/components/unit/UnitStatsPanel';
 import UnitSidebar from '@/components/unit/UnitSidebar';
+import { useDocumentMeta } from '@/hooks/useDocumentMeta';
 
 interface UnitDetailPageProps {
   unitId: string;
@@ -20,6 +21,13 @@ export default function UnitDetailPage({ unitId, appliedTreaties, onBack, onAppl
   const { formations: allFormations } = useFormations();
 
   const unit = units.find(u => u.id === unitId);
+
+  useDocumentMeta({
+    title: unit?.name,
+    description: unit ? `${unit.name} — ${unit.description}` : undefined,
+    image: unit?.avatar_url,
+  });
+
   if (!unit) return null;
 
   const myTreatyIds = appliedTreaties[unit.id] || [];
