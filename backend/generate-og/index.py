@@ -24,6 +24,24 @@ def handler(event: dict, context) -> dict:
     if event.get("httpMethod") == "OPTIONS":
         return {"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET, OPTIONS", "Access-Control-Allow-Headers": "Content-Type"}, "body": ""}
 
+    s3 = boto3.client(
+        "s3",
+        endpoint_url="https://bucket.poehali.dev",
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+    cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{OUTPUT_KEY}"
+
+    try:
+        s3.head_object(Bucket="files", Key=OUTPUT_KEY)
+        return {
+            "statusCode": 200,
+            "headers": {"Access-Control-Allow-Origin": "*", "Content-Type": "application/json"},
+            "body": json.dumps({"url": cdn_url}),
+        }
+    except Exception:
+        pass
+
     bg_data = download_bytes(BG_URL)
     img = Image.open(io.BytesIO(bg_data)).convert("RGB")
     w, h = img.size
@@ -50,15 +68,7 @@ def handler(event: dict, context) -> dict:
     img.save(buf, format="JPEG", quality=92)
     buf.seek(0)
 
-    s3 = boto3.client(
-        "s3",
-        endpoint_url="https://bucket.poehali.dev",
-        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-    )
     s3.put_object(Bucket="files", Key=OUTPUT_KEY, Body=buf.read(), ContentType="image/jpeg")
-
-    cdn_url = f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{OUTPUT_KEY}"
 
     return {
         "statusCode": 200,
