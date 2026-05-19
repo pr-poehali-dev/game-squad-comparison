@@ -11,7 +11,6 @@
   "game-api": "https://functions.poehali.dev/23edd385-7e13-41cb-a5d2-0a5cc4b4b5f7",
   "formations-api": "https://functions.poehali.dev/d8bb45c5-f402-46c5-ac74-722186fd2a5d",
   "roles-api": "https://functions.poehali.dev/36953fca-cdb1-4ebc-8482-8ba8556d1389",
-  "battle-api": "https://functions.poehali.dev/e55b6676-4af3-410b-99a4-d9faac5243bb",
   "forum-api": "https://functions.poehali.dev/914f3bd8-b9e4-4dfa-b16a-e3dda3710d6e",
   "upload": "https://functions.poehali.dev/26151075-4ef3-4b29-8d16-c82a04dd0e83",
   "seed": "https://functions.poehali.dev/95ab29ef-b38b-4e5b-9578-0456fb855829",
